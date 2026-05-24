@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { logger } from '@/utils/logger'
+import { config } from '@/config'
 
 export type AppError = {
   status: number
@@ -7,7 +8,7 @@ export type AppError = {
 }
 
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000',
+  baseURL: config.apiBaseUrl,
   timeout: 10_000,
   headers: { 'Content-Type': 'application/json' },
 })

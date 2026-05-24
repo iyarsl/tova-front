@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
-import { useMockSignal } from './useMockSignal'
+import { useRxStream } from './useRxStream'
+import { useVortexConfig } from '@/features/vortex/useVortexConfig'
 import { useTheme } from '@/hooks/useTheme'
+import type { SignalData, RxStatus } from '@/types/rx'
 import _Plot from 'react-plotly.js'
 import type { PlotParams } from 'react-plotly.js'
 // CJS/ESM interop: Vite may expose the module as { default: Component }
@@ -18,11 +20,40 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'spectrogram', label: 'Spectrogram',  icon: '▦' },
 ]
 
+const STATUS_CHIP: Record<RxStatus, { dot: string; label: string }> = {
+  connecting: { dot: 'bg-yellow-400',  label: 'Connecting…'   },
+  streaming:  { dot: 'bg-emerald-400', label: 'Live'          },
+  silence:    { dot: 'bg-gray-400',    label: 'Silence'       },
+  no_device:  { dot: 'bg-rose-500',    label: 'No Device'     },
+  done:       { dot: 'bg-gray-400',    label: 'Done'          },
+  error:      { dot: 'bg-rose-500',    label: 'Reconnecting…' },
+}
+
+const NO_DATA_MSG: Record<RxStatus, string> = {
+  connecting: 'Connecting to stream…',
+  streaming:  'Waiting for first frame…',
+  silence:    'No signal — silence reported by device',
+  no_device:  'No device connected',
+  done:       'Stream ended',
+  error:      'Connection lost — reconnecting…',
+}
+
 export function RxPage() {
-  const [tab, setTab]         = useState<Tab>('time')
-  const [running, setRunning] = useState(true)
-  const { data, centerFreq, sampleRate } = useMockSignal(running)
+  const [tab, setTab] = useState<Tab>('time')
+  const [frozen, setFrozen]         = useState(false)
+  const [frozenData, setFrozenData] = useState<SignalData | null>(null)
+
+  const { data: liveData, status, sampleRate } = useRxStream()
+  const { config: vortexConfig } = useVortexConfig()
   const { theme } = useTheme()
+
+  const centerFreq = vortexConfig ? (vortexConfig.rfin_hz / 1e6).toFixed(0) : '—'
+  const data: SignalData | null = frozen ? frozenData : liveData
+
+  function handleToggle() {
+    if (!frozen) setFrozenData(liveData)
+    setFrozen(f => !f)
+  }
 
   const isDark     = theme === 'dark'
   const bgColor    = isDark ? '#030712'  : '#f9fafb'
@@ -39,6 +70,8 @@ export function RxPage() {
     xaxis: { gridcolor: gridColor, zerolinecolor: gridColor, tickfont: { size: 10 } },
     yaxis: { gridcolor: gridColor, zerolinecolor: gridColor, tickfont: { size: 10 } },
   }
+
+  const chip = STATUS_CHIP[status]
 
   return (
     <PageTransition>
@@ -69,18 +102,27 @@ export function RxPage() {
           ))}
 
           <div className="ml-auto flex items-center gap-3 pb-2">
+            {/* Status chip */}
+            <div className="flex items-center gap-1.5">
+              <span className={`w-1.5 h-1.5 rounded-full ${chip.dot} ${status === 'streaming' ? 'animate-pulse' : ''}`} />
+              <span className="font-mono text-xs dark:text-[#4b5563] text-[#9ca3af]">{chip.label}</span>
+            </div>
+
+            {/* Center freq / sample rate */}
             <span className="font-mono text-xs dark:text-[#4b5563] text-[#9ca3af]">
-              {centerFreq} MHz · {(sampleRate / 1e6).toFixed(1)} Msps
+              {centerFreq} MHz · {sampleRate > 0 ? (sampleRate / 1e6).toFixed(1) : '—'} Msps
             </span>
+
+            {/* Freeze / Resume button */}
             <button
-              onClick={() => setRunning(r => !r)}
+              onClick={handleToggle}
               className={`px-4 py-1.5 rounded-[8px] font-mono text-xs font-medium border transition-all ${
-                running
+                !frozen
                   ? 'dark:border-rose-500/30 dark:text-rose-400 dark:hover:bg-rose-500/10 border-rose-400/40 text-rose-500 hover:bg-rose-50'
                   : 'dark:border-emerald-500/30 dark:text-emerald-400 dark:hover:bg-emerald-500/10 border-emerald-500/40 text-emerald-600 hover:bg-emerald-50'
               }`}
             >
-              {running ? '⏹ Stop' : '▶ Start'}
+              {!frozen ? '⏹ Freeze' : '▶ Resume'}
             </button>
           </div>
         </div>
@@ -131,8 +173,8 @@ export function RxPage() {
                   }]}
                   layout={{
                     ...layoutBase,
-                    xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency (MHz)', font: { size: 10, color: textColor } } },
-                    yaxis: { ...layoutBase.yaxis, title: { text: 'Power (dBm)',      font: { size: 10, color: textColor } } },
+                    xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency offset (MHz)', font: { size: 10, color: textColor } } },
+                    yaxis: { ...layoutBase.yaxis, title: { text: 'Power (dBm)',             font: { size: 10, color: textColor } } },
                   }}
                   config={{ displayModeBar: false, responsive: true }}
                   style={{ width: '100%', height: '100%' }}
@@ -167,7 +209,7 @@ export function RxPage() {
               {!data && (
                 <div className="flex items-center justify-center h-full">
                   <span className="font-mono text-sm dark:text-[#4b5563] text-[#9ca3af]">
-                    {running ? 'Generating signal data…' : 'Press Start to begin'}
+                    {NO_DATA_MSG[status]}
                   </span>
                 </div>
               )}
