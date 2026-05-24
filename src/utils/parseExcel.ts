@@ -86,17 +86,13 @@ export async function parseExcelToScanRows(file: File): Promise<ScanRow[]> {
       return isNaN(n) ? 0 : n
     }
 
-    const bwRaw = get('bandwidth')
-    const bandwidth = [80, 160, 320].includes(bwRaw)
-      ? (bwRaw as 80 | 160 | 320)
-      : 80
-
     parsed.push({
       id:                crypto.randomUUID(),
       duration:          get('duration'),
       entrance_freq_ghz: get('entrance_freq_ghz'),
       out_freq_mhz:      get('out_freq_mhz'),
-      bandwidth,
+      // Cast as-is — validation will flag invalid values (not 80/160/320)
+      bandwidth:         get('bandwidth') as 80 | 160 | 320,
       gain_db:           get('gain_db'),
       sample_rate:       get('sample_rate'),
     })
