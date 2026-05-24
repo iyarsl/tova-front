@@ -1,5 +1,10 @@
 import type { WorkerInput, WorkerOutput } from '@/types/rx'
 
+// Max IQ samples fed into the FFT.  Limits chart output to ≤ this many bins.
+// nextPow2(250 000) = 262 144 — that's 21 M heatmap cells/frame.  4096 gives
+// 244 Hz/bin resolution across the full ±500 kHz BW: plenty for display.
+const MAX_FFT_SAMPLES = 4096
+
 // ---------------------------------------------------------------------------
 // Cooley-Tukey radix-2 in-place FFT (complex input)
 // re[] and im[] are modified in-place; length must be a power of 2.
@@ -59,16 +64,18 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
   const iq = new Float32Array(bytes.buffer)
 
   // 2. Separate I and Q into padded Float64 arrays for FFT
-  const n = nextPow2(length)
+  //    Cap at MAX_FFT_SAMPLES so Plotly never receives millions of points.
+  const fftLen = Math.min(length, MAX_FFT_SAMPLES)
+  const n = nextPow2(fftLen)
   const re = new Float64Array(n)
   const im = new Float64Array(n)
-  for (let i = 0; i < length; i++) {
+  for (let i = 0; i < fftLen; i++) {
     re[i] = iq[i * 2]       // I sample
     im[i] = iq[i * 2 + 1]   // Q sample
   }
 
   // 3. Time domain — I channel only (before FFT modifies re[])
-  const timeY = Array.from(re.subarray(0, length)) as number[]
+  const timeY = Array.from(re.subarray(0, fftLen)) as number[]
 
   // 4. Complex FFT in-place
   fftInPlace(re, im)
