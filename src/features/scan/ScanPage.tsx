@@ -236,7 +236,11 @@ export function ScanPage() {
                   Schedule
                 </button>
                 <button
-                  onClick={() => setShowModal(true)}
+                  onClick={() => {
+                    const ok = validateAll()
+                    if (!ok) { toast('Fix validation errors before running', 'error'); return }
+                    setShowModal(true)
+                  }}
                   className="px-4 py-[7px] rounded-[8px] dark:bg-cyan-400 bg-[#0891b2] dark:text-[#030712] text-white font-display text-xs font-semibold tracking-widest uppercase hover:opacity-90 transition-opacity"
                 >
                   Run Scan
