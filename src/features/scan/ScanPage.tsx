@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
@@ -130,13 +130,11 @@ export function ScanPage() {
   const [showScheduleModal, setShowScheduleModal]   = useState(false)
   const [results, setResults]                       = useState<string[] | null>(null)
   const [importedFileName, setImportedFileName]     = useState<string | null>(null)
-  const fileInputRef                                = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!fileInputRef.current) return
-    fileInputRef.current.value = ''        // reset so same file can re-trigger
+    e.target.value = ''        // reset so same file can re-trigger
     if (!file) return
 
     try {
@@ -179,8 +177,9 @@ export function ScanPage() {
           <div className="max-w-6xl mx-auto space-y-5">
             <DeviceStatePanel />
 
-            {/* Hidden file input for Excel import */}
+            {/* Hidden file input — triggered by label below, not programmatic click */}
             <input
+              id="excel-file-import"
               ref={fileInputRef}
               type="file"
               accept=".xlsx,.xls"
@@ -213,17 +212,17 @@ export function ScanPage() {
                   Template
                 </button>
 
-                {/* Import Excel */}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
+                {/* Import Excel — label triggers file input natively, no JS click() needed */}
+                <label
+                  htmlFor="excel-file-import"
                   title="Import rows from Excel file"
-                  className="px-4 py-[7px] rounded-[8px] border dark:border-cyan-400/30 border-cyan-500/30 dark:text-cyan-400 text-[#0891b2] font-display text-xs tracking-widest uppercase dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors flex items-center gap-1.5"
+                  className="cursor-pointer px-4 py-[7px] rounded-[8px] border dark:border-cyan-400/30 border-cyan-500/30 dark:text-cyan-400 text-[#0891b2] font-display text-xs tracking-widest uppercase dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors flex items-center gap-1.5"
                 >
                   <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
                   </svg>
                   Import Excel
-                </button>
+                </label>
 
                 <button
                   onClick={() => setShowScheduleModal(true)}
