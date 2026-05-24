@@ -57,13 +57,20 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
   }`
 
   if (col.type === 'select') {
+    const numVal = Number(value)
+    const isValidOption = col.options!.includes(numVal)
     return (
       <div className={`${cellBase} p-0`}>
         <select
-          value={Number(value)}
+          value={numVal}
           onChange={e => onUpdate(row.id, col.key, parseInt(e.target.value) as never)}
           className="w-full h-full bg-transparent px-3 text-[13px] font-mono dark:text-[#d1d5db] text-[#374151] focus:outline-none dark:focus:bg-cyan-400/10 focus:bg-[#ecfeff] cursor-pointer"
         >
+          {!isValidOption && (
+            <option value={numVal} className="dark:bg-base-900 bg-white text-rose-500">
+              {numVal} (invalid)
+            </option>
+          )}
           {col.options!.map(o => (
             <option key={o} value={o} className="dark:bg-base-900 bg-white">{o}</option>
           ))}
