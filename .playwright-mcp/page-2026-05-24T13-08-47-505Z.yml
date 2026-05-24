@@ -1,0 +1,6 @@
+- generic [ref=e7]:
+  - generic [ref=e10]: ◈
+  - heading "USRP Control" [level=1] [ref=e13]
+  - paragraph [ref=e14]: Real-time RF control & signal visualization
+  - generic [ref=e17]: Backend unreachable
+  - button "Connect" [ref=e18] [cursor=pointer]: Connect

@@ -1,0 +1,133 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]: USRP
+      - button "Collapse sidebar" [ref=e7] [cursor=pointer]: ‹
+    - generic [ref=e8]: Workspace
+    - navigation [ref=e9]:
+      - link "⚡ Vortex Config" [ref=e10] [cursor=pointer]:
+        - /url: /vortex
+        - generic [ref=e11]: ⚡
+        - generic [ref=e12]: Vortex Config
+      - link "⊞ Scan Table" [active] [ref=e13] [cursor=pointer]:
+        - /url: /config
+        - generic [ref=e14]: ⊞
+        - generic [ref=e15]: Scan Table
+      - link "◈ RX Graphs" [ref=e16] [cursor=pointer]:
+        - /url: /rx
+        - generic [ref=e17]: ◈
+        - generic [ref=e18]: RX Graphs
+    - generic [ref=e22]: Disconnected
+  - main [ref=e23]:
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - heading "Scan Table" [level=1] [ref=e29]
+        - button "Toggle theme" [ref=e30] [cursor=pointer]:
+          - generic [ref=e33]: Dark
+      - generic [ref=e35]:
+        - generic [ref=e36]:
+          - generic [ref=e37]: 1 row
+          - generic [ref=e38]:
+            - button "Validate" [ref=e39] [cursor=pointer]
+            - button "Template" [ref=e40] [cursor=pointer]:
+              - img [ref=e41]
+              - text: Template
+            - button "Import Excel" [ref=e43] [cursor=pointer]:
+              - img [ref=e44]
+              - text: Import Excel
+            - button "Schedule" [ref=e46] [cursor=pointer]:
+              - img [ref=e47]
+              - text: Schedule
+            - button "Run Scan" [ref=e49] [cursor=pointer]
+        - table [ref=e52]:
+          - rowgroup [ref=e53]:
+            - row "Duration s Entrance Freq GHz Out Freq MHz Bandwidth MHz Gain dB Sample Rate Hz" [ref=e54]:
+              - columnheader [ref=e55]
+              - columnheader "Duration s" [ref=e56]:
+                - generic [ref=e57]:
+                  - generic [ref=e58]: Duration
+                  - generic [ref=e59]: s
+              - columnheader "Entrance Freq GHz" [ref=e60]:
+                - generic [ref=e61]:
+                  - generic [ref=e62]: Entrance Freq
+                  - generic [ref=e63]: GHz
+              - columnheader "Out Freq MHz" [ref=e64]:
+                - generic [ref=e65]:
+                  - generic [ref=e66]: Out Freq
+                  - generic [ref=e67]: MHz
+              - columnheader "Bandwidth MHz" [ref=e68]:
+                - generic [ref=e69]:
+                  - generic [ref=e70]: Bandwidth
+                  - generic [ref=e71]: MHz
+              - columnheader "Gain dB" [ref=e72]:
+                - generic [ref=e73]:
+                  - generic [ref=e74]: Gain
+                  - generic [ref=e75]: dB
+              - columnheader "Sample Rate Hz" [ref=e76]:
+                - generic [ref=e77]:
+                  - generic [ref=e78]: Sample Rate
+                  - generic [ref=e79]: Hz
+          - rowgroup [ref=e80]:
+            - row "1 1 2.4 70 80 20 1,000,000" [ref=e81]:
+              - cell "1" [ref=e82]:
+                - generic [ref=e84]: "1"
+              - cell "1" [ref=e85]:
+                - generic [ref=e86] [cursor=pointer]: "1"
+              - cell "2.4" [ref=e87]:
+                - generic [ref=e88] [cursor=pointer]: "2.4"
+              - cell "70" [ref=e89]:
+                - generic [ref=e90] [cursor=pointer]: "70"
+              - cell "80" [ref=e91]:
+                - combobox [ref=e93] [cursor=pointer]:
+                  - option "80" [selected]
+                  - option "160"
+                  - option "320"
+              - cell "20" [ref=e94]:
+                - generic [ref=e95] [cursor=pointer]: "20"
+              - cell "1,000,000" [ref=e96]:
+                - generic [ref=e97] [cursor=pointer]: 1,000,000
+            - row "+ Add row" [ref=e98]:
+              - cell "+ Add row" [ref=e99]:
+                - button "+ Add row" [ref=e100] [cursor=pointer]:
+                  - generic [ref=e101]: +
+                  - generic [ref=e102]: Add row
+        - generic [ref=e103]:
+          - generic [ref=e105]: Upcoming Scheduled Runs
+          - table [ref=e109]:
+            - rowgroup [ref=e110]:
+              - row "# Scheduled At Recurrence Next Run Status" [ref=e111]:
+                - columnheader "#" [ref=e112]:
+                  - generic [ref=e114]: "#"
+                - columnheader "Scheduled At" [ref=e115]:
+                  - generic [ref=e117]: Scheduled At
+                - columnheader "Recurrence" [ref=e118]:
+                  - generic [ref=e120]: Recurrence
+                - columnheader "Next Run" [ref=e121]:
+                  - generic [ref=e123]: Next Run
+                - columnheader "Status" [ref=e124]:
+                  - generic [ref=e126]: Status
+                - columnheader [ref=e127]
+            - rowgroup [ref=e129]:
+              - row "No scheduled runs" [ref=e130]:
+                - cell "No scheduled runs" [ref=e131]:
+                  - generic [ref=e132]: No scheduled runs
+        - generic [ref=e133]:
+          - generic [ref=e135]: Scan History
+          - table [ref=e139]:
+            - rowgroup [ref=e140]:
+              - row "# Run Time Status Output Files Parameters" [ref=e141]:
+                - columnheader "#" [ref=e142]:
+                  - generic [ref=e144]: "#"
+                - columnheader "Run Time" [ref=e145]:
+                  - generic [ref=e147]: Run Time
+                - columnheader "Status" [ref=e148]:
+                  - generic [ref=e150]: Status
+                - columnheader "Output Files" [ref=e151]:
+                  - generic [ref=e153]: Output Files
+                - columnheader "Parameters" [ref=e154]:
+                  - generic [ref=e156]: Parameters
+                - columnheader [ref=e157]
+            - rowgroup [ref=e159]:
+              - row "No history yet" [ref=e160]:
+                - cell "No history yet" [ref=e161]:
+                  - generic [ref=e162]: No history yet
