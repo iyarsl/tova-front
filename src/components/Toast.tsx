@@ -26,12 +26,11 @@ const icons: Record<ToastType, string> = {
   info:    'ℹ',
 }
 
-// Toasts always use dark bg for contrast in both light and dark modes
 const colors: Record<ToastType, string> = {
-  success: 'border-emerald-500/60 bg-[#0f1f18] text-emerald-400',
-  error:   'border-rose-500/60    bg-[#1f0f12] text-rose-400',
-  warning: 'border-amber-500/60  bg-[#1f1808] text-amber-400',
-  info:    'border-cyan-500/60   bg-[#071820] text-cyan-400',
+  success: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400',
+  error:   'border-rose-500/50 bg-rose-500/10 text-rose-400',
+  warning: 'border-amber-500/50 bg-amber-500/10 text-amber-400',
+  info:    'border-cyan-500/50 bg-cyan-500/10 text-cyan-400',
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -58,7 +57,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               className={`flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur-sm font-mono text-sm min-w-64 pointer-events-auto ${colors[t.type]}`}
             >
               <span className="text-base font-bold">{icons[t.type]}</span>
-              <span className="text-white/90 font-body">{t.message}</span>
+              <span className="dark:text-gray-200 text-gray-800 font-body">{t.message}</span>
             </motion.div>
           ))}
         </AnimatePresence>
