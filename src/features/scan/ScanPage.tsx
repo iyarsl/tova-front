@@ -177,10 +177,9 @@ export function ScanPage() {
           <div className="max-w-6xl mx-auto space-y-5">
             <DeviceStatePanel />
 
-            {/* Hidden file input — triggered by label below, not programmatic click */}
+            {/* Hidden file input — triggered by label below via htmlFor */}
             <input
               id="excel-file-import"
-              ref={fileInputRef}
               type="file"
               accept=".xlsx,.xls"
               className="hidden"
