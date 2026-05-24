@@ -9,6 +9,9 @@ import { fetchConfig } from '@/api/vortex'
 import { runScan } from '@/api/scan'
 import { useToast } from '@/components/Toast'
 import type { AppError } from '@/api/client'
+import { ScheduleModal } from './ScheduleModal'
+import { ScheduledRunsTable } from './ScheduledRunsTable'
+import { ScanHistoryTable } from './ScanHistoryTable'
 
 function DeviceStatePanel() {
   const { data } = useQuery({
@@ -121,8 +124,9 @@ function RunModal({
 
 export function ScanPage() {
   const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors } = useScanRows()
-  const [showModal, setShowModal] = useState(false)
-  const [results, setResults]     = useState<string[] | null>(null)
+  const [showModal, setShowModal]           = useState(false)
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [results, setResults]               = useState<string[] | null>(null)
   const { toast } = useToast()
 
   const runMut = useMutation({
@@ -164,6 +168,18 @@ export function ScanPage() {
                   Validate
                 </button>
                 <button
+                  onClick={() => setShowScheduleModal(true)}
+                  className="px-4 py-[7px] rounded-[8px] border dark:border-cyan-400/30 border-cyan-500/30 dark:text-cyan-400 text-[#0891b2] font-display text-xs tracking-widest uppercase dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors flex items-center gap-1.5"
+                >
+                  <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  Schedule
+                </button>
+                <button
                   onClick={() => setShowModal(true)}
                   className="px-4 py-[7px] rounded-[8px] dark:bg-cyan-400 bg-[#0891b2] dark:text-[#030712] text-white font-display text-xs font-semibold tracking-widest uppercase hover:opacity-90 transition-opacity"
                 >
@@ -199,6 +215,28 @@ export function ScanPage() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Upcoming Scheduled Runs */}
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="font-display text-xs font-semibold tracking-[0.12em] uppercase dark:text-white/40 text-[#9ca3af]">
+                  Upcoming Scheduled Runs
+                </span>
+                <div className="flex-1 h-px dark:bg-white/[0.06] bg-black/[0.06]" />
+              </div>
+              <ScheduledRunsTable />
+            </div>
+
+            {/* Scan History */}
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="font-display text-xs font-semibold tracking-[0.12em] uppercase dark:text-white/40 text-[#9ca3af]">
+                  Scan History
+                </span>
+                <div className="flex-1 h-px dark:bg-white/[0.06] bg-black/[0.06]" />
+              </div>
+              <ScanHistoryTable />
+            </div>
           </div>
         </div>
       </div>
@@ -209,6 +247,15 @@ export function ScanPage() {
             onClose={() => setShowModal(false)}
             onRun={(dir, mock) => runMut.mutate({ dir, mock })}
             loading={runMut.isPending}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showScheduleModal && (
+          <ScheduleModal
+            rows={rows}
+            onClose={() => setShowScheduleModal(false)}
           />
         )}
       </AnimatePresence>
