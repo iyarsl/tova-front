@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
@@ -12,6 +12,8 @@ import type { AppError } from '@/api/client'
 import { ScheduleModal } from './ScheduleModal'
 import { ScheduledRunsTable } from './ScheduledRunsTable'
 import { ScanHistoryTable } from './ScanHistoryTable'
+import { parseExcelToScanRows } from '@/utils/parseExcel'
+import { downloadScanTemplate } from '@/utils/downloadTemplate'
 
 function DeviceStatePanel() {
   const { data } = useQuery({
@@ -123,11 +125,33 @@ function RunModal({
 }
 
 export function ScanPage() {
-  const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors } = useScanRows()
-  const [showModal, setShowModal]           = useState(false)
-  const [showScheduleModal, setShowScheduleModal] = useState(false)
-  const [results, setResults]               = useState<string[] | null>(null)
+  const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows } = useScanRows()
+  const [showModal, setShowModal]                   = useState(false)
+  const [showScheduleModal, setShowScheduleModal]   = useState(false)
+  const [results, setResults]                       = useState<string[] | null>(null)
+  const [importedFileName, setImportedFileName]     = useState<string | null>(null)
+  const fileInputRef                                = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!fileInputRef.current) return
+    fileInputRef.current.value = ''        // reset so same file can re-trigger
+    if (!file) return
+
+    try {
+      const parsedRows = await parseExcelToScanRows(file)
+      const allValid   = loadRows(parsedRows)
+      setImportedFileName(file.name)
+      if (allValid) {
+        toast(`Loaded ${parsedRows.length} row${parsedRows.length !== 1 ? 's' : ''} from "${file.name}"`, 'success')
+      } else {
+        toast(`Loaded ${parsedRows.length} row${parsedRows.length !== 1 ? 's' : ''} from "${file.name}" — validation errors found`, 'error')
+      }
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Failed to import Excel file', 'error')
+    }
+  }
 
   const runMut = useMutation({
     mutationFn: ({ dir, mock }: { dir: string; mock: boolean }) =>
@@ -155,6 +179,15 @@ export function ScanPage() {
           <div className="max-w-6xl mx-auto space-y-5">
             <DeviceStatePanel />
 
+            {/* Hidden file input for Excel import */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.xls"
+              className="hidden"
+              onChange={handleImport}
+            />
+
             {/* Toolbar */}
             <div className="flex items-center justify-between">
               <span className="text-xs tracking-[0.08em] dark:text-[#4b5563] text-[#9ca3af] uppercase font-medium">
@@ -167,6 +200,31 @@ export function ScanPage() {
                 >
                   Validate
                 </button>
+
+                {/* Download Template */}
+                <button
+                  onClick={downloadScanTemplate}
+                  title="Download Excel template"
+                  className="px-4 py-[7px] rounded-[8px] border dark:border-cyan-400/30 border-cyan-500/30 dark:text-cyan-400 text-[#0891b2] font-display text-xs tracking-widest uppercase dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors flex items-center gap-1.5"
+                >
+                  <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+                  </svg>
+                  Template
+                </button>
+
+                {/* Import Excel */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Import rows from Excel file"
+                  className="px-4 py-[7px] rounded-[8px] border dark:border-cyan-400/30 border-cyan-500/30 dark:text-cyan-400 text-[#0891b2] font-display text-xs tracking-widest uppercase dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors flex items-center gap-1.5"
+                >
+                  <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                  </svg>
+                  Import Excel
+                </button>
+
                 <button
                   onClick={() => setShowScheduleModal(true)}
                   className="px-4 py-[7px] rounded-[8px] border dark:border-cyan-400/30 border-cyan-500/30 dark:text-cyan-400 text-[#0891b2] font-display text-xs tracking-widest uppercase dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors flex items-center gap-1.5"
@@ -187,6 +245,32 @@ export function ScanPage() {
                 </button>
               </div>
             </div>
+
+            {/* Import success badge */}
+            <AnimatePresence>
+              {importedFileName && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-[8px] border dark:border-cyan-400/20 border-cyan-500/20 dark:bg-cyan-400/5 bg-[#ecfeff]"
+                >
+                  <svg className="w-3.5 h-3.5 dark:text-cyan-400 text-[#0891b2] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-mono text-[11px] dark:text-cyan-400 text-[#0891b2] flex-1">
+                    Loaded from <span className="font-semibold">"{importedFileName}"</span>
+                  </span>
+                  <button
+                    onClick={() => setImportedFileName(null)}
+                    className="dark:text-cyan-400/50 text-[#0891b2]/50 dark:hover:text-cyan-400 hover:text-[#0891b2] transition-colors leading-none"
+                    aria-label="Dismiss"
+                  >
+                    ×
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <ScanTable
               rows={rows}

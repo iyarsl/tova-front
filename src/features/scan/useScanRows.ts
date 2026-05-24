@@ -55,5 +55,17 @@ export function useScanRows() {
 
   const clearErrors = useCallback(() => setErrors({}), [])
 
-  return { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors }
+  const loadRows = useCallback((incoming: ScanRow[]): boolean => {
+    setRows(incoming)
+    const errs: Record<string, ScanRowErrors> = {}
+    let valid = true
+    incoming.forEach(r => {
+      const e = validate(r)
+      if (Object.keys(e).length > 0) { errs[r.id] = e; valid = false }
+    })
+    setErrors(errs)
+    return valid
+  }, [])
+
+  return { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows }
 }
