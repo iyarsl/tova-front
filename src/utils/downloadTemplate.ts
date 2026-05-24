@@ -9,10 +9,8 @@ const HEADERS = [
   'Sample Rate (Hz)',
 ]
 
-const EXAMPLE_ROW = [1.0, 2.4, 70, 80, 20, 1_000_000]
-
 export function downloadScanTemplate(): void {
-  const ws = XLSX.utils.aoa_to_sheet([HEADERS, EXAMPLE_ROW])
+  const ws = XLSX.utils.aoa_to_sheet([HEADERS])
 
   // Set column widths for readability
   ws['!cols'] = HEADERS.map(h => ({ wch: Math.max(h.length + 4, 16) }))

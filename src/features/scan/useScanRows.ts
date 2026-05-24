@@ -25,7 +25,7 @@ function validate(row: ScanRow): ScanRowErrors {
 }
 
 export function useScanRows() {
-  const [rows, setRows] = useState<ScanRow[]>([makeRow()])
+  const [rows, setRows] = useState<ScanRow[]>([])
   const [errors, setErrors] = useState<Record<string, ScanRowErrors>>({})
 
   const addRow = useCallback(() =>
