@@ -150,6 +150,7 @@ export function RxPage() {
                   }]}
                   layout={{
                     ...layoutBase,
+                    uirevision: 'time',
                     xaxis: { ...layoutBase.xaxis, title: { text: 'Time (ms)', font: { size: 10, color: textColor } } },
                     yaxis: { ...layoutBase.yaxis, title: { text: 'Amplitude', font: { size: 10, color: textColor } } },
                   }}
@@ -173,6 +174,7 @@ export function RxPage() {
                   }]}
                   layout={{
                     ...layoutBase,
+                    uirevision: 'fft',
                     xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency offset (MHz)', font: { size: 10, color: textColor } } },
                     yaxis: { ...layoutBase.yaxis, title: { text: 'Power (dBm)',             font: { size: 10, color: textColor } } },
                   }}
@@ -197,6 +199,7 @@ export function RxPage() {
                   }]}
                   layout={{
                     ...layoutBase,
+                    uirevision: 'spectrogram',
                     xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency bin', font: { size: 10, color: textColor } } },
                     yaxis: { ...layoutBase.yaxis, title: { text: 'Time →',         font: { size: 10, color: textColor } } },
                   }}
