@@ -1,3 +1,9 @@
+/** Persisted x/y axis range for a single Plotly chart tab */
+export type ZoomLayout = {
+  xRange?: readonly [number, number]
+  yRange?: readonly [number, number]
+}
+
 /** Shape of signal data consumed by RxPage charts */
 export type SignalData = {
   time:        { x: number[]; y: number[] }

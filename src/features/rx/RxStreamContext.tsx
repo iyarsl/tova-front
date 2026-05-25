@@ -7,17 +7,14 @@ import {
   useState,
 } from 'react'
 import { config } from '@/config'
-import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData } from '@/types/rx'
+import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout } from '@/types/rx'
 
 // ---- types ------------------------------------------------------------------
 
 export type Tab = 'time' | 'fft' | 'spectrogram'
 
-/** Persisted x/y axis range for a single Plotly chart */
-export type TabZoom = {
-  xRange?: readonly [number, number]
-  yRange?: readonly [number, number]
-}
+/** Persisted x/y axis range for a single Plotly chart — re-exported from @/types/rx */
+export type TabZoom = ZoomLayout
 
 type RxStreamContextType = {
   /** Latest live frame from the stream */
