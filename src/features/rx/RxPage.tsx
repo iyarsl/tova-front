@@ -1,18 +1,16 @@
-import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
-import { useRxStream } from './useRxStream'
+import { useRxStreamContext } from './RxStreamContext'
+import type { Tab } from './RxStreamContext'
 import { useVortexConfig } from '@/features/vortex/useVortexConfig'
 import { useTheme } from '@/hooks/useTheme'
-import type { SignalData, RxStatus } from '@/types/rx'
+import type { RxStatus, SignalData } from '@/types/rx'
 import _Plot from 'react-plotly.js'
 import type { PlotParams } from 'react-plotly.js'
 // CJS/ESM interop: Vite may expose the module as { default: Component }
 const Plot = (_Plot as unknown as { default: React.ComponentType<PlotParams> }).default
   ?? (_Plot as unknown as React.ComponentType<PlotParams>)
-
-type Tab = 'time' | 'fft' | 'spectrogram'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'time',        label: 'Time Domain',  icon: '∿' },
@@ -39,21 +37,23 @@ const NO_DATA_MSG: Record<RxStatus, string> = {
 }
 
 export function RxPage() {
-  const [tab, setTab] = useState<Tab>('time')
-  const [frozen, setFrozen]         = useState(false)
-  const [frozenData, setFrozenData] = useState<SignalData | null>(null)
+  const {
+    status,
+    sampleRate,
+    tab,
+    setTab,
+    frozen,
+    handleToggle,
+    displayData,
+    zoomLayouts,
+    handleRelayout,
+  } = useRxStreamContext()
 
-  const { data: liveData, status, sampleRate } = useRxStream()
   const { config: vortexConfig } = useVortexConfig()
   const { theme } = useTheme()
 
   const centerFreq = vortexConfig ? (vortexConfig.rfin_hz / 1e6).toFixed(0) : '—'
-  const data: SignalData | null = frozen ? frozenData : liveData
-
-  function handleToggle() {
-    if (!frozen) setFrozenData(liveData)
-    setFrozen(f => !f)
-  }
+  const data: SignalData | null = displayData
 
   const isDark     = theme === 'dark'
   const bgColor    = isDark ? '#030712'  : '#f9fafb'
@@ -151,12 +151,21 @@ export function RxPage() {
                   layout={{
                     ...layoutBase,
                     uirevision: 'time',
-                    xaxis: { ...layoutBase.xaxis, title: { text: 'Time (ms)', font: { size: 10, color: textColor } } },
-                    yaxis: { ...layoutBase.yaxis, title: { text: 'Amplitude', font: { size: 10, color: textColor } } },
+                    xaxis: {
+                      ...layoutBase.xaxis,
+                      ...(zoomLayouts.time.xRange && { range: zoomLayouts.time.xRange as [number, number], autorange: false }),
+                      title: { text: 'Time (ms)', font: { size: 10, color: textColor } },
+                    },
+                    yaxis: {
+                      ...layoutBase.yaxis,
+                      ...(zoomLayouts.time.yRange && { range: zoomLayouts.time.yRange as [number, number], autorange: false }),
+                      title: { text: 'Amplitude', font: { size: 10, color: textColor } },
+                    },
                   }}
                   config={{ displayModeBar: false, responsive: true }}
                   style={{ width: '100%', height: '100%' }}
                   useResizeHandler
+                  onRelayout={(e) => handleRelayout('time', e)}
                 />
               )}
 
@@ -175,12 +184,21 @@ export function RxPage() {
                   layout={{
                     ...layoutBase,
                     uirevision: 'fft',
-                    xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency offset (MHz)', font: { size: 10, color: textColor } } },
-                    yaxis: { ...layoutBase.yaxis, title: { text: 'Power (dBm)',             font: { size: 10, color: textColor } } },
+                    xaxis: {
+                      ...layoutBase.xaxis,
+                      ...(zoomLayouts.fft.xRange && { range: zoomLayouts.fft.xRange as [number, number], autorange: false }),
+                      title: { text: 'Frequency offset (MHz)', font: { size: 10, color: textColor } },
+                    },
+                    yaxis: {
+                      ...layoutBase.yaxis,
+                      ...(zoomLayouts.fft.yRange && { range: zoomLayouts.fft.yRange as [number, number], autorange: false }),
+                      title: { text: 'Power (dBm)', font: { size: 10, color: textColor } },
+                    },
                   }}
                   config={{ displayModeBar: false, responsive: true }}
                   style={{ width: '100%', height: '100%' }}
                   useResizeHandler
+                  onRelayout={(e) => handleRelayout('fft', e)}
                 />
               )}
 
@@ -200,12 +218,21 @@ export function RxPage() {
                   layout={{
                     ...layoutBase,
                     uirevision: 'spectrogram',
-                    xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency bin', font: { size: 10, color: textColor } } },
-                    yaxis: { ...layoutBase.yaxis, title: { text: 'Time →',         font: { size: 10, color: textColor } } },
+                    xaxis: {
+                      ...layoutBase.xaxis,
+                      ...(zoomLayouts.spectrogram.xRange && { range: zoomLayouts.spectrogram.xRange as [number, number], autorange: false }),
+                      title: { text: 'Frequency bin', font: { size: 10, color: textColor } },
+                    },
+                    yaxis: {
+                      ...layoutBase.yaxis,
+                      ...(zoomLayouts.spectrogram.yRange && { range: zoomLayouts.spectrogram.yRange as [number, number], autorange: false }),
+                      title: { text: 'Time →', font: { size: 10, color: textColor } },
+                    },
                   }}
                   config={{ displayModeBar: false, responsive: true }}
                   style={{ width: '100%', height: '100%' }}
                   useResizeHandler
+                  onRelayout={(e) => handleRelayout('spectrogram', e)}
                 />
               )}
 
