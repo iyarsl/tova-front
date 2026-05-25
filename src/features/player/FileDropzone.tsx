@@ -1,4 +1,4 @@
-import { useCallback, useId, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 type Props = {
   onFile: (file: File) => void
@@ -15,16 +15,40 @@ function formatBytes(bytes: number): string {
 }
 
 export function FileDropzone({ onFile, fileName, fileSizeBytes, disabled = false }: Props) {
-  const inputId  = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
 
+  // ── file selection via input ────────────────────────────────────────────────
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) onFile(file)
-    // Reset value so same file can be re-selected
-    e.target.value = ''
+    e.target.value = '' // reset so same file can be re-selected
   }, [onFile])
+
+  // Prevent the input's own click from bubbling back up to the wrapper div,
+  // which would re-trigger input.click() in an infinite loop.
+  const handleInputClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+  }, [])
+
+  const openFilePicker = useCallback(() => {
+    if (!disabled) inputRef.current?.click()
+  }, [disabled])
+
+  // ── drag-and-drop ───────────────────────────────────────────────────────────
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!disabled) setDragging(true)
+  }, [disabled])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    // Only clear when leaving the dropzone entirely, not entering a child element
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragging(false)
+    }
+  }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -35,46 +59,37 @@ export function FileDropzone({ onFile, fileName, fileSizeBytes, disabled = false
     if (file) onFile(file)
   }, [onFile, disabled])
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!disabled) setDragging(true)
-  }, [disabled])
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    // Only clear dragging when leaving the dropzone entirely (not entering a child)
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setDragging(false)
-    }
-  }, [])
-
   const loaded = fileName !== ''
 
   return (
-    <label
-      htmlFor={inputId}
+    <div
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-label={loaded ? 'Replace file' : 'Select .fc32 file'}
+      onClick={openFilePicker}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openFilePicker() }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDragEnter={(e) => { e.preventDefault(); e.stopPropagation() }}
       onDrop={handleDrop}
-      className={`
-        flex items-center gap-4 px-5 py-3.5 rounded-lg border cursor-pointer
-        transition-all duration-200 select-none
-        ${dragging
+      className={[
+        'flex items-center gap-4 px-5 py-3.5 rounded-lg border cursor-pointer',
+        'transition-all duration-200 select-none outline-none',
+        'focus-visible:ring-2 focus-visible:ring-amber-400/50',
+        dragging
           ? 'border-amber-400/70 dark:bg-amber-400/5 bg-amber-50 shadow-[0_0_12px_rgba(251,191,36,0.15)]'
           : loaded
             ? 'dark:border-amber-400/30 border-amber-300/60 dark:bg-amber-400/[0.04] bg-amber-50/60'
-            : 'dark:border-white/10 border-black/[0.1] dark:bg-white/[0.02] bg-white dark:hover:border-amber-400/30 hover:border-amber-300/50 dark:hover:bg-amber-400/[0.03]'
-        }
-        ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
-      `}
+            : 'dark:border-white/10 border-black/[0.1] dark:bg-white/[0.02] bg-white dark:hover:border-amber-400/30 hover:border-amber-300/50 dark:hover:bg-amber-400/[0.03]',
+        disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : '',
+      ].join(' ')}
     >
       {/* Icon */}
-      <div className={`text-xl flex-shrink-0 transition-colors ${
+      <span className={`text-xl flex-shrink-0 transition-colors ${
         loaded ? 'text-amber-400' : 'dark:text-[#4b5563] text-[#9ca3af]'
       }`}>
         {loaded ? '◈' : '⊕'}
-      </div>
+      </span>
 
       {/* Label */}
       <div className="flex-1 min-w-0">
@@ -90,7 +105,9 @@ export function FileDropzone({ onFile, fileName, fileSizeBytes, disabled = false
         ) : (
           <span className="font-mono text-sm dark:text-[#9ca3af] text-[#6b7280]">
             Drop <span className="dark:text-amber-400 text-amber-600">.fc32</span> file or{' '}
-            <span className="dark:text-amber-400 text-amber-600 underline underline-offset-2">click to browse</span>
+            <span className="dark:text-amber-400 text-amber-600 underline underline-offset-2">
+              click to browse
+            </span>
           </span>
         )}
       </div>
@@ -101,15 +118,22 @@ export function FileDropzone({ onFile, fileName, fileSizeBytes, disabled = false
         </span>
       )}
 
-      {/* Hidden file input — associated via htmlFor/id, no JS click() needed */}
+      {/*
+        Hidden file input.
+        onClick stopPropagation is CRITICAL — without it, the click triggered by
+        inputRef.current?.click() would bubble back up to the wrapper div, which
+        would call inputRef.current?.click() again → infinite loop.
+      */}
       <input
         ref={inputRef}
-        id={inputId}
         type="file"
-        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+        style={{ position: 'absolute', opacity: 0, width: 0, height: 0, overflow: 'hidden' }}
+        onClick={handleInputClick}
         onChange={handleChange}
         disabled={disabled}
       />
-    </label>
+    </div>
   )
 }
