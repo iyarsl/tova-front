@@ -42,30 +42,43 @@ export function PlayerPage() {
   const srInputRef = useRef<HTMLInputElement>(null)
 
   // --- file loading ----------------------------------------------------------
+  // Validate sample rate at play-time, not load-time — user should be able to
+  // drop a file first and then set sample rate before hitting play.
+  const pendingFileRef = useRef<File | null>(null)
+
   const handleFile = useCallback(async (file: File) => {
-    if (!file.name.endsWith('.fc32')) {
+    if (!file.name.toLowerCase().endsWith('.fc32')) {
       toast('Only .fc32 files accepted', 'error')
       return
     }
-
-    const sr = parseInt(srInput, 10)
-    if (!sr || sr <= 0) {
-      setSrError('Enter sample rate before loading')
-      srInputRef.current?.focus()
-      return
-    }
-    setSrError('')
 
     if (file.size > 500 * 1024 * 1024) {
       toast(`Large file (${(file.size / 1e6).toFixed(0)} MB) — loading…`, 'warning')
     }
 
-    await player.loadFile(file, sr)
-
-    if (player.error) {
-      toast(player.error, 'error')
+    const sr = parseInt(srInput, 10)
+    if (!sr || sr <= 0) {
+      // Store file and show inline error — user can fix SR then click play
+      pendingFileRef.current = file
+      setSrError('Set sample rate then press ▶')
+      srInputRef.current?.focus()
+      return
     }
+    setSrError('')
+    pendingFileRef.current = null
+
+    await player.loadFile(file, sr)
   }, [player, srInput, toast])
+
+  // When sample rate is corrected, load the pending file if any
+  const handleSrCommit = useCallback(async (sr: number) => {
+    const pending = pendingFileRef.current
+    if (pending && sr > 0) {
+      pendingFileRef.current = null
+      setSrError('')
+      await player.loadFile(pending, sr)
+    }
+  }, [player])
 
   // --- derived -----------------------------------------------------------------
   const sr            = player.sampleRate
@@ -76,6 +89,18 @@ export function PlayerPage() {
   const handleSrChange = (v: string) => {
     setSrInput(v)
     if (srError) setSrError('')
+  }
+
+  const handleSrBlur = () => {
+    const sr = parseInt(srInput, 10)
+    void handleSrCommit(sr)
+  }
+
+  const handleSrKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const sr = parseInt(srInput, 10)
+      void handleSrCommit(sr)
+    }
   }
 
   // --- render ------------------------------------------------------------------
@@ -108,6 +133,8 @@ export function PlayerPage() {
                   type="number"
                   value={srInput}
                   onChange={(e) => handleSrChange(e.target.value)}
+                  onBlur={handleSrBlur}
+                  onKeyDown={handleSrKeyDown}
                   min={1}
                   step={1000000}
                   className={`
