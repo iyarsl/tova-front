@@ -152,8 +152,10 @@ export function ScanPage() {
   }
 
   const runMut = useMutation({
-    mutationFn: ({ dir, mock }: { dir: string; mock: boolean }) =>
-      runScan('', dir, mock),
+    mutationFn: ({ dir, mock }: { dir: string; mock: boolean }) => {
+      const apiRows = rows.map(({ id: _id, ...rest }) => rest)
+      return runScan(apiRows, dir, mock)
+    },
     onSuccess: (files) => {
       setResults(files)
       setShowModal(false)

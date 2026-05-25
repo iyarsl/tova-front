@@ -18,10 +18,10 @@ export async function validateScan(path: string): Promise<ApiScanRow[]> {
 }
 
 export async function runScan(
-  excel_path: string,
+  rows: ApiScanRow[],
   output_dir: string,
   mock: boolean,
 ): Promise<string[]> {
-  const res = await client.post('/scan/run', { excel_path, output_dir, mock })
+  const res = await client.post('/scan/run', { rows, output_dir, mock })
   return z.array(z.string()).parse(res.data)
 }
