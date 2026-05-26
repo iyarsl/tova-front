@@ -8,7 +8,7 @@ import { TimeDomainChart } from '@/components/signal/TimeDomainChart'
 import { FftChart } from '@/components/signal/FftChart'
 import { SpectrogramChart } from '@/components/signal/SpectrogramChart'
 import { FileDropzone } from './FileDropzone'
-import { useFilePlayer } from './useFilePlayer'
+import { usePlayer } from './PlayerContext'
 import type { PlayerTab } from './useFilePlayer'
 
 const TABS: { id: PlayerTab; label: string; icon: string }[] = [
@@ -34,10 +34,13 @@ export function PlayerPage() {
   const { toast } = useToast()
   const { theme } = useTheme()
 
-  const player = useFilePlayer()
+  const player = usePlayer()
 
   // --- local sample-rate input state ----------------------------------------
-  const [srInput, setSrInput]   = useState('2000000')
+  // Initialise from the persisted player state so the value survives navigation
+  const [srInput, setSrInput]   = useState(() =>
+    player.sampleRate > 0 ? String(player.sampleRate) : '2000000'
+  )
   const [srError, setSrError]   = useState('')
   const srInputRef = useRef<HTMLInputElement>(null)
 

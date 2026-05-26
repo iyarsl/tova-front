@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { ScanTable } from './ScanTable'
-import { useScanRows } from './useScanRows'
+import { useScan } from './ScanContext'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
 import { runScan } from '@/api/scan'
@@ -125,11 +125,10 @@ function RunModal({
 }
 
 export function ScanPage() {
-  const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows } = useScanRows()
+  const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows,
+          importedFileName, setImportedFileName, results, setResults } = useScan()
   const [showModal, setShowModal]                   = useState(false)
   const [showScheduleModal, setShowScheduleModal]   = useState(false)
-  const [results, setResults]                       = useState<string[] | null>(null)
-  const [importedFileName, setImportedFileName]     = useState<string | null>(null)
   const { toast } = useToast()
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
