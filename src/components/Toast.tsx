@@ -27,10 +27,10 @@ const icons: Record<ToastType, string> = {
 }
 
 const colors: Record<ToastType, string> = {
-  success: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400',
-  error:   'border-rose-500/50 bg-rose-500/10 text-rose-400',
-  warning: 'border-amber-500/50 bg-amber-500/10 text-amber-400',
-  info:    'border-cyan-500/50 bg-cyan-500/10 text-cyan-400',
+  success: 'bg-pastel-green border-meadow-green/50 text-meadow-green-dk dark:bg-emerald-500/10 dark:border-emerald-500/50 dark:text-emerald-400',
+  error:   'bg-[#FFE0E0] border-sunset-red/50 text-[#B03030] dark:bg-rose-500/10 dark:border-rose-500/50 dark:text-rose-400',
+  warning: 'bg-[#FFF6CC] border-sunshine/60 text-[#7A5C3A] dark:bg-amber-500/10 dark:border-amber-500/50 dark:text-amber-400',
+  info:    'bg-pastel-blue border-sky-blue-d/50 text-[#1A6A8A] dark:bg-cyan-500/10 dark:border-cyan-500/50 dark:text-cyan-400',
 }
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -54,10 +54,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, x: 0,  scale: 1 }}
               exit={{    opacity: 0, x: 60, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg border backdrop-blur-sm font-mono text-sm min-w-64 pointer-events-auto ${colors[t.type]}`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-dora-card font-body text-sm min-w-64 pointer-events-auto ${colors[t.type]}`}
             >
               <span className="text-base font-bold">{icons[t.type]}</span>
-              <span className="dark:text-gray-200 text-gray-800 font-body">{t.message}</span>
+              <span className="font-body">{t.message}</span>
             </motion.div>
           ))}
         </AnimatePresence>
