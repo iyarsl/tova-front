@@ -45,8 +45,12 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
   function commit(raw: string) {
     setEditing(false)
     if (col.type === 'number') {
-      const n = parseFloat(raw)
-      if (!isNaN(n)) onUpdate(row.id, col.key, n as never)
+      if (raw.trim() === '') {
+        onUpdate(row.id, col.key, null as never)
+      } else {
+        const n = parseFloat(raw)
+        if (!isNaN(n)) onUpdate(row.id, col.key, n as never)
+      }
     }
   }
 
@@ -57,16 +61,20 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
   }`
 
   if (col.type === 'select') {
-    const numVal = Number(value)
-    const isValidOption = col.options!.includes(numVal)
+    const numVal = value === null ? '' : String(Number(value))
+    const isValidOption = value !== null && col.options!.includes(Number(value))
     return (
       <div className={`${cellBase} p-0`}>
         <select
           value={numVal}
-          onChange={e => onUpdate(row.id, col.key, parseInt(e.target.value) as never)}
+          onChange={e => {
+            const v = e.target.value
+            onUpdate(row.id, col.key, v === '' ? null as never : parseInt(v) as never)
+          }}
           className="w-full h-full bg-transparent px-3 text-[13px] font-mono dark:text-[#d1d5db] text-[#374151] focus:outline-none dark:focus:bg-cyan-400/10 focus:bg-[#ecfeff] cursor-pointer"
         >
-          {!isValidOption && (
+          <option value="" className="dark:bg-base-900 bg-white dark:text-[#6b7280] text-[#9ca3af]">—</option>
+          {!isValidOption && value !== null && (
             <option value={numVal} className="dark:bg-base-900 bg-white text-rose-500">
               {numVal} (invalid)
             </option>
@@ -86,7 +94,7 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
           ref={inputRef}
           autoFocus
           type="number"
-          defaultValue={String(value)}
+          defaultValue={value === null ? '' : String(value)}
           min={col.min}
           max={col.max}
           step={col.step}
@@ -103,7 +111,10 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
 
   return (
     <div className={cellBase} onClick={() => setEditing(true)}>
-      {typeof value === 'number' ? value.toLocaleString() : String(value)}
+      {value === null
+        ? <span className="dark:text-[#4b5563] text-[#d1d5db]">—</span>
+        : typeof value === 'number' ? value.toLocaleString() : String(value)
+      }
       {error && <span className="ml-2 text-rose-400 text-xs">⚠</span>}
     </div>
   )

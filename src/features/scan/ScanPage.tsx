@@ -7,6 +7,7 @@ import { useScan } from './ScanContext'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
 import { runScan } from '@/api/scan'
+import type { ApiScanRow } from '@/types/scan'
 import { useToast } from '@/components/Toast'
 import type { AppError } from '@/api/client'
 import { ScheduleModal } from './ScheduleModal'
@@ -152,7 +153,14 @@ export function ScanPage() {
 
   const runMut = useMutation({
     mutationFn: ({ dir, mock }: { dir: string; mock: boolean }) => {
-      const apiRows = rows.map(({ id: _id, ...rest }) => rest)
+      const apiRows: ApiScanRow[] = rows.map(({ id: _id, duration, entrance_freq_ghz, out_freq_mhz, bandwidth, gain_db, sample_rate }) => ({
+        duration:          duration!,
+        entrance_freq_ghz: entrance_freq_ghz!,
+        out_freq_mhz:      out_freq_mhz!,
+        bandwidth:         bandwidth!,
+        gain_db:           gain_db!,
+        sample_rate:       sample_rate!,
+      }))
       return runScan(apiRows, dir, mock)
     },
     onSuccess: (files) => {

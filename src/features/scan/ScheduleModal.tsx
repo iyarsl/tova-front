@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useCreateSchedule } from './useScheduledScans'
-import type { ScanRow } from '@/types/scan'
+import type { ScanRow, ApiScanRow } from '@/types/scan'
 import type { Recurrence } from '@/types/schedule'
 
 interface Props {
@@ -25,9 +25,17 @@ export function ScheduleModal({ rows, onClose }: Props) {
 
   function handleSubmit() {
     if (!scheduledAt || !dir) return
+    const apiRows: ApiScanRow[] = rows.map(({ id: _id, duration, entrance_freq_ghz, out_freq_mhz, bandwidth, gain_db, sample_rate }) => ({
+      duration:          duration!,
+      entrance_freq_ghz: entrance_freq_ghz!,
+      out_freq_mhz:      out_freq_mhz!,
+      bandwidth:         bandwidth!,
+      gain_db:           gain_db!,
+      sample_rate:       sample_rate!,
+    }))
     createMut.mutate(
       {
-        rows: rows.map(({ id: _id, ...rest }) => rest),
+        rows: apiRows,
         output_dir: dir,
         mock,
         scheduled_at: new Date(scheduledAt).toISOString(),

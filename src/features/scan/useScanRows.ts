@@ -4,23 +4,36 @@ import type { ScanRow, ScanRowErrors } from '@/types/scan'
 function makeRow(): ScanRow {
   return {
     id: crypto.randomUUID(),
-    duration: 1.0,
-    entrance_freq_ghz: 2.4,
-    out_freq_mhz: 70.0,
-    bandwidth: 80,
-    gain_db: 20.0,
-    sample_rate: 1_000_000,
+    duration:          null,
+    entrance_freq_ghz: null,
+    out_freq_mhz:      null,
+    bandwidth:         null,
+    gain_db:           null,
+    sample_rate:       null,
   }
 }
 
 function validate(row: ScanRow): ScanRowErrors {
   const e: ScanRowErrors = {}
-  if (row.duration <= 0)                          e.duration = 'Must be > 0'
-  if (row.entrance_freq_ghz < 0.01 || row.entrance_freq_ghz > 26) e.entrance_freq_ghz = '0.01–26 GHz'
-  if (row.out_freq_mhz < 0 || row.out_freq_mhz > 3500)           e.out_freq_mhz = '0–3500 MHz'
-  if (![80, 160, 320].includes(row.bandwidth))                    e.bandwidth = '80/160/320'
-  if (row.gain_db < 0 || row.gain_db > 90)                        e.gain_db = '0–90 dB'
-  if (row.sample_rate <= 0)                                       e.sample_rate = 'Must be > 0'
+
+  if (row.duration === null)                                        e.duration = 'Required'
+  else if (row.duration <= 0)                                       e.duration = 'Must be > 0'
+
+  if (row.entrance_freq_ghz === null)                               e.entrance_freq_ghz = 'Required'
+  else if (row.entrance_freq_ghz < 0.01 || row.entrance_freq_ghz > 26) e.entrance_freq_ghz = '0.01–26 GHz'
+
+  if (row.out_freq_mhz === null)                                    e.out_freq_mhz = 'Required'
+  else if (row.out_freq_mhz < 0 || row.out_freq_mhz > 3500)        e.out_freq_mhz = '0–3500 MHz'
+
+  if (row.bandwidth === null)                                       e.bandwidth = 'Required'
+  else if (![80, 160, 320].includes(row.bandwidth))                 e.bandwidth = '80/160/320'
+
+  if (row.gain_db === null)                                         e.gain_db = 'Required'
+  else if (row.gain_db < 0 || row.gain_db > 90)                    e.gain_db = '0–90 dB'
+
+  if (row.sample_rate === null)                                     e.sample_rate = 'Required'
+  else if (row.sample_rate <= 0)                                    e.sample_rate = 'Must be > 0'
+
   return e
 }
 
