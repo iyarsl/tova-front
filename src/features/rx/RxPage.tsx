@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
-import { useRxStream } from './useRxStream'
+import { useRxStreamContext } from './RxStreamContext'
 import { useVortexConfig } from '@/features/vortex/useVortexConfig'
 import { useTheme } from '@/hooks/useTheme'
 import type { SignalData, RxStatus } from '@/types/rx'
@@ -43,7 +43,7 @@ export function RxPage() {
   const [frozen, setFrozen]         = useState(false)
   const [frozenData, setFrozenData] = useState<SignalData | null>(null)
 
-  const { data: liveData, status, sampleRate } = useRxStream()
+  const { data: liveData, status, sampleRate } = useRxStreamContext()
   const { config: vortexConfig } = useVortexConfig()
   const { theme } = useTheme()
 
