@@ -1,11 +1,28 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { WaveCanvas } from './WaveCanvas'
+import { DoraSkyCanvas } from './DoraSkyCanvas'
 import { fetchConfig } from '@/api/vortex'
 import { useQuery } from '@tanstack/react-query'
 
 type ConnectState = 'idle' | 'connecting' | 'success'
+
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <line x1="16.5" y1="16.5" x2="22" y2="22" />
+    </svg>
+  )
+}
 
 export function HeroPage() {
   const navigate = useNavigate()
@@ -29,102 +46,119 @@ export function HeroPage() {
   }
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-base-950 dark:bg-base-950">
-      <WaveCanvas />
-
-      {/* Vignette overlay */}
-      <div className="absolute inset-0 bg-radial-[ellipse_at_center] from-transparent via-base-950/40 to-base-950/80 pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden bg-sky-canvas">
+      <DoraSkyCanvas />
 
       {/* Center card */}
-      <div className="absolute inset-0 flex items-center justify-center p-6">
+      <div className="absolute inset-0 flex items-center justify-center p-6" style={{ paddingBottom: '10%' }}>
         <motion.div
-          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+          initial={{ opacity: 0, y: 32, scale: 0.95 }}
           animate={{ opacity: 1, y: 0,  scale: 1 }}
-          transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="relative w-full max-w-md"
+          transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1], delay: 0.2 }}
+          className="relative w-full max-w-[440px]"
         >
-          {/* Card glass */}
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md p-10 shadow-2xl">
-            {/* Subtle corner accent */}
-            <div className="absolute -top-px -left-px w-20 h-20 rounded-tl-2xl border-t border-l border-cyan-400/40 pointer-events-none" />
-            <div className="absolute -bottom-px -right-px w-20 h-20 rounded-br-2xl border-b border-r border-violet-500/40 pointer-events-none" />
+          {/* Rainbow banner top */}
+          <div
+            className="absolute top-0 left-0 right-0 h-[5px] rounded-t-[28px]"
+            style={{ background: 'linear-gradient(90deg, #FF8C42, #FFCA3A, #56C271, #5BC8F5, #9B5DE5)' }}
+          />
 
-            {/* Logo mark */}
-            <div className="flex justify-center mb-8">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-xl border border-cyan-400/30 bg-cyan-400/5 flex items-center justify-center text-3xl shadow-glow-cyan">
-                  ◈
-                </div>
-                <div className="absolute -inset-2 rounded-xl bg-cyan-400/5 blur-md -z-10" />
+          {/* Card body */}
+          <div className="rounded-[28px] border-2 border-[#FFD4A6] bg-cream-page shadow-dora-hero pt-8 pb-8 px-10">
+
+            {/* Logo mark — magnifying glass */}
+            <div className="flex justify-center mb-6">
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center bg-pastel-orange border-2 border-[#FFD4A6]"
+                style={{ boxShadow: '0 0 20px rgba(255,140,66,0.3)' }}
+              >
+                <SearchIcon className="w-9 h-9 text-dora-orange" />
               </div>
             </div>
 
             {/* Title */}
             <div className="text-center mb-2">
-              <h1 className="font-display text-5xl font-bold tracking-[0.15em] uppercase bg-gradient-to-r from-cyan-400 via-cyan-300 to-violet-400 bg-clip-text text-transparent">
+              <h1 className="font-display font-extrabold text-[2.8rem] leading-tight text-dora-orange">
                 USRP Control
               </h1>
             </div>
 
             {/* Tagline */}
-            <p className="text-center text-gray-400 font-body text-sm tracking-wide mb-10">
+            <p className="text-center text-tale-gray font-body text-[15px] mb-8">
               Real-time RF control & signal visualization
             </p>
 
             {/* Status */}
-            <div className="flex items-center justify-center gap-2 mb-8">
-              <span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-400 animate-pulse-slow' : 'bg-rose-400'}`} />
-              <span className={`font-mono text-xs ${online ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {online ? `Device online · v${data?.version}` : 'Backend unreachable'}
-              </span>
+            <div className="flex items-center justify-center gap-2 mb-7">
+              {online ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-meadow-green animate-pulse-slow" />
+                  <span className="font-mono text-xs text-meadow-green-dk">
+                    Device online · v{data?.version}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <SearchIcon className="w-3.5 h-3.5 text-sunset-red animate-searching" />
+                  <span className="font-mono text-xs text-sunset-red">
+                    Backend unreachable
+                  </span>
+                </>
+              )}
             </div>
 
             {/* Connect button */}
             <button
               onClick={handleConnect}
               disabled={connectState !== 'idle'}
-              className="w-full relative group py-3.5 px-6 rounded-xl font-display font-semibold text-lg tracking-widest uppercase text-base-950 overflow-hidden transition-all duration-300 disabled:cursor-default"
+              className="w-full relative group py-4 px-6 rounded-full font-display font-bold text-lg text-white overflow-hidden transition-all duration-200 disabled:cursor-default disabled:opacity-80"
               style={{
                 background: connectState === 'idle'
-                  ? 'linear-gradient(135deg, #22d3ee, #8b5cf6)'
+                  ? 'linear-gradient(135deg, #FF8C42, #E06A1A)'
+                  : undefined,
+                boxShadow: connectState === 'idle'
+                  ? '0 4px 14px rgba(255,140,66,0.40)'
                   : undefined,
               }}
             >
               {connectState === 'idle' && (
                 <>
                   <span className="relative z-10">Connect</span>
-                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-200" />
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-glow-cyan" />
+                  <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-200 rounded-full" />
                 </>
               )}
               {connectState === 'connecting' && (
-                <span className="flex items-center justify-center gap-3 text-cyan-400">
-                  <svg className="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
+                <span className="flex items-center justify-center gap-3 bg-[#E06A1A] text-white rounded-full px-6 -mx-6 py-4 -my-4">
+                  <SearchIcon className="w-5 h-5 animate-searching" />
                   Connecting…
                 </span>
               )}
               {connectState === 'success' && (
-                <span className="flex items-center justify-center gap-2 text-emerald-400 font-mono">
-                  <span>✓</span> Connected
+                <span className="flex items-center justify-center gap-2 bg-meadow-green text-white rounded-full px-6 -mx-6 py-4 -my-4 font-body">
+                  <span className="text-lg">✓</span> Connected
                 </span>
               )}
             </button>
+
+            {/* Decorative dots row */}
+            <div className="flex justify-center gap-2 mt-5">
+              {(['#FF8C42', '#FFCA3A', '#56C271', '#5BC8F5', '#9B5DE5'] as const).map(c => (
+                <span key={c} className="w-2 h-2 rounded-full" style={{ backgroundColor: c }} />
+              ))}
+            </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Scan line effect */}
+      {/* Success flash */}
       <AnimatePresence>
         {connectState === 'success' && (
           <motion.div
-            initial={{ scaleX: 0, opacity: 0.8 }}
+            initial={{ scaleX: 0, opacity: 0.6 }}
             animate={{ scaleX: 1, opacity: 0 }}
             exit={{}}
             transition={{ duration: 0.5, ease: 'easeIn' }}
-            className="absolute inset-0 bg-cyan-400/20 origin-left pointer-events-none"
+            className="absolute inset-0 bg-meadow-green/20 origin-left pointer-events-none"
           />
         )}
       </AnimatePresence>
