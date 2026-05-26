@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
@@ -47,8 +47,6 @@ function SunIcon({ className }: { className?: string }) {
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
-  const location = useLocation()
-
   const { data, isError } = useQuery({
     queryKey: ['vortex-config'],
     queryFn: fetchConfig,

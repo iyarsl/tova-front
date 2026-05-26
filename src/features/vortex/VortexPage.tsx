@@ -9,8 +9,16 @@ import {
 
 function ConfigCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-[10px] border dark:border-white/[0.07] border-black/[0.08] dark:bg-base-900 bg-white p-5 transition-colors">
-      <h3 className="font-display text-[10px] font-semibold tracking-[0.2em] dark:text-[#4b5563] text-[#9ca3af] uppercase mb-5">
+    <div className="relative rounded-[20px] border border-[#FFD4A6] dark:border-white/[0.07] bg-pastel-orange dark:bg-base-900 p-6 shadow-dora-card dark:shadow-none transition-all hover:shadow-dora-card-hover hover:-translate-y-0.5">
+      {/* Dot-row decoration */}
+      <div
+        className="absolute top-0 left-6 right-6 h-[4px] rounded-b-full dark:hidden"
+        style={{
+          background: 'repeating-linear-gradient(90deg, #FFB37A 0px, #FFB37A 5px, transparent 5px, transparent 13px)',
+          borderRadius: '0 0 4px 4px',
+        }}
+      />
+      <h3 className="font-display font-bold text-[15px] text-story-ink dark:text-[#4b5563] uppercase tracking-[0.12em] mb-5 mt-1">
         {title}
       </h3>
       {children}
@@ -64,9 +72,9 @@ function SliderField({ label, value, min, max, step, unit, disabled, locked, onC
   return (
     <div className={`space-y-2 ${disabled ? 'opacity-40' : ''}`} onWheel={handleWheel}>
       <div className="flex justify-between items-center">
-        <label className="font-body text-sm dark:text-[#9ca3af] text-[#6b7280]">{label}</label>
+        <label className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">{label}</label>
         <div className="flex items-center gap-1.5">
-          {locked && <span className="text-amber-400 text-xs">🔒</span>}
+          {locked && <span className="text-[#7A5C3A] text-xs">🔒</span>}
           <input
             type="text"
             inputMode="decimal"
@@ -80,15 +88,16 @@ function SliderField({ label, value, min, max, step, unit, disabled, locked, onC
               else if (e.key === 'ArrowDown') { e.preventDefault(); const n = clamp(snap(current - step)); setDraft(n); scheduleCommit(n) }
             }}
             disabled={disabled || locked}
-            className="font-mono text-sm w-20 text-right dark:text-cyan-400 text-[#0891b2] dark:bg-base-950/60 bg-[#f3f4f6] px-2 py-0.5 rounded border dark:border-white/10 border-black/[0.06] focus:outline-none focus:ring-1 focus:ring-cyan-400/50 disabled:cursor-not-allowed"
+            className="font-mono text-sm w-20 text-right text-dora-orange dark:text-cyan-400 bg-white dark:bg-base-950/60 px-2 py-0.5 rounded-lg border border-[#FFD4A6] dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-dora-orange/30 dark:focus:ring-cyan-400/50 disabled:cursor-not-allowed"
           />
-          <span className="font-mono text-xs dark:text-[#4b5563] text-[#9ca3af] w-8">{unit}</span>
+          <span className="font-mono text-xs text-whisper-gray dark:text-[#4b5563] w-8">{unit}</span>
         </div>
       </div>
+      {/* Slider track */}
       <div className="relative">
-        <div className="h-1.5 rounded-full dark:bg-white/10 bg-[#e5e7eb]">
+        <div className="h-2 rounded-full bg-[#E8E4F7] dark:bg-white/10 overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 transition-all"
+            className="h-full rounded-full bg-dora-orange dark:bg-gradient-to-r dark:from-cyan-400 dark:to-violet-500 transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -100,7 +109,7 @@ function SliderField({ label, value, min, max, step, unit, disabled, locked, onC
           onChange={e => { setText(null); setDraft(parseFloat(e.target.value)) }}
           onMouseUp={() => { if (draft !== null) { onCommit(draft); setDraft(null) } }}
           onTouchEnd={() => { if (draft !== null) { onCommit(draft); setDraft(null) } }}
-          className="absolute inset-0 w-full opacity-0 cursor-pointer disabled:cursor-not-allowed h-1.5"
+          className="absolute inset-0 w-full opacity-0 cursor-pointer disabled:cursor-not-allowed h-2"
           style={{ WebkitAppearance: 'none' }}
         />
       </div>
@@ -115,19 +124,15 @@ export function VortexPage() {
   } = useVortexConfig()
 
   const [resumed, setResumed] = useState(false)
-
-  // Local state for BW and Spectrum so clicks are immediately visible
-  // regardless of how fast React batches the query-cache optimistic update.
   const [localBw, setLocalBw] = useState<number | null>(null)
   const [localInvert, setLocalInvert] = useState<boolean | null>(null)
 
-  // Sync local state when the server data changes (e.g. after a refetch)
   useEffect(() => { setLocalBw(null) },     [config?.ifbw_mhz])
   useEffect(() => { setLocalInvert(null) }, [config?.gain_mode])
 
   if (isLoading) return (
     <PageTransition>
-      <div className="flex-1 flex items-center justify-center dark:text-[#6b7280] text-[#9ca3af] font-mono text-sm">
+      <div className="flex-1 flex items-center justify-center text-tale-gray dark:text-[#6b7280] font-body text-sm">
         Loading device config…
       </div>
     </PageTransition>
@@ -135,7 +140,7 @@ export function VortexPage() {
 
   if (isError || !config) return (
     <PageTransition>
-      <div className="flex-1 flex items-center justify-center text-rose-500 font-mono text-sm">
+      <div className="flex-1 flex items-center justify-center text-sunset-red dark:text-rose-500 font-body text-sm">
         ✕ Cannot reach device at {import.meta.env.VITE_API_BASE_URL}
       </div>
     </PageTransition>
@@ -150,17 +155,17 @@ export function VortexPage() {
 
   return (
     <PageTransition>
-      <div className="h-full flex flex-col overflow-hidden dark:bg-base-950 bg-[#f9fafb] transition-colors">
+      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
         <Topbar title="Vortex Config" />
 
         {resumed && (
-          <div className="mx-5 mt-4 px-4 py-3 rounded-[8px] border border-amber-500/30 bg-amber-500/10 text-amber-500 font-mono text-sm flex items-center gap-2">
+          <div className="mx-5 mt-4 px-4 py-3 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-sm flex items-center gap-2">
             <span>⚠</span> Control released — reload to regain access
           </div>
         )}
 
         <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* RF Frequency */}
             <ConfigCard title="RF Input">
@@ -202,7 +207,7 @@ export function VortexPage() {
             {/* IF Bandwidth */}
             <ConfigCard title="IF Bandwidth">
               <div className="space-y-3">
-                <div className={`flex rounded-[8px] border dark:border-white/10 border-black/[0.08] overflow-hidden ${bwDisabled || resumed ? 'opacity-40' : ''}`}>
+                <div className={`flex rounded-[14px] border border-[#FFD4A6] dark:border-white/10 overflow-hidden bg-white dark:bg-transparent ${bwDisabled || resumed ? 'opacity-40' : ''}`}>
                   {[80, 160, 320].map(bw => {
                     const available = bws.includes(bw)
                     const active    = displayBw === bw
@@ -215,12 +220,12 @@ export function VortexPage() {
                           setLocalBw(bw)
                           ifbwMut.mutate(bw, { onError: () => setLocalBw(prev) })
                         }}
-                        className={`flex-1 py-2.5 text-sm font-mono font-medium transition-all duration-150 ${
+                        className={`flex-1 py-2.5 text-sm font-display font-bold transition-all duration-150 ${
                           active
-                            ? 'dark:bg-cyan-400/20 dark:text-cyan-400 bg-[#ecfeff] text-[#0891b2]'
+                            ? 'bg-dora-orange text-white shadow-dora-btn dark:bg-cyan-400/20 dark:text-cyan-400'
                             : available
-                              ? 'dark:text-[#9ca3af] dark:hover:text-[#e5e7eb] dark:hover:bg-white/5 text-[#6b7280] hover:text-[#374151] hover:bg-[#f3f4f6]'
-                              : 'dark:text-[#374151] text-[#d1d5db] cursor-not-allowed'
+                              ? 'text-tale-gray dark:text-[#9ca3af] hover:text-story-ink hover:bg-pastel-orange dark:hover:text-[#e5e7eb] dark:hover:bg-white/5'
+                              : 'text-whisper-gray dark:text-[#374151] cursor-not-allowed'
                         }`}
                       >
                         {bw} MHz
@@ -229,7 +234,7 @@ export function VortexPage() {
                   })}
                 </div>
                 {bwDisabled && (
-                  <p className="text-xs dark:text-[#4b5563] text-[#9ca3af] font-mono">Disabled on v{config.version}</p>
+                  <p className="text-xs text-whisper-gray dark:text-[#4b5563] font-mono">Disabled on v{config.version}</p>
                 )}
               </div>
             </ConfigCard>
@@ -237,7 +242,7 @@ export function VortexPage() {
             {/* Invert */}
             <ConfigCard title="Spectrum">
               <div className="flex items-center justify-between">
-                <span className="font-body text-sm dark:text-[#9ca3af] text-[#6b7280]">Invert Spectrum</span>
+                <span className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">Invert Spectrum</span>
                 <button
                   disabled={resumed}
                   onClick={() => {
@@ -245,14 +250,14 @@ export function VortexPage() {
                     setLocalInvert(next)
                     invertMut.mutate(next, { onError: () => setLocalInvert(!next) })
                   }}
-                  className={`relative w-14 h-7 rounded-full border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 ${
+                  className={`relative w-14 h-7 rounded-full border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-dora-orange/40 dark:focus:ring-cyan-400/50 ${
                     displayInvert
-                      ? 'dark:bg-cyan-400/20 dark:border-cyan-400/40 bg-[#ecfeff] border-cyan-500/30'
-                      : 'dark:bg-white/5 dark:border-white/10 bg-[#f3f4f6] border-black/[0.08]'
+                      ? 'bg-gradient-to-r from-meadow-green to-meadow-green-dk border-meadow-green/40 dark:from-cyan-400/20 dark:to-cyan-400/20 dark:border-cyan-400/40'
+                      : 'bg-[#E8E4F7] border-[#D8D4EC] dark:bg-white/5 dark:border-white/10'
                   }`}
                 >
-                  <span className={`absolute top-1 left-1 w-5 h-5 rounded-full transition-transform duration-300 ${
-                    displayInvert ? 'dark:bg-cyan-400 bg-[#0891b2] translate-x-7' : 'dark:bg-[#4b5563] bg-[#d1d5db] translate-x-0'
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                    displayInvert ? 'translate-x-7' : 'translate-x-0'
                   }`} />
                 </button>
               </div>
@@ -266,9 +271,9 @@ export function VortexPage() {
                   { label: 'Gain Mode', value: String(config.gain_mode) },
                   { label: 'RF In Hz', value: config.rfin_hz.toLocaleString() },
                 ].map(({ label, value }) => (
-                  <div key={label} className="flex justify-between">
-                    <span className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af]">{label}</span>
-                    <span className="font-mono text-xs dark:text-[#e5e7eb] text-[#374151]">{value}</span>
+                  <div key={label} className="flex justify-between border-b border-[#FFD4A6]/50 dark:border-white/[0.06] pb-2 last:border-0 last:pb-0">
+                    <span className="font-body text-xs text-whisper-gray dark:text-[#6b7280]">{label}</span>
+                    <span className="font-mono text-xs text-story-ink dark:text-[#e5e7eb]">{value}</span>
                   </div>
                 ))}
               </div>
@@ -281,14 +286,22 @@ export function VortexPage() {
             <button
               disabled={resumed || saveMut.isPending}
               onClick={() => saveMut.mutate()}
-              className="flex-1 py-[7px] rounded-[8px] font-display font-semibold tracking-widest uppercase text-[13px] border dark:border-cyan-400/30 border-cyan-500/30 dark:text-cyan-400 text-[#0891b2] dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 py-3 rounded-full font-display font-bold tracking-wide text-[14px] text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, #FF8C42, #E06A1A)',
+                boxShadow: '0 4px 14px rgba(255,140,66,0.40)',
+              }}
             >
               {saveMut.isPending ? 'Saving…' : 'Save to Flash'}
             </button>
             <button
               disabled={resumed || resumeMut.isPending}
               onClick={() => { resumeMut.mutate(); setResumed(true) }}
-              className="flex-1 py-[7px] rounded-[8px] font-display font-semibold tracking-widest uppercase text-[13px] border dark:border-violet-500/30 border-violet-500/30 dark:text-violet-400 text-violet-600 dark:hover:bg-violet-500/10 hover:bg-violet-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 py-3 rounded-full font-display font-bold tracking-wide text-[14px] text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5"
+              style={{
+                background: 'linear-gradient(135deg, #9B5DE5, #7B3FC8)',
+                boxShadow: '0 4px 14px rgba(155,93,229,0.40)',
+              }}
             >
               {resumeMut.isPending ? 'Releasing…' : 'Resume Control'}
             </button>
