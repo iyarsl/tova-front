@@ -117,6 +117,7 @@ export function PlayerPage() {
             <div className="flex-1">
               <FileDropzone
                 onFile={handleFile}
+                onRemove={player.clearFile}
                 fileName={player.fileName}
                 fileSizeBytes={player.fileSizeBytes}
               />

@@ -29,6 +29,7 @@ export type FilePlayerState = {
 
 export type FilePlayerActions = {
   loadFile:    (file: File, sampleRate: number) => Promise<void>
+  clearFile:   () => void
   play:        () => void
   pause:       () => void
   seek:        (chunk: number) => void
@@ -40,7 +41,7 @@ export type FilePlayerActions = {
 
 // ---- hook -------------------------------------------------------------------
 
-export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLayouts: PlayerZoomLayouts; tab: PlayerTab; setTab: (t: PlayerTab) => void } {
+export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLayouts: PlayerZoomLayouts; tab: PlayerTab; setTab: (t: PlayerTab) => void; clearFile: () => void } {
   // --- reactive state --------------------------------------------------------
   const [isLoaded,    setIsLoaded]    = useState(false)
   const [isPlaying,   setIsPlaying]   = useState(false)
@@ -235,6 +236,27 @@ export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLay
     seek(Math.min(totalChunksRef.current - 1, currentChunkRef.current + STEP_CHUNKS))
   }, [seek])
 
+  const clearFile = useCallback(() => {
+    if (tickRef.current) clearTimeout(tickRef.current)
+    isPlayingRef.current    = false
+    bufferRef.current       = null
+    sampleRateRef.current   = 0
+    currentChunkRef.current = 0
+    totalChunksRef.current  = 0
+    spectroRef.current      = []
+    processingRef.current   = false
+
+    setIsLoaded(false)
+    setIsPlaying(false)
+    setTotalChunks(0)
+    setCurrentChunk(0)
+    setSampleRate(0)
+    setFileName('')
+    setFileSizeBytes(0)
+    setSignalData(null)
+    setError(null)
+  }, [])
+
   const handleRelayout = useCallback((t: PlayerTab, event: Plotly.PlotRelayoutEvent) => {
     const raw = event as unknown as Record<string, unknown>
 
@@ -274,6 +296,7 @@ export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLay
     zoomLayouts,
     // actions
     loadFile,
+    clearFile,
     play,
     pause,
     seek,
