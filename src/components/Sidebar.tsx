@@ -12,6 +12,39 @@ const navItems: NavItem[] = [
   { to: '/rx',     label: 'RX Graphs',     icon: '◈' },
 ]
 
+function SearchIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <line x1="16.5" y1="16.5" x2="22" y2="22" />
+    </svg>
+  )
+}
+
+function SunIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <circle cx="12" cy="12" r="4" />
+      <line x1="12" y1="2"  x2="12" y2="5"  />
+      <line x1="12" y1="19" x2="12" y2="22" />
+      <line x1="2"  y1="12" x2="5"  y2="12" />
+      <line x1="19" y1="12" x2="22" y2="12" />
+      <line x1="4.22"  y1="4.22"  x2="6.34"  y2="6.34"  />
+      <line x1="17.66" y1="17.66" x2="19.78" y2="19.78" />
+      <line x1="4.22"  y1="19.78" x2="6.34"  y2="17.66" />
+      <line x1="17.66" y1="6.34"  x2="19.78" y2="4.22"  />
+    </svg>
+  )
+}
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
@@ -27,65 +60,103 @@ export function Sidebar() {
 
   return (
     <motion.aside
-      animate={{ width: collapsed ? 64 : 220 }}
-      transition={{ duration: 0.25, ease: 'easeInOut' }}
-      className="flex-shrink-0 h-full flex flex-col dark:bg-base-900 bg-white border-r dark:border-white/[0.07] border-black/[0.08] overflow-hidden transition-colors"
+      animate={{ width: collapsed ? 64 : 240 }}
+      transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+      className="flex-shrink-0 h-full flex flex-col bg-warm-fog dark:bg-base-900 border-r border-[#FFE4C4] dark:border-white/[0.07] shadow-dora-sidebar dark:shadow-none overflow-hidden transition-colors"
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b dark:border-white/[0.07] border-black/[0.08] min-h-[60px]">
+      <div className="flex items-center justify-between px-4 py-4 border-b border-[#FFE4C4] dark:border-white/[0.07] min-h-[60px]">
         {!collapsed && (
-          <span className="font-display font-bold text-lg tracking-widest dark:text-cyan-400 text-[#0891b2] uppercase whitespace-nowrap">
-            USRP
-          </span>
+          <div className="flex items-center gap-2">
+            <SearchIcon className="w-5 h-5 text-dora-orange flex-shrink-0" />
+            <span className="font-display font-extrabold text-xl text-dora-orange dark:text-cyan-400 whitespace-nowrap">
+              Dora
+            </span>
+          </div>
+        )}
+        {collapsed && (
+          <SearchIcon className="w-6 h-6 text-dora-orange dark:text-cyan-400 mx-auto" />
         )}
         <button
           onClick={() => setCollapsed(c => !c)}
-          className="w-8 h-8 flex items-center justify-center rounded-md dark:text-[#9ca3af] text-[#6b7280] dark:hover:text-cyan-400 hover:text-[#0891b2] dark:hover:bg-white/5 hover:bg-[#f3f4f6] transition-colors ml-auto"
+          className="w-7 h-7 flex items-center justify-center rounded-full bg-white dark:bg-base-800 border border-[#FFD4A6] dark:border-white/10 text-dora-orange dark:text-[#9ca3af] hover:border-dora-orange dark:hover:text-cyan-400 shadow-sm transition-colors ml-auto flex-shrink-0"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {collapsed ? '›' : '‹'}
+          <span className="text-sm">{collapsed ? '›' : '‹'}</span>
         </button>
       </div>
 
       {/* Section label */}
-      <div className={`px-3 pt-4 pb-1 ${collapsed ? 'hidden' : ''}`}>
-        <span className="text-[10px] font-medium tracking-[0.08em] uppercase dark:text-[#4b5563] text-[#9ca3af]">
-          Workspace
-        </span>
-      </div>
+      {!collapsed && (
+        <div className="px-4 pt-4 pb-1">
+          <span className="text-[10px] font-body font-bold tracking-[0.12em] uppercase text-whisper-gray dark:text-[#4b5563]">
+            Workspace
+          </span>
+        </div>
+      )}
 
       {/* Nav */}
-      <nav className="flex-1 py-1 flex flex-col gap-0.5 px-2">
+      <nav className="flex-1 py-2 flex flex-col gap-0.5 px-2 relative">
+        {/* Map trail dotted line (light mode only, expanded) */}
+        {!collapsed && (
+          <div
+            className="absolute left-[22px] top-3 bottom-3 w-0 dark:hidden"
+            style={{ borderLeft: '2px dashed #FFD4A6' }}
+          />
+        )}
+
         {navItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-[13px] font-body transition-all duration-150 ${
+              `relative flex items-center gap-3 px-3 py-[9px] rounded-[14px] text-[14px] font-display font-semibold transition-all duration-150 ${
                 isActive
-                  ? 'dark:bg-cyan-400/10 dark:text-cyan-400 dark:border dark:border-cyan-400/20 bg-[#ecfeff] text-[#0891b2] font-medium'
-                  : 'dark:text-[#9ca3af] text-[#6b7280] dark:hover:bg-white/5 hover:bg-[#f3f4f6]'
-              } ${location.pathname === item.to ? 'dark:shadow-glow-sm' : ''}`
+                  ? 'bg-gradient-to-r from-pastel-orange to-[#FFD4A6] text-dora-orange border-l-[3px] border-dora-orange dark:bg-cyan-400/10 dark:text-cyan-400 dark:border dark:border-cyan-400/20'
+                  : 'text-map-brown dark:text-[#9ca3af] hover:bg-[rgba(255,140,66,0.10)] dark:hover:bg-white/5 hover:translate-x-0.5'
+              }`
             }
           >
-            <span className="text-base flex-shrink-0 w-5 text-center">{item.icon}</span>
-            {!collapsed && (
-              <span className="whitespace-nowrap overflow-hidden">{item.label}</span>
+            {({ isActive }) => (
+              <>
+                {!collapsed && (
+                  <span
+                    className={`absolute left-[-6px] w-3 h-3 rounded-full border-2 dark:hidden flex-shrink-0 ${
+                      isActive
+                        ? 'bg-dora-orange border-dora-orange'
+                        : 'bg-white border-[#FFD4A6]'
+                    }`}
+                    style={{ top: '50%', transform: 'translateY(-50%)' }}
+                  />
+                )}
+                <span className={`text-base flex-shrink-0 w-5 text-center z-10 ${
+                  isActive ? 'text-dora-orange dark:text-cyan-400' : ''
+                }`}>
+                  {item.icon}
+                </span>
+                {!collapsed && (
+                  <span className="whitespace-nowrap overflow-hidden z-10">{item.label}</span>
+                )}
+              </>
             )}
           </NavLink>
         ))}
       </nav>
 
       {/* Status pill */}
-      <div className="px-3 py-4 border-t dark:border-white/[0.07] border-black/[0.08]">
+      <div className="px-3 py-4 border-t border-[#FFE4C4] dark:border-white/[0.07]">
         <div
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-mono ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-[14px] text-xs font-body font-bold ${
             connected
-              ? 'dark:bg-emerald-500/10 dark:border dark:border-emerald-500/20 dark:text-emerald-400 bg-emerald-50 border border-emerald-200 text-emerald-700'
-              : 'dark:bg-rose-500/10 dark:border dark:border-rose-500/20 dark:text-rose-400 bg-rose-50 border border-rose-200 text-rose-600'
+              ? 'bg-pastel-green border border-meadow-green/40 text-meadow-green-dk dark:bg-emerald-500/10 dark:border dark:border-emerald-500/20 dark:text-emerald-400'
+              : 'bg-[#FFE0E0] border border-sunset-red/40 text-[#B03030] dark:bg-rose-500/10 dark:border dark:border-rose-500/20 dark:text-rose-400'
           }`}
         >
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${connected ? 'bg-emerald-400 animate-pulse-slow' : 'bg-rose-400'}`} />
+          {connected ? (
+            <SunIcon className="w-4 h-4 flex-shrink-0 animate-sun-pulse text-sunshine dark:text-emerald-400" />
+          ) : (
+            <SearchIcon className="w-4 h-4 flex-shrink-0 animate-searching text-sunset-red dark:text-rose-400" />
+          )}
           {!collapsed && (
             <span className="whitespace-nowrap">
               {connected ? `v${data?.version}` : 'Disconnected'}
