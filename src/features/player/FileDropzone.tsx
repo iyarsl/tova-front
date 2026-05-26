@@ -50,6 +50,11 @@ export function FileDropzone({ onFile, onRemove, fileName, fileSizeBytes, disabl
     if (file) onFile(file)
   }, [onFile, disabled])
 
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
   const loaded = fileName !== ''
 
   /*
@@ -84,7 +89,7 @@ export function FileDropzone({ onFile, onRemove, fileName, fileSizeBytes, disabl
         aria-label={loaded ? 'Replace file' : 'Select .fc32 file'}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        onDragEnter={(e) => { e.preventDefault(); e.stopPropagation() }}
+        onDragEnter={handleDragEnter}
         onDrop={handleDrop}
         className={[
           'flex items-center gap-4 px-5 py-3.5 rounded-lg border',
@@ -162,6 +167,7 @@ export function FileDropzone({ onFile, onRemove, fileName, fileSizeBytes, disabl
       <input
         id={inputId}
         type="file"
+        accept=".fc32"
         style={{ display: 'none' }}
         onChange={handleChange}
         disabled={disabled}

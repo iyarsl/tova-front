@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { parseFC32, validateFC32 } from '@/utils/parseFC32'
-import type { WorkerOutput, SignalData, ZoomLayout } from '@/types/rx'
+import { parseFC32 } from '@/utils/parseFC32'
+import type { WorkerOutput, SignalData, ZoomLayout, ChartTab } from '@/types/rx'
 import type { PlayerWorkerInput } from './playerWorker'
 
-export type PlayerTab = 'time' | 'fft' | 'spectrogram'
+/** Alias of the shared ChartTab — exported so PlayerPage can import it */
+export type PlayerTab = ChartTab
 
 /** Serialisable zoom state, one entry per tab */
 export type PlayerZoomLayouts = Record<PlayerTab, ZoomLayout>
@@ -41,7 +42,7 @@ export type FilePlayerActions = {
 
 // ---- hook -------------------------------------------------------------------
 
-export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLayouts: PlayerZoomLayouts; tab: PlayerTab; setTab: (t: PlayerTab) => void; clearFile: () => void } {
+export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLayouts: PlayerZoomLayouts; tab: PlayerTab; setTab: (t: PlayerTab) => void } {
   // --- reactive state --------------------------------------------------------
   const [isLoaded,    setIsLoaded]    = useState(false)
   const [isPlaying,   setIsPlaying]   = useState(false)
@@ -158,21 +159,17 @@ export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLay
 
   // --- public actions ---------------------------------------------------------
   const loadFile = useCallback(async (file: File, sr: number): Promise<void> => {
-    // Cancel any ongoing playback
+    // Cancel any ongoing playback and in-flight worker message
     if (tickRef.current) clearTimeout(tickRef.current)
-    isPlayingRef.current = false
+    isPlayingRef.current  = false
+    processingRef.current = false  // prevent stale worker response from landing
     setIsPlaying(false)
     setError(null)
 
     try {
       const arrayBuffer = await file.arrayBuffer()
 
-      const validation = validateFC32(arrayBuffer)
-      if (!validation.valid) {
-        setError(validation.error)
-        return
-      }
-
+      // parseFC32 validates internally and throws with a descriptive message if invalid
       const { samples, totalSamples } = parseFC32(arrayBuffer)
       const chunks = Math.ceil(totalSamples / CHUNK_SIZE)
 

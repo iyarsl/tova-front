@@ -1,9 +1,5 @@
-import _Plot from 'react-plotly.js'
-import type { PlotParams } from 'react-plotly.js'
 import type { ZoomLayout } from '@/types/rx'
-
-const Plot = (_Plot as unknown as { default: React.ComponentType<PlotParams> }).default
-  ?? (_Plot as unknown as React.ComponentType<PlotParams>)
+import { getChartColors, Plot } from '@/utils/chartTheme'
 
 type Props = {
   history: number[][]
@@ -13,11 +9,7 @@ type Props = {
 }
 
 export function SpectrogramChart({ history, theme, zoomLayout = {}, onRelayout }: Props) {
-  const isDark     = theme === 'dark'
-  const bgColor    = isDark ? '#030712' : '#f9fafb'
-  const paperColor = isDark ? '#111827' : '#ffffff'
-  const gridColor  = isDark ? '#1f2937' : '#e5e7eb'
-  const textColor  = isDark ? '#6b7280' : '#9ca3af'
+  const { bgColor, paperColor, gridColor, textColor } = getChartColors(theme)
 
   return (
     <Plot
@@ -39,17 +31,17 @@ export function SpectrogramChart({ history, theme, zoomLayout = {}, onRelayout }
         font:          { family: 'JetBrains Mono', size: 11, color: textColor },
         uirevision:    'spectrogram',
         xaxis: {
-          gridcolor:    gridColor,
+          gridcolor:     gridColor,
           zerolinecolor: gridColor,
-          tickfont:     { size: 10 },
-          title:        { text: 'Frequency bin', font: { size: 10, color: textColor } },
+          tickfont:      { size: 10 },
+          title:         { text: 'Frequency offset (MHz)', font: { size: 10, color: textColor } },
           ...(zoomLayout.xRange && { range: zoomLayout.xRange as [number, number], autorange: false }),
         },
         yaxis: {
-          gridcolor:    gridColor,
+          gridcolor:     gridColor,
           zerolinecolor: gridColor,
-          tickfont:     { size: 10 },
-          title:        { text: 'Time →', font: { size: 10, color: textColor } },
+          tickfont:      { size: 10 },
+          title:         { text: 'Time →', font: { size: 10, color: textColor } },
           ...(zoomLayout.yRange && { range: zoomLayout.yRange as [number, number], autorange: false }),
         },
       }}

@@ -7,11 +7,11 @@ import {
   useState,
 } from 'react'
 import { config } from '@/config'
-import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout } from '@/types/rx'
+import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout, ChartTab } from '@/types/rx'
 
 // ---- types ------------------------------------------------------------------
 
-export type Tab = 'time' | 'fft' | 'spectrogram'
+export type Tab = ChartTab
 
 /** Persisted x/y axis range for a single Plotly chart — re-exported from @/types/rx */
 export type TabZoom = ZoomLayout
@@ -54,6 +54,11 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   const [data, setData]             = useState<SignalData | null>(null)
   const [status, setStatus]         = useState<RxStatus>('connecting')
   const [sampleRate, setSampleRate] = useState(0)
+
+  // Mirror data in a ref so handleToggle always captures the latest frame,
+  // even when called from inside setFrozen's functional updater.
+  const dataRef = useRef<SignalData | null>(null)
+  useEffect(() => { dataRef.current = data }, [data])
 
   // UI state — persists across page navigation because provider never unmounts
   const [tab, setTab]               = useState<Tab>('time')
@@ -196,12 +201,12 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   const handleToggle = useCallback(() => {
     setFrozen(f => {
       if (!f) {
-        // capture snapshot on freeze
-        setFrozenData(data)
+        // capture snapshot on freeze — use ref so we always get the latest frame
+        setFrozenData(dataRef.current)
       }
       return !f
     })
-  }, [data])
+  }, [])
 
   // -- zoom persistence -------------------------------------------------------
 

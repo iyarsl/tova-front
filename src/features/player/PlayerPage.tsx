@@ -282,6 +282,24 @@ export function PlayerPage() {
           </div>
         </div>
 
+        {/* ── Error banner ───────────────────────────────────────────────── */}
+        {player.error && (
+          <div className="flex-shrink-0 px-5 py-2 flex items-center gap-2 dark:bg-rose-900/20 bg-rose-50 border-b dark:border-rose-500/20 border-rose-200/60">
+            <span className="text-rose-400 text-sm flex-shrink-0">⚠</span>
+            <span className="font-mono text-xs dark:text-rose-400 text-rose-600 flex-1 min-w-0 truncate">
+              {player.error}
+            </span>
+            <button
+              type="button"
+              aria-label="Dismiss error"
+              onClick={() => player.clearFile()}
+              className="font-mono text-[10px] dark:text-rose-400/60 text-rose-400/60 hover:dark:text-rose-400 hover:text-rose-500 flex-shrink-0"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* ── Tab bar ────────────────────────────────────────────────────── */}
         <div className="flex items-center gap-1 px-5 pt-3 pb-0 border-b dark:border-white/[0.07] border-black/[0.08] dark:bg-[#0c0e10] bg-white transition-colors flex-shrink-0">
           {TABS.map(t => (

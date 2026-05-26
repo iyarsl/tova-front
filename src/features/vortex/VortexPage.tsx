@@ -38,12 +38,16 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
   const holdTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const current = draft ?? value
-  const pct     = Math.min(100, Math.max(0, ((current - min) / (max - min)) * 100))
+  const current  = draft ?? value
   const decimals = step >= 1 ? 0 : (String(step).split('.')[1]?.length ?? 0)
-  const clamp    = (v: number) => Math.min(max, Math.max(min, v))
-  const snap     = (v: number) => parseFloat((Math.round(v / step) * step).toFixed(decimals))
-  const fmt      = (v: number) => v.toFixed(decimals)
+  const pct      = Math.min(100, Math.max(0, ((current - min) / (max - min)) * 100))
+
+  const clamp = useCallback((v: number) => Math.min(max, Math.max(min, v)), [min, max])
+  const snap  = useCallback(
+    (v: number) => parseFloat((Math.round(v / step) * step).toFixed(decimals)),
+    [step, decimals],
+  )
+  const fmt   = useCallback((v: number) => v.toFixed(decimals), [decimals])
 
   const isDisabled = disabled || locked
 
@@ -69,7 +73,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
     pendingRef.current = next
     setDraft(next)
     setError(null)
-  }, [isDisabled, value, step, clamp, snap]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isDisabled, value, step, clamp, snap])
 
   // stepByScroll: update draft + debounced commit (scroll has no "release")
   const stepByScroll = useCallback((dir: 1 | -1, multiplier = 1) => {
@@ -80,7 +84,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
     setDraft(next)
     setError(null)
     scheduleCommit(next)
-  }, [isDisabled, value, step, clamp, snap, scheduleCommit]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isDisabled, value, step, clamp, snap, scheduleCommit])
 
   // Commit once on button release — draft stays set until value prop updates (optimistic/refetch)
   const commitOnRelease = useCallback(() => {
@@ -180,6 +184,9 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
             onMouseDown={() => { stepBy(-1); startHold(-1) }}
             onMouseUp={commitOnRelease}
             onMouseLeave={commitOnRelease}
+            onTouchStart={(e) => { e.preventDefault(); stepBy(-1); startHold(-1) }}
+            onTouchEnd={commitOnRelease}
+            onTouchCancel={commitOnRelease}
             disabled={isDisabled}
             className="flex-1 flex items-center justify-center font-mono text-base dark:text-[#4b5563] text-[#c0c4cc] dark:hover:text-cyan-300 hover:text-[#0e7490] dark:hover:bg-white/[0.04] hover:bg-black/[0.03] transition-colors select-none disabled:cursor-not-allowed"
           >
@@ -206,6 +213,9 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
             onMouseDown={() => { stepBy(1); startHold(1) }}
             onMouseUp={commitOnRelease}
             onMouseLeave={commitOnRelease}
+            onTouchStart={(e) => { e.preventDefault(); stepBy(1); startHold(1) }}
+            onTouchEnd={commitOnRelease}
+            onTouchCancel={commitOnRelease}
             disabled={isDisabled}
             className="flex-1 flex items-center justify-center font-mono text-base dark:text-[#4b5563] text-[#c0c4cc] dark:hover:text-cyan-300 hover:text-[#0e7490] dark:hover:bg-white/[0.04] hover:bg-black/[0.03] transition-colors select-none disabled:cursor-not-allowed"
           >
