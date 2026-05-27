@@ -97,7 +97,7 @@ export function ScanHistoryTable() {
                     <div className="flex flex-col gap-1">
                       <StatusBadge status={entry.status} />
                       {entry.error_message && (
-                        <span className="font-mono text-[10px] dark:text-rose-400/70 text-rose-400 max-w-[200px] truncate" title={entry.error_message}>
+                        <span className="font-mono text-[10px] dark:text-rose-400/70 text-rose-400 break-all">
                           {entry.error_message}
                         </span>
                       )}
