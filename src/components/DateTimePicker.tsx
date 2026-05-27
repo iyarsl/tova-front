@@ -165,7 +165,7 @@ function TimeView({ hour, minute, second, minHour, minMinute, minSecond, onChang
   return (
     <div className="flex flex-col gap-3">
       <span className="font-display text-[10px] tracking-widest uppercase dark:text-[#6b7280] text-[#9ca3af]">
-        Time (local)
+        Time
       </span>
 
       <div className="flex items-center gap-1">
@@ -414,6 +414,21 @@ export function DateTimePicker({ value, min, onChange }: DateTimePickerProps) {
   }, [min])
 
   const parts = useMemo((): DateTimeParts => {
+    // When no value is selected yet, default the picker display to the current
+    // time (not minParts). minParts is the *minimum* constraint — showing it as
+    // the default makes the clock appear 1 minute ahead. The constraint is
+    // enforced independently via handleChangeParts clamping.
+    if (!value) {
+      const n = new Date()
+      return {
+        year:   n.getFullYear(),
+        month:  n.getMonth() + 1,
+        day:    n.getDate(),
+        hour:   n.getHours(),
+        minute: n.getMinutes(),
+        second: n.getSeconds(),
+      }
+    }
     return parseDateTimeString(value) ?? { ...minParts }
   }, [value, minParts])
 

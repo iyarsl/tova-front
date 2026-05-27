@@ -292,7 +292,7 @@ export function PlayerPage() {
                 onChange={(e) => player.seek(parseInt(e.target.value, 10))}
                 disabled={controlsDisabled}
                 className="
-                  w-full h-1.5 rounded-full appearance-none cursor-pointer
+                  w-full h-3.5 rounded-full appearance-none cursor-pointer
                   disabled:opacity-30 disabled:cursor-not-allowed
                   [&::-webkit-slider-runnable-track]:rounded-full
                   [&::-webkit-slider-runnable-track]:h-1.5
@@ -305,7 +305,6 @@ export function PlayerPage() {
                   dark:[&::-webkit-slider-thumb]:bg-amber-400
                   [&::-webkit-slider-thumb]:bg-amber-500
                   dark:[&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(251,191,36,0.5)]
-                  [&::-webkit-slider-thumb]:-mt-1
                 "
               />
               {/* Progress overlay — amber fill */}

@@ -78,15 +78,15 @@ export function HeroPage() {
 
             {/* Title */}
             <div className="text-center mb-2">
-              <h1 className="font-display font-extrabold text-[2.8rem] leading-tight text-dora-orange">
-                USRP Control
+              <h1 className="font-display font-extrabold text-[3rem] leading-tight text-dora-orange">
+                Dora
               </h1>
             </div>
 
-            {/* Tagline */}
+            {/* Tagline
             <p className="text-center text-tale-gray font-body text-[15px] mb-8">
               Real-time RF control & signal visualization
-            </p>
+            </p> */}
 
             {/* Status */}
             <div className="flex items-center justify-center gap-2 mb-7">
