@@ -23,7 +23,12 @@ export function ScheduleModal({ rows, onClose }: Props) {
 
   const createMut = useCreateSchedule()
 
-  const [minDateTime] = useState(() => new Date(Date.now() + 60_000).toISOString().slice(0, 19))
+  const [minDateTime] = useState(() => {
+    const d  = new Date(Date.now() + 60_000)
+    const p2 = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}` +
+           `T${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`
+  })
 
   const unitToMinutes = { seconds: 1 / 60, minutes: 1, hours: 60, days: 1440, weeks: 10080 } as const
 
