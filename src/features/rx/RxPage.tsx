@@ -21,12 +21,12 @@ const TABS: { id: Tab; label: string; icon: string }[] = [
 ]
 
 const STATUS_CHIP: Record<RxStatus, { dot: string; label: string }> = {
-  connecting: { dot: 'bg-yellow-400',  label: 'Connecting…'   },
-  streaming:  { dot: 'bg-emerald-400', label: 'Live'          },
-  silence:    { dot: 'bg-gray-400',    label: 'Silence'       },
-  no_device:  { dot: 'bg-rose-500',    label: 'No Device'     },
-  done:       { dot: 'bg-gray-400',    label: 'Done'          },
-  error:      { dot: 'bg-rose-500',    label: 'Reconnecting…' },
+  connecting: { dot: 'bg-sunshine',     label: 'Connecting…' },
+  streaming:  { dot: 'bg-meadow-green', label: 'Live'        },
+  silence:    { dot: 'bg-whisper-gray', label: 'Silence'     },
+  no_device:  { dot: 'bg-sunset-red',   label: 'No Device'   },
+  done:       { dot: 'bg-whisper-gray', label: 'Done'        },
+  error:      { dot: 'bg-sunset-red',   label: 'Reconnecting…'},
 }
 
 const NO_DATA_MSG: Record<RxStatus, string> = {
@@ -56,11 +56,11 @@ export function RxPage() {
   }
 
   const isDark     = theme === 'dark'
-  const bgColor    = isDark ? '#030712'  : '#f9fafb'
-  const paperColor = isDark ? '#111827'  : '#ffffff'
-  const gridColor  = isDark ? '#1f2937'  : '#e5e7eb'
-  const textColor  = isDark ? '#6b7280'  : '#9ca3af'
-  const lineColor  = '#22d3ee'
+  const bgColor    = isDark ? '#030712'  : '#0A1628'
+  const paperColor = isDark ? '#111827'  : '#0F2040'
+  const gridColor  = isDark ? '#1f2937'  : 'rgba(255,255,255,0.06)'
+  const textColor  = isDark ? '#6b7280'  : 'rgba(255,255,255,0.45)'
+  const lineColor  = '#5BC8F5'  // sky-blue-d for both modes in Dora
 
   const layoutBase: Partial<Plotly.Layout> = {
     paper_bgcolor: paperColor,
@@ -75,52 +75,60 @@ export function RxPage() {
 
   return (
     <PageTransition>
-      <div className="h-full flex flex-col overflow-hidden dark:bg-base-950 bg-[#f9fafb] transition-colors">
+      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
         <Topbar title="RX Graphs" />
 
         {/* Tab bar */}
-        <div className="flex items-center gap-1 px-5 pt-3 pb-0 border-b dark:border-white/[0.07] border-black/[0.08] dark:bg-base-900 bg-white transition-colors">
+        <div className="flex items-center gap-1 px-5 pt-3 pb-0 border-b border-[#F0EBD8] dark:border-white/[0.07] bg-cream-page dark:bg-base-900 transition-colors">
           {TABS.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`relative flex items-center gap-2 px-4 py-2.5 text-xs font-medium tracking-widest uppercase transition-colors rounded-t-lg ${
+              className={`relative flex items-center gap-2 px-5 py-2.5 text-[13px] font-display font-bold tracking-wide uppercase transition-colors rounded-t-[12px] ${
                 tab === t.id
-                  ? 'dark:text-cyan-400 text-[#0891b2]'
-                  : 'dark:text-[#6b7280] text-[#9ca3af] dark:hover:text-[#d1d5db] hover:text-[#6b7280]'
+                  ? 'text-white'
+                  : 'text-whisper-gray dark:text-[#6b7280] hover:text-tale-gray dark:hover:text-[#d1d5db] hover:bg-pastel-orange/30 dark:hover:bg-white/5'
               }`}
+              style={tab === t.id ? {
+                background: 'linear-gradient(135deg, #5BC8F5, #3BA8D5)',
+                boxShadow: '0 4px 12px rgba(91,200,245,0.45)',
+              } : {}}
             >
               <span className="text-base">{t.icon}</span>
               {t.label}
-              {tab === t.id && (
-                <motion.div
-                  layoutId="tab-indicator"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-violet-500"
-                />
-              )}
             </button>
           ))}
 
           <div className="ml-auto flex items-center gap-3 pb-2">
             {/* Status chip */}
             <div className="flex items-center gap-1.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${chip.dot} ${status === 'streaming' ? 'animate-pulse' : ''}`} />
-              <span className="font-mono text-xs dark:text-[#4b5563] text-[#9ca3af]">{chip.label}</span>
+              <span className={`w-2 h-2 rounded-full ${chip.dot} ${status === 'streaming' ? 'animate-pulse' : ''}`} />
+              <span className="font-body text-xs font-semibold text-whisper-gray dark:text-[#4b5563]">{chip.label}</span>
             </div>
 
             {/* Center freq / sample rate */}
-            <span className="font-mono text-xs dark:text-[#4b5563] text-[#9ca3af]">
+            <span className="font-mono text-xs text-whisper-gray dark:text-[#4b5563]">
               {centerFreq} MHz · {sampleRate > 0 ? (sampleRate / 1e6).toFixed(1) : '—'} Msps
             </span>
 
             {/* Freeze / Resume button */}
             <button
               onClick={handleToggle}
-              className={`px-4 py-1.5 rounded-[8px] font-mono text-xs font-medium border transition-all ${
+              className="px-4 py-1.5 rounded-full font-display font-bold text-xs border-2 transition-all hover:-translate-y-0.5"
+              style={
                 !frozen
-                  ? 'dark:border-rose-500/30 dark:text-rose-400 dark:hover:bg-rose-500/10 border-rose-400/40 text-rose-500 hover:bg-rose-50'
-                  : 'dark:border-emerald-500/30 dark:text-emerald-400 dark:hover:bg-emerald-500/10 border-emerald-500/40 text-emerald-600 hover:bg-emerald-50'
-              }`}
+                  ? {
+                    border: '2px solid #9B5DE5',
+                    color: '#9B5DE5',
+                    background: 'transparent',
+                  }
+                  : {
+                    background: 'linear-gradient(135deg, #FF8C42, #E06A1A)',
+                    border: '2px solid transparent',
+                    color: '#FFFFFF',
+                    boxShadow: '0 4px 14px rgba(255,140,66,0.40)',
+                  }
+              }
             >
               {!frozen ? '⏹ Freeze' : '▶ Resume'}
             </button>
@@ -128,96 +136,98 @@ export function RxPage() {
         </div>
 
         {/* Chart area */}
-        <div className="flex-1 relative overflow-hidden p-4 dark:bg-base-950 bg-[#f9fafb]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={tab}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{    opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="absolute inset-4"
-            >
-              {tab === 'time' && data && (
-                <Plot
-                  data={[{
-                    x: data.time.x,
-                    y: data.time.y,
-                    type: 'scatter',
-                    mode: 'lines',
-                    line: { color: lineColor, width: 1.5 },
-                    name: 'Amplitude',
-                  }]}
-                  layout={{
-                    ...layoutBase,
-                    uirevision: 'time',
-                    xaxis: { ...layoutBase.xaxis, title: { text: 'Time (ms)', font: { size: 10, color: textColor } } },
-                    yaxis: { ...layoutBase.yaxis, title: { text: 'Amplitude', font: { size: 10, color: textColor } } },
-                  }}
-                  config={{ displayModeBar: false, responsive: true }}
-                  style={{ width: '100%', height: '100%' }}
-                  useResizeHandler
-                />
-              )}
+        <div className="flex-1 relative overflow-hidden p-4 bg-sky-canvas dark:bg-base-950">
+          <div className="absolute inset-4 rounded-[20px] border border-sky-blue-d/40 dark:border-white/[0.07] bg-pastel-blue dark:bg-base-900/40 p-3 overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{    opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-3 rounded-[12px] overflow-hidden"
+              >
+                {tab === 'time' && data && (
+                  <Plot
+                    data={[{
+                      x: data.time.x,
+                      y: data.time.y,
+                      type: 'scatter',
+                      mode: 'lines',
+                      line: { color: lineColor, width: 1.5 },
+                      name: 'Amplitude',
+                    }]}
+                    layout={{
+                      ...layoutBase,
+                      uirevision: 'time',
+                      xaxis: { ...layoutBase.xaxis, title: { text: 'Time (ms)', font: { size: 10, color: textColor } } },
+                      yaxis: { ...layoutBase.yaxis, title: { text: 'Amplitude', font: { size: 10, color: textColor } } },
+                    }}
+                    config={{ displayModeBar: false, responsive: true }}
+                    style={{ width: '100%', height: '100%' }}
+                    useResizeHandler
+                  />
+                )}
 
-              {tab === 'fft' && data && (
-                <Plot
-                  data={[{
-                    x: data.fft.x,
-                    y: data.fft.y,
-                    type: 'scatter',
-                    mode: 'lines',
-                    fill: 'tozeroy',
-                    fillcolor: 'rgba(34,211,238,0.07)',
-                    line: { color: lineColor, width: 1.5 },
-                    name: 'Power',
-                  }]}
-                  layout={{
-                    ...layoutBase,
-                    uirevision: 'fft',
-                    xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency offset (MHz)', font: { size: 10, color: textColor } } },
-                    yaxis: { ...layoutBase.yaxis, title: { text: 'Power (dBm)',             font: { size: 10, color: textColor } } },
-                  }}
-                  config={{ displayModeBar: false, responsive: true }}
-                  style={{ width: '100%', height: '100%' }}
-                  useResizeHandler
-                />
-              )}
+                {tab === 'fft' && data && (
+                  <Plot
+                    data={[{
+                      x: data.fft.x,
+                      y: data.fft.y,
+                      type: 'scatter',
+                      mode: 'lines',
+                      fill: 'tozeroy',
+                      fillcolor: 'rgba(91,200,245,0.10)',
+                      line: { color: lineColor, width: 1.5 },
+                      name: 'Power',
+                    }]}
+                    layout={{
+                      ...layoutBase,
+                      uirevision: 'fft',
+                      xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency offset (MHz)', font: { size: 10, color: textColor } } },
+                      yaxis: { ...layoutBase.yaxis, title: { text: 'Power (dBm)',             font: { size: 10, color: textColor } } },
+                    }}
+                    config={{ displayModeBar: false, responsive: true }}
+                    style={{ width: '100%', height: '100%' }}
+                    useResizeHandler
+                  />
+                )}
 
-              {tab === 'spectrogram' && data && (
-                <Plot
-                  data={[{
-                    z: data.spectrogram,
-                    type: 'heatmap',
-                    colorscale: 'Jet',
-                    showscale: true,
-                    colorbar: {
-                      thickness: 12,
-                      tickfont: { size: 10, color: textColor },
-                      title: { text: 'dBm', font: { size: 10, color: textColor } },
-                    },
-                  }]}
-                  layout={{
-                    ...layoutBase,
-                    uirevision: 'spectrogram',
-                    xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency bin', font: { size: 10, color: textColor } } },
-                    yaxis: { ...layoutBase.yaxis, title: { text: 'Time →',         font: { size: 10, color: textColor } } },
-                  }}
-                  config={{ displayModeBar: false, responsive: true }}
-                  style={{ width: '100%', height: '100%' }}
-                  useResizeHandler
-                />
-              )}
+                {tab === 'spectrogram' && data && (
+                  <Plot
+                    data={[{
+                      z: data.spectrogram,
+                      type: 'heatmap',
+                      colorscale: 'Jet',
+                      showscale: true,
+                      colorbar: {
+                        thickness: 12,
+                        tickfont: { size: 10, color: textColor },
+                        title: { text: 'dBm', font: { size: 10, color: textColor } },
+                      },
+                    }]}
+                    layout={{
+                      ...layoutBase,
+                      uirevision: 'spectrogram',
+                      xaxis: { ...layoutBase.xaxis, title: { text: 'Frequency bin', font: { size: 10, color: textColor } } },
+                      yaxis: { ...layoutBase.yaxis, title: { text: 'Time →',         font: { size: 10, color: textColor } } },
+                    }}
+                    config={{ displayModeBar: false, responsive: true }}
+                    style={{ width: '100%', height: '100%' }}
+                    useResizeHandler
+                  />
+                )}
 
-              {!data && (
-                <div className="flex items-center justify-center h-full">
-                  <span className="font-mono text-sm dark:text-[#4b5563] text-[#9ca3af]">
-                    {NO_DATA_MSG[status]}
-                  </span>
-                </div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+                {!data && (
+                  <div className="flex items-center justify-center h-full">
+                    <span className="font-body text-sm text-white/40">
+                      {NO_DATA_MSG[status]}
+                    </span>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
     </PageTransition>
