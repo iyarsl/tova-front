@@ -58,11 +58,10 @@ function RunModal({
   loading,
 }: {
   onClose: () => void
-  onRun: (dir: string, mock: boolean) => void
+  onRun: (dir: string) => void
   loading: boolean
 }) {
-  const [dir, setDir]   = useState('./output')
-  const [mock, setMock] = useState(false)
+  const [dir, setDir] = useState('./output')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[rgba(45,42,62,0.45)] backdrop-blur-sm">
@@ -94,21 +93,6 @@ function RunModal({
                 placeholder="./output"
               />
             </div>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div
-                onClick={() => setMock(m => !m)}
-                className={`relative w-11 h-6 rounded-full border-2 transition-all cursor-pointer ${
-                  mock
-                    ? 'bg-gradient-to-r from-meadow-green to-meadow-green-dk border-meadow-green/40 dark:bg-cyan-400/20 dark:border-cyan-400/40'
-                    : 'bg-[#E8E4F7] border-[#D8D4EC] dark:bg-white/5 dark:border-white/10'
-                }`}
-              >
-                <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                  mock ? 'translate-x-5' : 'translate-x-0'
-                }`} />
-              </div>
-              <span className="font-body text-[13px] text-tale-gray dark:text-[#9ca3af]">Mock mode (no hardware)</span>
-            </label>
           </div>
 
           <div className="flex gap-3">
@@ -120,7 +104,7 @@ function RunModal({
             </button>
             <button
               disabled={loading || !dir}
-              onClick={() => onRun(dir, mock)}
+              onClick={() => onRun(dir)}
               className="flex-1 py-2.5 rounded-full font-display font-bold text-[14px] text-white disabled:opacity-50 hover:-translate-y-0.5 transition-transform"
               style={{
                 background: 'linear-gradient(135deg, #FF8C42, #E06A1A)',
@@ -313,8 +297,17 @@ export function ScanPage() {
                   exit={{ opacity: 0 }}
                   className="rounded-[16px] border border-meadow-green/30 bg-pastel-green dark:bg-emerald-500/5 p-4"
                 >
-                  <div className="text-xs tracking-[0.08em] font-body font-bold text-meadow-green-dk dark:text-emerald-400 uppercase mb-3">
-                    Output Files
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-xs tracking-[0.08em] font-body font-bold text-meadow-green-dk dark:text-emerald-400 uppercase">
+                      Output Files
+                    </div>
+                    <button
+                      onClick={() => setResults(null)}
+                      aria-label="Close output files"
+                      className="text-meadow-green-dk/50 dark:text-emerald-400/50 hover:text-meadow-green-dk dark:hover:text-emerald-400 transition-colors leading-none text-lg"
+                    >
+                      ×
+                    </button>
                   </div>
                   <div className="space-y-1">
                     {results.map(f => (
@@ -354,7 +347,7 @@ export function ScanPage() {
         {showModal && (
           <RunModal
             onClose={() => setShowModal(false)}
-            onRun={(dir, mock) => runMut.mutate({ dir, mock })}
+            onRun={(dir) => runMut.mutate({ dir, mock: false })}
             loading={runMut.isPending}
           />
         )}
