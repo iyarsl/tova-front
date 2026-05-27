@@ -12,6 +12,7 @@ function formatDateTime(iso: string) {
 
 function RecurrenceLabel({ recurrence, customIntervalMinutes }: { recurrence: Recurrence; customIntervalMinutes?: number }) {
   function formatCustom(mins: number) {
+    if (mins < 1)           return `Every ${Math.round(mins * 60)}s`
     if (mins % 10080 === 0) return `Every ${mins / 10080}w`
     if (mins % 1440  === 0) return `Every ${mins / 1440}d`
     if (mins % 60    === 0) return `Every ${mins / 60}h`
@@ -50,7 +51,7 @@ function StatusBadge({ status }: { status: ScheduledScan['status'] }) {
 const HEADERS = ['#', 'Scheduled At', 'Recurrence', 'Next Run', 'Status', '']
 
 export function ScheduledRunsTable() {
-  const { data: schedules, isLoading } = useScheduledScans()
+  const { data: schedules, isLoading, error } = useScheduledScans()
   const cancelMut = useCancelSchedule()
   const [confirmCancel, setConfirmCancel] = useState<string | null>(null)
 
@@ -77,6 +78,17 @@ export function ScheduledRunsTable() {
                 <td colSpan={HEADERS.length}>
                   <div className="h-16 flex items-center justify-center">
                     <div className="w-4 h-4 border-2 dark:border-cyan-400/40 border-cyan-500/40 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                </td>
+              </tr>
+            ) : error !== null ? (
+              <tr>
+                <td colSpan={HEADERS.length}>
+                  <div className="h-16 flex items-center justify-center gap-2 font-mono text-xs dark:text-rose-400/70 text-rose-500">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    Failed to load scheduled runs
                   </div>
                 </td>
               </tr>
