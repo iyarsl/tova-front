@@ -237,7 +237,11 @@ export function ScanPage() {
                   className="inline-flex"
                 >
                   <button
-                    onClick={() => setShowScheduleModal(true)}
+                    onClick={() => {
+                      const ok = validateAll()
+                      if (!ok) { toast('Fix validation errors before scheduling', 'error'); return }
+                      setShowScheduleModal(true)
+                    }}
                     disabled={rows.length === 0}
                     className="px-4 py-[7px] rounded-[8px] border dark:border-cyan-400/30 border-cyan-500/30 dark:text-cyan-400 text-[#0891b2] font-display text-xs tracking-widest uppercase dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
                   >
