@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { ScanTable } from './ScanTable'
-import { useScanRows } from './useScanRows'
+import { useScan } from './ScanContext'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
 import { runScan } from '@/api/scan'
+import type { ApiScanRow } from '@/types/scan'
 import { useToast } from '@/components/Toast'
 import type { AppError } from '@/api/client'
 import { ScheduleModal } from './ScheduleModal'
@@ -136,11 +137,10 @@ function RunModal({
 }
 
 export function ScanPage() {
-  const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows } = useScanRows()
+  const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows,
+          importedFileName, setImportedFileName, results, setResults } = useScan()
   const [showModal, setShowModal]                   = useState(false)
   const [showScheduleModal, setShowScheduleModal]   = useState(false)
-  const [results, setResults]                       = useState<string[] | null>(null)
-  const [importedFileName, setImportedFileName]     = useState<string | null>(null)
   const { toast } = useToast()
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -163,8 +163,17 @@ export function ScanPage() {
   }
 
   const runMut = useMutation({
-    mutationFn: ({ dir, mock }: { dir: string; mock: boolean }) =>
-      runScan('', dir, mock),
+    mutationFn: ({ dir, mock }: { dir: string; mock: boolean }) => {
+      const apiRows: ApiScanRow[] = rows.map(({ id: _id, duration, entrance_freq_ghz, out_freq_mhz, bandwidth, gain_db, sample_rate }) => ({
+        duration:          duration!,
+        entrance_freq_ghz: entrance_freq_ghz!,
+        out_freq_mhz:      out_freq_mhz!,
+        bandwidth:         bandwidth!,
+        gain_db:           gain_db!,
+        sample_rate:       sample_rate!,
+      }))
+      return runScan(apiRows, dir, mock)
+    },
     onSuccess: (files) => {
       setResults(files)
       setShowModal(false)
@@ -228,18 +237,29 @@ export function ScanPage() {
                   </svg>
                   Import Excel
                 </label>
-                <button
-                  onClick={() => setShowScheduleModal(true)}
-                  className="px-4 py-2 rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 font-display font-bold text-xs tracking-wide uppercase hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors flex items-center gap-1.5"
+
+                <span
+                  title={rows.length === 0 ? 'Add scan rows to enable scheduling' : undefined}
+                  className="inline-flex"
                 >
-                  <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                  Schedule
-                </button>
+                  <button
+                    onClick={() => {
+                      const ok = validateAll()
+                      if (!ok) { toast('Fix validation errors before scheduling', 'error'); return }
+                      setShowScheduleModal(true)
+                    }}
+                    disabled={rows.length === 0}
+                    className="px-4 py-2 rounded-full border-2 border-[#C5A3F5] dark:border-cyan-400/30 text-adv-purple dark:text-cyan-400 font-display font-bold text-xs tracking-wide uppercase hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
+                  >
+                    <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    Schedule
+                  </button>
+                </span>
                 <button
                   onClick={() => {
                     const ok = validateAll()

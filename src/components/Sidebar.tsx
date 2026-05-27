@@ -10,6 +10,7 @@ const navItems: NavItem[] = [
   { to: '/vortex', label: 'Vortex Config', icon: '⚡' },
   { to: '/config', label: 'Scan Table',    icon: '⊞' },
   { to: '/rx',     label: 'RX Graphs',     icon: '◈' },
+  { to: '/player', label: 'File Player',   icon: '▶' },
 ]
 
 function SearchIcon({ className }: { className?: string }) {

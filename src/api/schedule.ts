@@ -19,3 +19,7 @@ export async function fetchScanHistory(limit = 20): Promise<ScanHistoryEntry[]> 
   const res = await client.get<ScanHistoryEntry[]>('/scan/history', { params: { limit } })
   return res.data
 }
+
+export async function deleteHistoryEntry(id: string): Promise<void> {
+  await client.delete(`/scan/history/${id}`)
+}

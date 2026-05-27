@@ -57,9 +57,12 @@ export function useVortexConfig() {
     isLoading: query.isLoading,
     isError:  query.isError,
 
-    rfinMut:   mutation((ghz: number) => setRfin(ghz),       'RF In updated'),
-    outputMut: mutation((mhz: number) => setOutput(mhz),     'Output updated'),
-    gainMut:   mutation((db: number)  => setGain(db),        'Gain updated'),
+    rfinMut:   mutation((ghz: number) => setRfin(ghz),   'RF In updated',
+                 (ghz, old) => ({ ...old, rfin_ghz: ghz, rfin_hz: Math.round(ghz * 1e9) })),
+    outputMut: mutation((mhz: number) => setOutput(mhz), 'Output updated',
+                 (mhz, old) => ({ ...old, output_mhz: mhz, output_hz: Math.round(mhz * 1e6) })),
+    gainMut:   mutation((db: number)  => setGain(db),    'Gain updated',
+                 (db,  old) => ({ ...old, gain_db: db })),
     ifbwMut:   mutation(
       (bw: number) => setIfbw(bw),
       'IF BW updated',

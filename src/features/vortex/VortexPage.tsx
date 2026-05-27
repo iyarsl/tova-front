@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { useVortexConfig } from './useVortexConfig'
@@ -26,7 +26,7 @@ function ConfigCard({ title, children }: { title: string; children: React.ReactN
   )
 }
 
-type SliderFieldProps = {
+type NumericFieldProps = {
   label: string
   value: number
   min: number
@@ -38,81 +38,206 @@ type SliderFieldProps = {
   onCommit: (v: number) => void
 }
 
-function SliderField({ label, value, min, max, step, unit, disabled, locked, onCommit }: SliderFieldProps) {
+function NumericField({ label, value, min, max, step, unit, disabled, locked, onCommit }: NumericFieldProps) {
   const [draft, setDraft] = useState<number | null>(null)
   const [text, setText] = useState<string | null>(null)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const commitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const holdTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const current = draft ?? value
-  const pct = ((current - min) / (max - min)) * 100
-  const clamp = (v: number) => Math.min(max, Math.max(min, v))
-  const snap = (v: number) => Math.round(v / step) * step
-  const fmt = (v: number) => v.toFixed(v < 10 ? 3 : 1)
+  const current  = draft ?? value
+  const decimals = step >= 1 ? 0 : (String(step).split('.')[1]?.length ?? 0)
+  const pct      = Math.min(100, Math.max(0, ((current - min) / (max - min)) * 100))
 
-  const scheduleCommit = (v: number) => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => { onCommit(v); setDraft(null) }, 400)
-  }
+  const clamp = useCallback((v: number) => Math.min(max, Math.max(min, v)), [min, max])
+  const snap  = useCallback(
+    (v: number) => parseFloat((Math.round(v / step) * step).toFixed(decimals)),
+    [step, decimals],
+  )
+  const fmt   = useCallback((v: number) => v.toFixed(decimals), [decimals])
+
+  const isDisabled = disabled || locked
+
+  // Ref tracks latest draft so commit-on-release always has the freshest value
+  const pendingRef = useRef<number | null>(null)
+
+  // When the server value lands (after optimistic update or refetch), clear our draft
+  useEffect(() => {
+    setDraft(null)
+    pendingRef.current = null
+  }, [value])
+
+  const scheduleCommit = useCallback((v: number) => {
+    if (commitTimerRef.current) clearTimeout(commitTimerRef.current)
+    commitTimerRef.current = setTimeout(() => { onCommit(v) }, 400)
+  }, [onCommit])
+
+  // stepBy: update draft only — no API call (used by buttons + hold)
+  const stepBy = useCallback((dir: 1 | -1, multiplier = 1) => {
+    if (isDisabled) return
+    const base = pendingRef.current ?? value
+    const next = clamp(snap(base + dir * step * multiplier))
+    pendingRef.current = next
+    setDraft(next)
+    setError(null)
+  }, [isDisabled, value, step, clamp, snap])
+
+  // stepByScroll: update draft + debounced commit (scroll has no "release")
+  const stepByScroll = useCallback((dir: 1 | -1, multiplier = 1) => {
+    if (isDisabled) return
+    const base = pendingRef.current ?? value
+    const next = clamp(snap(base + dir * step * multiplier))
+    pendingRef.current = next
+    setDraft(next)
+    setError(null)
+    scheduleCommit(next)
+  }, [isDisabled, value, step, clamp, snap, scheduleCommit])
+
+  // Commit once on button release — draft stays set until value prop updates (optimistic/refetch)
+  const commitOnRelease = useCallback(() => {
+    if (holdTimerRef.current)    { clearTimeout(holdTimerRef.current);   holdTimerRef.current = null }
+    if (holdIntervalRef.current) { clearInterval(holdIntervalRef.current); holdIntervalRef.current = null }
+    if (pendingRef.current !== null) {
+      onCommit(pendingRef.current)
+      // intentionally do NOT reset draft here — value useEffect handles it
+    }
+  }, [onCommit])
+
+  const clearHold = useCallback(() => {
+    if (holdTimerRef.current)   { clearTimeout(holdTimerRef.current);   holdTimerRef.current = null }
+    if (holdIntervalRef.current){ clearInterval(holdIntervalRef.current); holdIntervalRef.current = null }
+  }, [])
+
+  const startHold = useCallback((dir: 1 | -1) => {
+    if (isDisabled) return
+    holdTimerRef.current = setTimeout(() => {
+      holdIntervalRef.current = setInterval(() => stepBy(dir), 80)
+    }, 500)
+  }, [isDisabled, stepBy])
+
+  useEffect(() => () => {
+    clearHold()
+    if (commitTimerRef.current) clearTimeout(commitTimerRef.current)
+  }, [clearHold])
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (disabled || locked) return
+    if (isDisabled) return
     e.preventDefault()
-    const next = clamp(snap(current + (e.deltaY < 0 ? step : -step)))
-    setDraft(next)
-    scheduleCommit(next)
+    stepByScroll(e.deltaY < 0 ? 1 : -1, e.shiftKey ? 10 : 1)
   }
 
   const commitText = () => {
     if (text === null) return
     const p = parseFloat(text)
-    if (!isNaN(p)) { const v = clamp(snap(p)); setDraft(v); onCommit(v) }
+    if (isNaN(p)) {
+      setError('Invalid number')
+      return
+    }
+    if (p < min || p > max) {
+      setError(`Must be ${fmt(min)}–${fmt(max)} ${unit}`)
+      return
+    }
+    setError(null)
+    const v = snap(p)
+    setDraft(v)
+    onCommit(v)
     setText(null)
   }
 
   return (
-    <div className={`space-y-2 ${disabled ? 'opacity-40' : ''}`} onWheel={handleWheel}>
-      <div className="flex justify-between items-center">
+    <div className={`${isDisabled ? 'opacity-40 pointer-events-none' : ''}`} onWheel={handleWheel}>
+
+      {/* Label + lock */}
+      <div className="flex items-center justify-between mb-3">
         <label className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">{label}</label>
-        <div className="flex items-center gap-1.5">
-          {locked && <span className="text-[#7A5C3A] text-xs">🔒</span>}
+        {locked && <span className="text-[#7A5C3A] dark:text-amber-400/80 text-xs">🔒</span>}
+      </div>
+
+      {/* Input card */}
+      <div className={`relative rounded-[12px] overflow-hidden transition-all border ${
+        error
+          ? 'border-sunset-red/60 ring-1 ring-sunset-red/40'
+          : 'border-[#FFD4A6] dark:border-white/[0.10] focus-within:border-dora-orange/50 dark:focus-within:ring-cyan-400/40 dark:focus-within:ring-1'
+      } bg-white dark:bg-base-950/60`}>
+
+        {/* Top: value input */}
+        <div className="flex items-center px-4 pt-3 pb-2 gap-3">
           <input
             type="text"
             inputMode="decimal"
             value={text ?? fmt(current)}
-            onChange={e => setText(e.target.value)}
+            onChange={e => { setText(e.target.value); setError(null) }}
             onBlur={commitText}
             onKeyDown={e => {
-              if (e.key === 'Enter') { commitText(); (e.target as HTMLInputElement).blur() }
-              else if (e.key === 'Escape') setText(null)
-              else if (e.key === 'ArrowUp') { e.preventDefault(); const n = clamp(snap(current + step)); setDraft(n); scheduleCommit(n) }
-              else if (e.key === 'ArrowDown') { e.preventDefault(); const n = clamp(snap(current - step)); setDraft(n); scheduleCommit(n) }
+              if (e.key === 'Enter')       { commitText(); (e.target as HTMLInputElement).blur() }
+              else if (e.key === 'Escape') { setText(null); setError(null) }
+              else if (e.key === 'ArrowUp')   { e.preventDefault(); stepByScroll(1,  e.shiftKey ? 10 : 1) }
+              else if (e.key === 'ArrowDown') { e.preventDefault(); stepByScroll(-1, e.shiftKey ? 10 : 1) }
             }}
-            disabled={disabled || locked}
-            className="font-mono text-sm w-20 text-right text-dora-orange dark:text-cyan-400 bg-white dark:bg-base-950/60 px-2 py-0.5 rounded-lg border border-[#FFD4A6] dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-dora-orange/30 dark:focus:ring-cyan-400/50 disabled:cursor-not-allowed"
+            disabled={isDisabled}
+            className={`flex-1 min-w-0 bg-transparent border-none outline-none font-mono text-[28px] leading-none tracking-tight disabled:cursor-not-allowed transition-colors ${
+              error ? 'text-sunset-red dark:text-rose-400' : 'text-dora-orange dark:text-cyan-300'
+            }`}
           />
-          <span className="font-mono text-xs text-whisper-gray dark:text-[#4b5563] w-8">{unit}</span>
+          <span className={`font-mono text-sm flex-shrink-0 ${error ? 'text-sunset-red/60' : 'text-whisper-gray dark:text-[#374151]'}`}>{unit}</span>
+        </div>
+
+        {/* Divider */}
+        <div className="bg-[#FFD4A6]/40 dark:bg-white/[0.05] h-px" />
+
+        {/* Bottom: − bar + */}
+        <div className="flex items-stretch h-9">
+          <button
+            onMouseDown={() => { stepBy(-1); startHold(-1) }}
+            onMouseUp={commitOnRelease}
+            onMouseLeave={commitOnRelease}
+            onTouchStart={(e) => { e.preventDefault(); stepBy(-1); startHold(-1) }}
+            onTouchEnd={commitOnRelease}
+            onTouchCancel={commitOnRelease}
+            disabled={isDisabled}
+            className="flex-1 flex items-center justify-center font-mono text-base text-tale-gray dark:text-[#4b5563] hover:text-dora-orange dark:hover:text-cyan-300 hover:bg-pastel-orange/40 dark:hover:bg-white/[0.04] transition-colors select-none disabled:cursor-not-allowed"
+          >
+            −
+          </button>
+
+          {/* Range bar */}
+          <div className="flex-[3] flex flex-col justify-center px-2 gap-1 border-x border-[#FFD4A6]/60 dark:border-white/[0.05]">
+            <div className="h-[3px] rounded-full bg-[#E8E4F7] dark:bg-white/[0.06] relative overflow-hidden">
+              <div
+                className={`absolute left-0 top-0 h-full rounded-full transition-all duration-100 ${
+                  error ? 'bg-sunset-red/60' : 'bg-dora-orange dark:bg-gradient-to-r dark:from-cyan-400/70 dark:to-violet-500/60'
+                }`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <div className="flex justify-between font-mono text-[9px] text-whisper-gray dark:text-[#2a2a35]">
+              <span>{fmt(min)}</span>
+              <span>{fmt(max)}</span>
+            </div>
+          </div>
+
+          <button
+            onMouseDown={() => { stepBy(1); startHold(1) }}
+            onMouseUp={commitOnRelease}
+            onMouseLeave={commitOnRelease}
+            onTouchStart={(e) => { e.preventDefault(); stepBy(1); startHold(1) }}
+            onTouchEnd={commitOnRelease}
+            onTouchCancel={commitOnRelease}
+            disabled={isDisabled}
+            className="flex-1 flex items-center justify-center font-mono text-base text-tale-gray dark:text-[#4b5563] hover:text-dora-orange dark:hover:text-cyan-300 hover:bg-pastel-orange/40 dark:hover:bg-white/[0.04] transition-colors select-none disabled:cursor-not-allowed"
+          >
+            +
+          </button>
         </div>
       </div>
-      {/* Slider track */}
-      <div className="relative">
-        <div className="h-2 rounded-full bg-[#E8E4F7] dark:bg-white/10 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-dora-orange dark:bg-gradient-to-r dark:from-cyan-400 dark:to-violet-500 transition-all"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <input
-          type="range"
-          min={min} max={max} step={step}
-          value={current}
-          disabled={disabled || locked}
-          onChange={e => { setText(null); setDraft(parseFloat(e.target.value)) }}
-          onMouseUp={() => { if (draft !== null) { onCommit(draft); setDraft(null) } }}
-          onTouchEnd={() => { if (draft !== null) { onCommit(draft); setDraft(null) } }}
-          className="absolute inset-0 w-full opacity-0 cursor-pointer disabled:cursor-not-allowed h-2"
-          style={{ WebkitAppearance: 'none' }}
-        />
-      </div>
+
+      {/* Error */}
+      {error && (
+        <p className="mt-2 text-[11px] font-mono text-sunset-red dark:text-rose-400">⚠ {error}</p>
+      )}
+
+
     </div>
   )
 }
@@ -169,7 +294,7 @@ export function VortexPage() {
 
             {/* RF Frequency */}
             <ConfigCard title="RF Input">
-              <SliderField
+              <NumericField
                 label="Frequency"
                 value={config.rfin_ghz}
                 min={0.01} max={26} step={0.001}
@@ -181,7 +306,7 @@ export function VortexPage() {
 
             {/* Output */}
             <ConfigCard title="IF Output">
-              <SliderField
+              <NumericField
                 label="Frequency"
                 value={outLocked ? IFBW_320_OUTPUT_MHZ : config.output_mhz}
                 min={0} max={3500} step={0.1}
@@ -194,7 +319,7 @@ export function VortexPage() {
 
             {/* Gain */}
             <ConfigCard title="Gain">
-              <SliderField
+              <NumericField
                 label="Gain"
                 value={config.gain_db}
                 min={0} max={90} step={0.5}

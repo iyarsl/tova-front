@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useCreateSchedule } from './useScheduledScans'
+import { DateTimePicker } from '@/components/DateTimePicker'
 import type { ScanRow } from '@/types/scan'
 import type { Recurrence } from '@/types/schedule'
 
@@ -9,27 +10,30 @@ interface Props {
   onClose: () => void
 }
 
+function isAbsolutePath(p: string): boolean {
+  return /^([a-zA-Z]:[\\/]|\/|\\\\)/.test(p)
+}
+
 export function ScheduleModal({ rows, onClose }: Props) {
-  const [dir, setDir]               = useState('./output')
-  const [mock, setMock]             = useState(false)
+  const [dir, setDir]               = useState('')
   const [scheduledAt, setScheduledAt] = useState('')
   const [recurrence, setRecurrence] = useState<Recurrence>('none')
   const [customValue, setCustomValue] = useState(2)
-  const [customUnit, setCustomUnit]   = useState<'minutes' | 'hours' | 'days' | 'weeks'>('hours')
+  const [customUnit, setCustomUnit]   = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'weeks'>('hours')
 
   const createMut = useCreateSchedule()
 
-  const minDateTime = new Date(Date.now() + 60_000).toISOString().slice(0, 16)
+  const [minDateTime] = useState(() => new Date(Date.now() + 60_000).toISOString().slice(0, 19))
 
-  const unitToMinutes = { minutes: 1, hours: 60, days: 1440, weeks: 10080 } as const
+  const unitToMinutes = { seconds: 1 / 60, minutes: 1, hours: 60, days: 1440, weeks: 10080 } as const
 
   function handleSubmit() {
     if (!scheduledAt || !dir) return
     createMut.mutate(
       {
-        rows: rows.map(({ id: _id, ...rest }) => rest),
+        rows: rows.map(({ id: _, ...rest }) => rest as import('@/types/scan').ApiScanRow),
         output_dir: dir,
-        mock,
+        mock: false,
         scheduled_at: new Date(scheduledAt).toISOString(),
         recurrence,
         ...(recurrence === 'custom'
@@ -61,9 +65,18 @@ export function ScheduleModal({ rows, onClose }: Props) {
             <input
               value={dir}
               onChange={e => setDir(e.target.value)}
-              placeholder="./output"
-              className="w-full dark:bg-base-950/60 bg-[#f9fafb] border dark:border-white/10 border-black/[0.08] rounded-[8px] px-3 py-2.5 font-mono text-[13px] dark:text-[#e5e7eb] text-[#111827] focus:outline-none dark:focus:border-cyan-400/40 focus:border-cyan-500/40 transition-colors"
+              placeholder="/path/to/output"
+              className={`w-full dark:bg-base-950/60 bg-[#f9fafb] border rounded-[8px] px-3 py-2.5 font-mono text-[13px] dark:text-[#e5e7eb] text-[#111827] focus:outline-none transition-colors ${
+                dir && !isAbsolutePath(dir)
+                  ? 'dark:border-rose-500/40 border-rose-400/40 dark:focus:border-rose-500/60 focus:border-rose-400/60'
+                  : 'dark:border-white/10 border-black/[0.08] dark:focus:border-cyan-400/40 focus:border-cyan-500/40'
+              }`}
             />
+            {dir && !isAbsolutePath(dir) && (
+              <p className="mt-1 font-mono text-[11px] dark:text-rose-400/80 text-rose-500">
+                Must be absolute (e.g. /data/output or C:\scans\output)
+              </p>
+            )}
           </div>
 
           {/* Date / time */}
@@ -71,12 +84,10 @@ export function ScheduleModal({ rows, onClose }: Props) {
             <label className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af] uppercase tracking-wider block mb-1.5">
               Scheduled Time
             </label>
-            <input
-              type="datetime-local"
+            <DateTimePicker
               value={scheduledAt}
               min={minDateTime}
-              onChange={e => setScheduledAt(e.target.value)}
-              className="w-full dark:bg-base-950/60 bg-[#f9fafb] border dark:border-white/10 border-black/[0.08] rounded-[8px] px-3 py-2.5 font-mono text-[13px] dark:text-[#e5e7eb] text-[#111827] focus:outline-none dark:focus:border-cyan-400/40 focus:border-cyan-500/40 transition-colors [color-scheme:light] dark:[color-scheme:dark]"
+              onChange={setScheduledAt}
             />
           </div>
 
@@ -106,16 +117,21 @@ export function ScheduleModal({ rows, onClose }: Props) {
               <div className="flex gap-2">
                 <input
                   type="number"
-                  min={1}
+                  min={customUnit === 'seconds' ? 5 : 1}
                   value={customValue}
-                  onChange={e => setCustomValue(Math.max(1, parseInt(e.target.value) || 1))}
+                  onChange={e => setCustomValue(Math.max(customUnit === 'seconds' ? 5 : 1, parseInt(e.target.value) || 1))}
                   className="w-24 dark:bg-base-950/60 bg-[#f9fafb] border dark:border-white/10 border-black/[0.08] rounded-[8px] px-3 py-2.5 font-mono text-[13px] dark:text-[#e5e7eb] text-[#111827] focus:outline-none dark:focus:border-cyan-400/40 focus:border-cyan-500/40 transition-colors"
                 />
                 <select
                   value={customUnit}
-                  onChange={e => setCustomUnit(e.target.value as typeof customUnit)}
+                  onChange={e => {
+                    const unit = e.target.value as typeof customUnit
+                    setCustomUnit(unit)
+                    if (unit === 'seconds') setCustomValue(v => Math.max(5, v))
+                  }}
                   className="flex-1 dark:bg-base-950/60 bg-[#f9fafb] border dark:border-white/10 border-black/[0.08] rounded-[8px] px-3 py-2.5 font-mono text-[13px] dark:text-[#e5e7eb] text-[#111827] focus:outline-none dark:focus:border-cyan-400/40 focus:border-cyan-500/40 transition-colors"
                 >
+                  <option value="seconds" className="dark:bg-base-900 bg-white">Second{customValue !== 1 ? 's' : ''}</option>
                   <option value="minutes" className="dark:bg-base-900 bg-white">Minute{customValue !== 1 ? 's' : ''}</option>
                   <option value="hours"   className="dark:bg-base-900 bg-white">Hour{customValue !== 1 ? 's' : ''}</option>
                   <option value="days"    className="dark:bg-base-900 bg-white">Day{customValue !== 1 ? 's' : ''}</option>
@@ -125,22 +141,6 @@ export function ScheduleModal({ rows, onClose }: Props) {
             </div>
           )}
 
-          {/* Mock toggle */}
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              onClick={() => setMock(m => !m)}
-              className={`relative w-10 h-5 rounded-full border transition-all ${
-                mock
-                  ? 'dark:bg-cyan-400/20 dark:border-cyan-400/40 bg-[#ecfeff] border-cyan-500/30'
-                  : 'dark:bg-white/5 dark:border-white/10 bg-[#f3f4f6] border-black/[0.08]'
-              }`}
-            >
-              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full transition-transform ${
-                mock ? 'dark:bg-cyan-400 bg-[#0891b2] translate-x-5' : 'dark:bg-[#4b5563] bg-[#d1d5db]'
-              }`} />
-            </div>
-            <span className="font-body text-[13px] dark:text-[#9ca3af] text-[#6b7280]">Mock mode (no hardware)</span>
-          </label>
         </div>
 
         {/* Row count info */}
@@ -158,7 +158,7 @@ export function ScheduleModal({ rows, onClose }: Props) {
             Cancel
           </button>
           <button
-            disabled={createMut.isPending || !scheduledAt || !dir}
+            disabled={createMut.isPending || !scheduledAt || !dir || !isAbsolutePath(dir)}
             onClick={handleSubmit}
             className="flex-1 py-2.5 rounded-[8px] dark:bg-cyan-400 bg-[#0891b2] dark:text-[#030712] text-white font-display font-semibold text-[13px] tracking-wider uppercase disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
