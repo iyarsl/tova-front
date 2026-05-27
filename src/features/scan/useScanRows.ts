@@ -56,6 +56,10 @@ export function useScanRows() {
   }, [])
 
   const validateAll = useCallback(() => {
+    if (rows.length === 0) {
+      setErrors({})
+      return false          // empty table is not valid
+    }
     const errs: Record<string, ScanRowErrors> = {}
     let valid = true
     rows.forEach(r => {
