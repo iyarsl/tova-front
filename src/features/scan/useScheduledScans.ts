@@ -10,7 +10,9 @@ export function useScheduledScans() {
   return useQuery({
     queryKey: QK,
     queryFn: fetchScheduledScans,
-    refetchInterval: 10000,
+    refetchInterval: 10_000,
+    refetchOnWindowFocus: false,
+    retry: false,
   })
 }
 
@@ -24,7 +26,13 @@ export function useCreateSchedule() {
       void qc.invalidateQueries({ queryKey: QK })
       toast('Scan scheduled successfully', 'success')
     },
-    onError: (err: AppError) => toast(err.message, 'error'),
+    onError: (err: AppError) =>
+      toast(
+        err.status === 404
+          ? 'Schedule endpoint unavailable — backend not ready'
+          : err.message,
+        'error',
+      ),
   })
 }
 

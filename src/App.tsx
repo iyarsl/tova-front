@@ -5,10 +5,11 @@ import { HeroPage }    from '@/features/hero/HeroPage'
 import { VortexPage }  from '@/features/vortex/VortexPage'
 import { ScanPage }    from '@/features/scan/ScanPage'
 import { RxPage }      from '@/features/rx/RxPage'
+import { PlayerPage }  from '@/features/player/PlayerPage'
 
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen w-screen overflow-hidden dark:bg-base-950 bg-gray-50">
+    <div className="flex h-screen w-screen overflow-hidden dark:bg-base-950 bg-sky-canvas">
       <Sidebar />
       <main className="flex-1 flex flex-col overflow-hidden">
         {children}
@@ -35,9 +36,10 @@ export function App() {
     <AppShell>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/vortex" element={<VortexPage />} />
-          <Route path="/config" element={<ScanPage />}   />
-          <Route path="/rx"     element={<RxPage />}     />
+          <Route path="/vortex" element={<VortexPage />}  />
+          <Route path="/config" element={<ScanPage />}    />
+          <Route path="/rx"     element={<RxPage />}      />
+          <Route path="/player" element={<PlayerPage />}  />
           <Route path="*"       element={<Navigate to="/vortex" replace />} />
         </Routes>
       </AnimatePresence>

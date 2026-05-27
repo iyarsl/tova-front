@@ -1,9 +1,9 @@
-import type { ScanRow } from './scan'
+import type { ApiScanRow } from './scan'
 
 export type Recurrence = 'none' | 'hourly' | 'daily' | 'weekly' | 'custom'
 
 export interface CreateScheduledScanPayload {
-  rows: Omit<ScanRow, 'id'>[]
+  rows: ApiScanRow[]
   output_dir: string
   mock: boolean
   scheduled_at: string
@@ -13,7 +13,7 @@ export interface CreateScheduledScanPayload {
 
 export interface ScheduledScan {
   id: string
-  rows: Omit<ScanRow, 'id'>[]
+  rows: ApiScanRow[]
   output_dir: string
   mock: boolean
   scheduled_at: string
@@ -31,5 +31,5 @@ export interface ScanHistoryEntry {
   status: 'success' | 'failed'
   output_files: string[]
   error_message?: string
-  rows: Omit<ScanRow, 'id'>[]
+  rows: ApiScanRow[]
 }

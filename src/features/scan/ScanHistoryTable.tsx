@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
-import { useScanHistory } from './useScanHistory'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useScanHistory, useDeleteHistory } from './useScanHistory'
 import type { ScanHistoryEntry } from '@/types/schedule'
 
 function formatDateTime(iso: string) {
@@ -26,8 +26,10 @@ function StatusBadge({ status }: { status: ScanHistoryEntry['status'] }) {
 const HEADERS = ['#', 'Run Time', 'Status', 'Output Files', 'Parameters', '']
 
 export function ScanHistoryTable() {
-  const { data: history, isLoading } = useScanHistory()
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const { data: history, isLoading, error } = useScanHistory()
+  const deleteMut = useDeleteHistory()
+  const [expanded, setExpanded]         = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
   return (
     <div className="rounded-[10px] border border-t-2 dark:border-white/[0.12] border-black/[0.10] dark:border-t-violet-400/30 border-t-violet-500/30 overflow-hidden dark:bg-base-900/40 bg-white transition-colors">
@@ -52,6 +54,17 @@ export function ScanHistoryTable() {
                 <td colSpan={HEADERS.length}>
                   <div className="h-16 flex items-center justify-center">
                     <div className="w-4 h-4 border-2 dark:border-cyan-400/40 border-cyan-500/40 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                </td>
+              </tr>
+            ) : error !== null ? (
+              <tr>
+                <td colSpan={HEADERS.length}>
+                  <div className="h-16 flex items-center justify-center gap-2 font-mono text-xs dark:text-rose-400/70 text-rose-500">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    Failed to load history
                   </div>
                 </td>
               </tr>
@@ -84,19 +97,19 @@ export function ScanHistoryTable() {
                     <div className="flex flex-col gap-1">
                       <StatusBadge status={entry.status} />
                       {entry.error_message && (
-                        <span className="font-mono text-[10px] dark:text-rose-400/70 text-rose-400 max-w-[200px] truncate" title={entry.error_message}>
+                        <span className="font-mono text-[10px] dark:text-rose-400/70 text-rose-400 break-all">
                           {entry.error_message}
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 border-r dark:border-white/[0.10] border-black/[0.08] max-w-[220px]">
+                  <td className="px-3 py-2.5 border-r dark:border-white/[0.10] border-black/[0.08]">
                     {entry.output_files.length === 0 ? (
                       <span className="font-mono text-[11px] dark:text-[#4b5563] text-[#9ca3af]">—</span>
                     ) : (
                       <div className="space-y-0.5">
                         {entry.output_files.slice(0, 2).map(f => (
-                          <div key={f} className="font-mono text-[11px] dark:text-[#9ca3af] text-[#6b7280] truncate max-w-[200px]" title={f}>
+                          <div key={f} className="font-mono text-[11px] dark:text-[#9ca3af] text-[#6b7280] break-all">
                             {f}
                           </div>
                         ))}
@@ -113,13 +126,54 @@ export function ScanHistoryTable() {
                       {entry.rows.length} row{entry.rows.length !== 1 ? 's' : ''}
                     </span>
                   </td>
-                  <td className="px-3 py-2.5 w-16">
-                    <button
-                      onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
-                      className="text-[11px] font-mono dark:text-[#6b7280] text-[#9ca3af] dark:hover:text-cyan-400 hover:text-[#0891b2] px-1.5 py-0.5 rounded dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors"
-                    >
-                      {expanded === entry.id ? 'Hide' : 'View'}
-                    </button>
+                  <td className="px-3 py-2.5 w-28">
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
+                        className="text-[11px] font-mono dark:text-[#6b7280] text-[#9ca3af] dark:hover:text-cyan-400 hover:text-[#0891b2] px-1.5 py-0.5 rounded dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors"
+                      >
+                        {expanded === entry.id ? 'Hide' : 'View'}
+                      </button>
+                      <span className="dark:text-white/[0.10] text-black/[0.08] text-[10px]">|</span>
+                      <AnimatePresence mode="wait">
+                        {confirmDelete === entry.id ? (
+                          <motion.div
+                            key="confirm"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex items-center gap-1"
+                          >
+                            <button
+                              onClick={() => {
+                                deleteMut.mutate(entry.id)
+                                setConfirmDelete(null)
+                              }}
+                              className="text-[11px] font-mono dark:text-rose-400 text-rose-500 dark:hover:text-rose-300 hover:text-rose-600 px-1.5 py-0.5 rounded dark:hover:bg-rose-500/10 hover:bg-rose-50 transition-colors"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setConfirmDelete(null)}
+                              className="text-[11px] font-mono dark:text-[#6b7280] text-[#9ca3af] px-1.5 py-0.5 rounded transition-colors"
+                            >
+                              Keep
+                            </button>
+                          </motion.div>
+                        ) : (
+                          <motion.button
+                            key="delete-btn"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setConfirmDelete(entry.id)}
+                            className="text-[11px] font-mono dark:text-[#6b7280] text-[#9ca3af] dark:hover:text-rose-400 hover:text-rose-500 px-1.5 py-0.5 rounded dark:hover:bg-rose-500/10 hover:bg-rose-50 transition-colors"
+                          >
+                            Delete
+                          </motion.button>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </td>
                 </tr>
 
