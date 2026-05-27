@@ -34,6 +34,49 @@ const NO_DATA_MSG: Record<RxStatus, string> = {
   error:      'Connection lost — reconnecting…',
 }
 
+function GraphPlaceholder({ type }: { type: 'time' | 'fft' | 'spectrogram' }) {
+  return (
+    <svg
+      viewBox="0 0 200 80"
+      className="w-48 h-20 opacity-[0.18] dark:opacity-[0.10]"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1"
+    >
+      {/* axes */}
+      <line x1="20" y1="10" x2="20" y2="70" />
+      <line x1="20" y1="70" x2="190" y2="70" />
+
+      {type === 'time' && (
+        <path d="M20 40 Q50 10 80 40 Q110 70 140 40 Q160 20 190 40" strokeLinecap="round" />
+      )}
+
+      {type === 'fft' && (
+        <>
+          <line x1="40"  y1="70" x2="40"  y2="55" />
+          <line x1="60"  y1="70" x2="60"  y2="35" />
+          <line x1="80"  y1="70" x2="80"  y2="20" />
+          <line x1="100" y1="70" x2="100" y2="45" />
+          <line x1="120" y1="70" x2="120" y2="58" />
+          <line x1="140" y1="70" x2="140" y2="62" />
+          <line x1="160" y1="70" x2="160" y2="66" />
+        </>
+      )}
+
+      {type === 'spectrogram' && (
+        <>
+          {([25, 45, 65, 85, 105, 125, 145, 165, 185] as number[]).map(x =>
+            ([18, 32, 46, 60] as number[]).map(y => (
+              <rect key={`${x}-${y}`} x={x} y={y} width={14} height={10} rx="1"
+                opacity={((x + y) % 3 === 0) ? 0.6 : 0.2} fill="currentColor" stroke="none" />
+            ))
+          )}
+        </>
+      )}
+    </svg>
+  )
+}
+
 export function RxPage() {
   const {
     status,
@@ -159,8 +202,9 @@ export function RxPage() {
                 )}
 
                 {!data && (
-                  <div className="flex items-center justify-center h-full">
-                    <span className="font-body text-sm text-white/40">
+                  <div className="flex flex-col items-center justify-center h-full gap-4">
+                    <GraphPlaceholder type={tab} />
+                    <span className="font-body text-sm text-whisper-gray dark:text-white/30">
                       {NO_DATA_MSG[status]}
                     </span>
                   </div>
