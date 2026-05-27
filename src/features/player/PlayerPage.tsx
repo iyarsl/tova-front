@@ -48,6 +48,11 @@ export function PlayerPage() {
   // Validate sample rate at play-time, not load-time — user should be able to
   // drop a file first and then set sample rate before hitting play.
   const pendingFileRef = useRef<File | null>(null)
+  // Track the currently loaded file so SR changes can trigger a reload
+  const loadedFileRef  = useRef<File | null>(null)
+
+  // Drag state for the chart area (issue 7)
+  const [chartAreaDragging, setChartAreaDragging] = useState(false)
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.name.toLowerCase().endsWith('.fc32')) {
@@ -69,19 +74,49 @@ export function PlayerPage() {
     }
     setSrError('')
     pendingFileRef.current = null
+    loadedFileRef.current  = file   // remember for SR-change reloads
 
     await player.loadFile(file, sr)
   }, [player, srInput, toast])
 
-  // When sample rate is corrected, load the pending file if any
+  // When sample rate is corrected or changed, load/reload the file
   const handleSrCommit = useCallback(async (sr: number) => {
+    if (sr <= 0) return
     const pending = pendingFileRef.current
-    if (pending && sr > 0) {
+    if (pending) {
+      // File was waiting for a valid SR — load it now
       pendingFileRef.current = null
       setSrError('')
+      loadedFileRef.current = pending
       await player.loadFile(pending, sr)
+    } else if (loadedFileRef.current) {
+      // File already loaded — reload with the updated SR
+      setSrError('')
+      await player.loadFile(loadedFileRef.current, sr)
     }
   }, [player])
+
+  // Chart-area drag handlers (issue 7)
+  const handleChartDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setChartAreaDragging(true)
+  }, [])
+
+  const handleChartDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setChartAreaDragging(false)
+    }
+  }, [])
+
+  const handleChartDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setChartAreaDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file) void handleFile(file)
+  }, [handleFile])
 
   // --- derived -----------------------------------------------------------------
   const sr            = player.sampleRate
@@ -120,7 +155,11 @@ export function PlayerPage() {
             <div className="flex-1">
               <FileDropzone
                 onFile={handleFile}
-                onRemove={player.clearFile}
+                onRemove={() => {
+                  loadedFileRef.current = null
+                  pendingFileRef.current = null
+                  player.clearFile()
+                }}
                 fileName={player.fileName}
                 fileSizeBytes={player.fileSizeBytes}
               />
@@ -327,7 +366,7 @@ export function PlayerPage() {
           ))}
 
           {/* Status readout on the right */}
-          <div className="ml-auto pb-2 flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-3 self-center pb-[3px]">
             {player.isPlaying && (
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
@@ -343,7 +382,15 @@ export function PlayerPage() {
         </div>
 
         {/* ── Chart area ─────────────────────────────────────────────────── */}
-        <div className="flex-1 relative overflow-hidden p-4 dark:bg-[#070809] bg-[#f8f9fa]">
+        <div
+          className={`flex-1 relative overflow-hidden p-4 dark:bg-[#070809] bg-[#f8f9fa] transition-colors ${
+            chartAreaDragging ? 'dark:bg-amber-400/[0.04] bg-amber-50/60' : ''
+          }`}
+          onDragOver={handleChartDragOver}
+          onDragLeave={handleChartDragLeave}
+          onDragEnter={(e) => { e.preventDefault(); e.stopPropagation() }}
+          onDrop={handleChartDrop}
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={player.tab}
