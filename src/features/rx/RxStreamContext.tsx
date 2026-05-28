@@ -7,11 +7,12 @@ import {
   useState,
 } from 'react'
 import { config } from '@/config'
-import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout, ChartTab } from '@/types/rx'
+import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout, ChartTab, ChartKey } from '@/types/rx'
 
 // ---- types ------------------------------------------------------------------
 
 export type Tab = ChartTab
+export type { ChartKey }
 
 /** Persisted x/y axis range for a single Plotly chart — re-exported from @/types/rx */
 export type TabZoom = ZoomLayout
@@ -32,10 +33,10 @@ type RxStreamContextType = {
   handleToggle: () => void
   /** The data the chart should actually render (respects freeze) */
   displayData: SignalData | null
-  /** Persisted zoom/pan ranges per tab */
-  zoomLayouts: Record<Tab, TabZoom>
+  /** Persisted zoom/pan ranges per chart (independent of tab layout) */
+  zoomLayouts: Record<ChartKey, TabZoom>
   /** Call from Plot onRelayout to capture zoom state */
-  handleRelayout: (tab: Tab, event: Plotly.PlotRelayoutEvent) => void
+  handleRelayout: (chart: ChartKey, event: Plotly.PlotRelayoutEvent) => void
 }
 
 // ---- context ----------------------------------------------------------------
@@ -61,7 +62,7 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { dataRef.current = data }, [data])
 
   // UI state — persists across page navigation because provider never unmounts
-  const [tab, setTab]               = useState<Tab>('time')
+  const [tab, setTab]               = useState<Tab>('combined')
   const [frozen, setFrozen]         = useState(false)
   const [frozenData, setFrozenData] = useState<SignalData | null>(null)
 
@@ -210,13 +211,13 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
 
   // -- zoom persistence -------------------------------------------------------
 
-  const [zoomLayouts, setZoomLayouts] = useState<Record<Tab, TabZoom>>({
+  const [zoomLayouts, setZoomLayouts] = useState<Record<ChartKey, TabZoom>>({
     time: {},
     fft: {},
     spectrogram: {},
   })
 
-  const handleRelayout = useCallback((t: Tab, event: Plotly.PlotRelayoutEvent) => {
+  const handleRelayout = useCallback((t: ChartKey, event: Plotly.PlotRelayoutEvent) => {
     // Plotly fires events with dotted-key notation at runtime, despite the type saying Partial<Layout>
     const raw = event as unknown as Record<string, unknown>
 
