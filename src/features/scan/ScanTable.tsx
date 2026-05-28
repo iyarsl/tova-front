@@ -10,15 +10,16 @@ type Props = {
 }
 
 type ColDef = {
-  key:       keyof Omit<ScanRow, 'id'>
-  header:    string
-  subHeader: string
-  width:     string
-  type:      'number' | 'select'
-  options?:  number[]
-  min?:      number
-  max?:      number
-  step?:     number
+  key:          keyof Omit<ScanRow, 'id'>
+  header:       string
+  subHeader:    string
+  width:        string
+  type:         'number' | 'select'
+  options?:     number[]
+  min?:         number
+  max?:         number
+  step?:        number
+  displayScale?: number
 }
 
 const COLS: ColDef[] = [
@@ -27,7 +28,7 @@ const COLS: ColDef[] = [
   { key: 'out_freq_mhz',       header: 'Out Freq',       subHeader: 'MHz',  width: 'w-32',  type: 'number', min: 0, max: 3500, step: 0.1 },
   { key: 'bandwidth',          header: 'Bandwidth',      subHeader: 'MHz',  width: 'w-32',  type: 'select', options: [80, 160, 320] },
   { key: 'gain_db',            header: 'Gain',           subHeader: 'dB',   width: 'w-24',  type: 'number', min: 0, max: 90, step: 0.5 },
-  { key: 'sample_rate',        header: 'Sample Rate',    subHeader: 'Hz',   width: 'w-36',  type: 'number', min: 1, step: 1000 },
+  { key: 'sample_rate',        header: 'Sample Rate',    subHeader: 'MHz',  width: 'w-36',  type: 'number', min: 0.001, step: 0.1, displayScale: 1_000_000 },
 ]
 
 type CellProps = {
@@ -49,7 +50,7 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
         onUpdate(row.id, col.key, null as never)
       } else {
         const n = parseFloat(raw)
-        if (!isNaN(n)) onUpdate(row.id, col.key, n as never)
+        if (!isNaN(n)) onUpdate(row.id, col.key, (col.displayScale ? n * col.displayScale : n) as never)
       }
     }
   }
@@ -94,7 +95,7 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
           ref={inputRef}
           autoFocus
           type="number"
-          defaultValue={value === null ? '' : String(value)}
+          defaultValue={value === null ? '' : String(col.displayScale ? (value as number) / col.displayScale : value)}
           min={col.min}
           max={col.max}
           step={col.step}
@@ -113,7 +114,9 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
     <div className={cellBase} onClick={() => setEditing(true)}>
       {value === null
         ? <span className="text-whisper-gray dark:text-[#4b5563]">—</span>
-        : typeof value === 'number' ? value.toLocaleString() : String(value)
+        : typeof value === 'number'
+          ? (col.displayScale ? (value / col.displayScale).toLocaleString() : value.toLocaleString())
+          : String(value)
       }
       {error && <span className="ml-2 text-sunset-red text-xs">⚠</span>}
     </div>

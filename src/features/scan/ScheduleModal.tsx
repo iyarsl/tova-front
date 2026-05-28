@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useOutputDir } from '@/hooks/useOutputDir'
 import { motion } from 'framer-motion'
 import { useCreateSchedule } from './useScheduledScans'
 import { DateTimePicker } from '@/components/DateTimePicker'
@@ -15,7 +16,8 @@ function isAbsolutePath(p: string): boolean {
 }
 
 export function ScheduleModal({ rows, onClose }: Props) {
-  const [dir, setDir]               = useState('')
+  const [savedDir, saveDir]         = useOutputDir()
+  const [dir, setDir]               = useState(() => isAbsolutePath(savedDir) ? savedDir : '')
   const [scheduledAt, setScheduledAt] = useState('')
   const [recurrence, setRecurrence] = useState<Recurrence>('none')
   const [customValue, setCustomValue] = useState(2)
@@ -45,7 +47,7 @@ export function ScheduleModal({ rows, onClose }: Props) {
           ? { custom_interval_minutes: customValue * unitToMinutes[customUnit] }
           : {}),
       },
-      { onSuccess: () => onClose() },
+      { onSuccess: () => { saveDir(dir); onClose() } },
     )
   }
 
