@@ -10,7 +10,7 @@ Web conntrol for usrp and vortex combained together.
 
 - Always invoke the `frontend-design` skill before writing any frontend code, every session, no exceptions
 - For ANY conversation always use the `caveman` plugin
-- Use `Playwright` for browser automating and screen shots
+- Always use `Playwright` for browser automating, UI testing, and screen shots
 
 
 ## Tech Stack
