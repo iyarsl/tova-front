@@ -12,6 +12,10 @@ function FieldError({ msg }: { msg: string }) {
   return <p className="mt-1 font-mono text-[11px] text-sunset-red dark:text-rose-400/80">{msg}</p>
 }
 
+function isAbsolutePath(p: string): boolean {
+  return /^([a-zA-Z]:[\\/]|\/|\\\\)/.test(p)
+}
+
 export function ScanDefaultsModal({ onClose }: Props) {
   const { defaults, mutation } = useScanDefaults()
   const { toast } = useToast()
@@ -20,7 +24,7 @@ export function ScanDefaultsModal({ onClose }: Props) {
   const [outFreqStr, setOutFreqStr] = useState('')
   const [outputDir, setOutputDir]   = useState('')
 
-  const [errors, setErrors] = useState<{ gain?: string; outFreq?: string }>({})
+  const [errors, setErrors] = useState<{ gain?: string; outFreq?: string; outputDir?: string }>({})
 
   useEffect(() => {
     if (!defaults) return
@@ -39,6 +43,8 @@ export function ScanDefaultsModal({ onClose }: Props) {
 
     if (outFreqStr === '' || isNaN(outFreq))    errs.outFreq = 'Required'
     else if (outFreq < 0 || outFreq > 3500)     errs.outFreq = '0–3500 MHz'
+
+    if (outputDir && !isAbsolutePath(outputDir)) errs.outputDir = 'Must be absolute (e.g. C:\\scans\\output or /data/scans)'
 
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -124,10 +130,11 @@ export function ScanDefaultsModal({ onClose }: Props) {
               <input
                 type="text"
                 value={outputDir}
-                onChange={e => setOutputDir(e.target.value)}
+                onChange={e => { setOutputDir(e.target.value); setErrors(prev => ({ ...prev, outputDir: undefined })) }}
                 placeholder="C:\scans\output"
-                className={inputClass(false)}
+                className={inputClass(!!errors.outputDir)}
               />
+              {errors.outputDir && <FieldError msg={errors.outputDir} />}
             </div>
           </div>
 
