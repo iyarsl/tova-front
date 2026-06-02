@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useOutputDir } from '@/hooks/useOutputDir'
 import { motion } from 'framer-motion'
 import { useCreateSchedule } from './useScheduledScans'
+import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import type { ScanRow } from '@/types/scan'
 import type { Recurrence } from '@/types/schedule'
@@ -24,6 +25,7 @@ export function ScheduleModal({ rows, onClose }: Props) {
   const [customUnit, setCustomUnit]   = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'weeks'>('hours')
 
   const createMut = useCreateSchedule()
+  const { defaults } = useScanDefaults()
 
   const [minDateTime] = useState(() => {
     const d  = new Date(Date.now() + 60_000)
@@ -38,7 +40,10 @@ export function ScheduleModal({ rows, onClose }: Props) {
     if (!scheduledAt || !dir) return
     createMut.mutate(
       {
-        rows: rows.map(({ id: _, ...rest }) => rest as import('@/types/scan').ApiScanRow),
+        rows: rows.map(({ id: _, out_freq_mhz: _o, ...rest }) => ({
+          ...rest,
+          out_freq_mhz: defaults?.out_freq_mhz ?? 1250,
+        }) as import('@/types/scan').ApiScanRow),
         output_dir: dir,
         mock: false,
         scheduled_at: new Date(scheduledAt).toISOString(),

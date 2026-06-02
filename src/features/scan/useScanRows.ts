@@ -22,9 +22,6 @@ function validate(row: ScanRow): ScanRowErrors {
   if (row.entrance_freq_ghz === null)                               e.entrance_freq_ghz = 'Required'
   else if (row.entrance_freq_ghz < 0.01 || row.entrance_freq_ghz > 26) e.entrance_freq_ghz = '0.01–26 GHz'
 
-  if (row.out_freq_mhz === null)                                    e.out_freq_mhz = 'Required'
-  else if (row.out_freq_mhz < 0 || row.out_freq_mhz > 3500)        e.out_freq_mhz = '0–3500 MHz'
-
   if (row.bandwidth === null)                                       e.bandwidth = 'Required'
   else if (![80, 160, 320].includes(row.bandwidth))                 e.bandwidth = '80/160/320'
 

@@ -15,6 +15,7 @@ import { ScheduleModal } from './ScheduleModal'
 import { ScheduledRunsTable } from './ScheduledRunsTable'
 import { ScanHistoryTable } from './ScanHistoryTable'
 import { ScanDefaultsModal } from './ScanDefaultsModal'
+import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { parseExcelToScanRows } from '@/utils/parseExcel'
 import { downloadScanTemplate } from '@/utils/downloadTemplate'
 
@@ -139,6 +140,7 @@ function RunModal({
 export function ScanPage() {
   const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows,
           importedFileName, setImportedFileName, results, setResults } = useScan()
+  const { defaults } = useScanDefaults()
   const [showModal, setShowModal]                   = useState(false)
   const [showScheduleModal, setShowScheduleModal]   = useState(false)
   const [showDefaultsModal, setShowDefaultsModal]   = useState(false)
@@ -165,10 +167,11 @@ export function ScanPage() {
 
   const runMut = useMutation({
     mutationFn: ({ dir, mock }: { dir: string; mock: boolean }) => {
-      const apiRows: ApiScanRow[] = rows.map(({ id: _id, duration, entrance_freq_ghz, out_freq_mhz, bandwidth, gain_db, sample_rate }) => ({
+      const outFreq = defaults?.out_freq_mhz ?? 1250
+      const apiRows: ApiScanRow[] = rows.map(({ id: _id, duration, entrance_freq_ghz, bandwidth, gain_db, sample_rate }) => ({
         duration:          duration!,
         entrance_freq_ghz: entrance_freq_ghz!,
-        out_freq_mhz:      out_freq_mhz!,
+        out_freq_mhz:      outFreq,
         bandwidth:         bandwidth!,
         gain_db:           gain_db!,
         sample_rate:       sample_rate!,
