@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
+import mapGuide from '@/assets/dora/map.png'
 
 type NavItem = { to: string; label: string; icon: string }
 
@@ -141,6 +142,21 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {/* Map guide mascot — "I'm the Map!" */}
+      {!collapsed && (
+        <div className="px-4 pb-1 flex flex-col items-center select-none pointer-events-none">
+          <img
+            src={mapGuide}
+            alt=""
+            aria-hidden
+            className="w-[88px] animate-float-slow drop-shadow-[0_8px_14px_rgba(45,42,62,0.18)] dark:opacity-90"
+          />
+          <span className="mt-1 font-display font-bold text-[10px] tracking-[0.14em] uppercase text-map-brown/70 dark:text-[#4b5563]">
+            Map · your guide
+          </span>
+        </div>
+      )}
 
       {/* Status pill */}
       <div className="px-3 py-4 border-t border-[#FFE4C4] dark:border-white/[0.07]">

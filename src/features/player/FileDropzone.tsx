@@ -92,20 +92,20 @@ export function FileDropzone({ onFile, onRemove, fileName, fileSizeBytes, disabl
         onDragEnter={handleDragEnter}
         onDrop={handleDrop}
         className={[
-          'flex items-center gap-4 px-5 py-3.5 rounded-lg border',
+          'flex items-center gap-4 px-5 py-3.5 rounded-[14px] border-2',
           'transition-all duration-200 select-none outline-none',
-          'focus-visible:ring-2 focus-visible:ring-amber-400/50',
+          'focus-visible:ring-2 focus-visible:ring-dora-orange/50',
           disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : 'cursor-pointer',
           dragging
-            ? 'border-amber-400/70 dark:bg-amber-400/5 bg-amber-50 shadow-[0_0_12px_rgba(251,191,36,0.15)]'
+            ? 'border-dora-orange/70 dark:bg-amber-400/5 bg-pastel-orange shadow-[0_0_14px_rgba(255,140,66,0.22)]'
             : loaded
-              ? 'dark:border-amber-400/30 border-amber-300/60 dark:bg-amber-400/[0.04] bg-amber-50/60'
-              : 'dark:border-white/10 border-black/[0.1] dark:bg-white/[0.02] bg-white dark:hover:border-amber-400/30 hover:border-amber-300/50 dark:hover:bg-amber-400/[0.03]',
+              ? 'dark:border-amber-400/30 border-dora-orange/50 dark:bg-amber-400/[0.04] bg-pastel-orange/60'
+              : 'dark:border-white/10 border-[#FFD4A6] dark:bg-white/[0.02] bg-white dark:hover:border-amber-400/30 hover:border-dora-orange/60 dark:hover:bg-amber-400/[0.03] hover:bg-pastel-orange/40',
         ].join(' ')}
       >
         {/* Icon */}
         <span className={`text-xl flex-shrink-0 transition-colors ${
-          loaded ? 'text-amber-400' : 'dark:text-[#4b5563] text-[#9ca3af]'
+          loaded ? 'text-dora-orange' : 'dark:text-[#4b5563] text-whisper-gray'
         }`}>
           {loaded ? '◈' : '⊕'}
         </span>
@@ -114,17 +114,17 @@ export function FileDropzone({ onFile, onRemove, fileName, fileSizeBytes, disabl
         <div className="flex-1 min-w-0">
           {loaded ? (
             <div className="flex items-center gap-3">
-              <span className="font-mono text-sm dark:text-amber-300 text-amber-700 truncate max-w-xs">
+              <span className="font-mono text-sm dark:text-amber-300 text-dora-orange-dark truncate max-w-xs">
                 {fileName}
               </span>
-              <span className="font-mono text-xs dark:text-[#6b7280] text-[#9ca3af] flex-shrink-0">
+              <span className="font-mono text-xs dark:text-[#6b7280] text-whisper-gray flex-shrink-0">
                 {formatBytes(fileSizeBytes)}
               </span>
             </div>
           ) : (
-            <span className="font-mono text-sm dark:text-[#9ca3af] text-[#6b7280]">
-              Drop <span className="dark:text-amber-400 text-amber-600">.fc32</span> file or{' '}
-              <span className="dark:text-amber-400 text-amber-600 underline underline-offset-2">
+            <span className="font-body text-sm dark:text-[#9ca3af] text-tale-gray">
+              Drop <span className="dark:text-amber-400 text-dora-orange font-semibold">.fc32</span> file or{' '}
+              <span className="dark:text-amber-400 text-dora-orange font-semibold underline underline-offset-2">
                 click to browse
               </span>
             </span>
