@@ -44,7 +44,8 @@ export function ScanDefaultsModal({ onClose }: Props) {
     if (outFreqStr === '' || isNaN(outFreq))    errs.outFreq = 'Required'
     else if (outFreq < 0 || outFreq > 3500)     errs.outFreq = '0–3500 MHz'
 
-    if (outputDir && !isAbsolutePath(outputDir)) errs.outputDir = 'Must be absolute (e.g. C:\\scans\\output or /data/scans)'
+    if (!outputDir)                              errs.outputDir = 'Required'
+    else if (!isAbsolutePath(outputDir))         errs.outputDir = 'Must be absolute (e.g. C:\\scans\\output or /data/scans)'
 
     setErrors(errs)
     return Object.keys(errs).length === 0
