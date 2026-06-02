@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
+import { useToast } from '@/components/Toast'
+import type { AppError } from '@/api/client'
 
 interface Props {
   onClose: () => void
@@ -12,6 +14,7 @@ function FieldError({ msg }: { msg: string }) {
 
 export function ScanDefaultsModal({ onClose }: Props) {
   const { defaults, mutation } = useScanDefaults()
+  const { toast } = useToast()
 
   const [gainStr, setGainStr]       = useState('')
   const [outFreqStr, setOutFreqStr] = useState('')
@@ -45,7 +48,10 @@ export function ScanDefaultsModal({ onClose }: Props) {
     if (!validate()) return
     mutation.mutate(
       { gain_db: Number(gainStr), out_freq_mhz: Number(outFreqStr), output_dir: outputDir },
-      { onSuccess: onClose },
+      {
+        onSuccess: onClose,
+        onError: (err: AppError) => toast(err.message ?? 'Failed to save defaults', 'error'),
+      },
     )
   }
 
