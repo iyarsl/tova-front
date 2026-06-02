@@ -36,6 +36,12 @@ Web conntrol for usrp and vortex combained together.
 - console.log only in dev; use a logger utility in production paths
 - CSS: Tailwind utility classes; no inline styles; no CSS modules
 
+## Scope Discipline
+
+- Default to minimal solutions; do NOT build full examples/scaffolding when a snippet is requested
+- For library usage questions, show only the library usage — not a wrapping server/app
+- Ask before modifying existing files like api.py when the request could be solved with a separate module
+
 ## Architecture
 
 ```
@@ -131,4 +137,25 @@ Use an Axios response interceptor in `src/api/client.ts` to centralize error ext
 - Coverage target: all API utility functions and custom hooks
 
 Run tests: `npm run test`
+
+## Git Workflow
+
+- Always confirm current branch before committing; verify the intended target branch
+- Never auto-resolve merge conflicts without showing the user the conflicting hunks first
+- Do NOT stage Playwright MCP artifacts (*.png, test-results/) — check `git status` carefully before `git add`
+- After commits, verify with `git log --oneline -5` to confirm landing branch
+
+## Testing & Verification
+
+- After code changes, run type-checking (tsc/mypy) and relevant tests before declaring done
+- For UI changes, suggest verifying with the dev server or Playwright
+- For race-condition-prone code (streams, async), explicitly check for sentinel/lifecycle ordering
+
+## Verification Before Claims
+
+- Never state behavior of external libraries/APIs as fact without verifying (check docs, source, or run code first)
+- When uncertain, say 'I need to verify' rather than asserting
+- Re-check git state before claiming branches/commits exist or don't exist
+- Before stating any fact about a library's behavior, git state, or whether code exists, run the actual verification command (pip show, git log, grep, etc.) and show the output
+- If verification is not possible, say 'I'm not sure — let me check' instead of asserting
 

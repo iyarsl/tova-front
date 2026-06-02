@@ -1,5 +1,8 @@
 /** Shared tab type for all signal chart views */
-export type ChartTab = 'time' | 'fft' | 'spectrogram'
+export type ChartTab = 'combined' | 'spectrogram'
+
+/** Per-chart zoom key — independent of tab layout */
+export type ChartKey = 'time' | 'fft' | 'spectrogram'
 
 /** Persisted x/y axis range for a single Plotly chart tab */
 export type ZoomLayout = {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useOutputDir } from '@/hooks/useOutputDir'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
@@ -52,6 +53,10 @@ function DeviceStatePanel() {
   )
 }
 
+function isAbsolutePath(p: string): boolean {
+  return /^([a-zA-Z]:[\\/]|\/|\\\\)/.test(p)
+}
+
 function RunModal({
   onClose,
   onRun,
@@ -61,7 +66,8 @@ function RunModal({
   onRun: (dir: string) => void
   loading: boolean
 }) {
-  const [dir, setDir] = useState('./output')
+  const [savedDir, saveDir] = useOutputDir()
+  const [dir, setDir] = useState(() => isAbsolutePath(savedDir) ? savedDir : '')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[rgba(45,42,62,0.45)] backdrop-blur-sm">
@@ -89,9 +95,18 @@ function RunModal({
               <input
                 value={dir}
                 onChange={e => setDir(e.target.value)}
-                className="w-full bg-white dark:bg-base-950/60 border-2 border-[#D8D4EC] dark:border-white/10 rounded-[12px] px-3 py-2.5 font-mono text-[13px] text-story-ink dark:text-[#e5e7eb] focus:outline-none focus:border-adv-purple dark:focus:border-cyan-400/40 focus:ring-2 focus:ring-adv-purple/20 dark:focus:ring-cyan-400/20 transition-colors"
-                placeholder="./output"
+                placeholder="C:\scans\output"
+                className={`w-full bg-white dark:bg-base-950/60 border-2 rounded-[12px] px-3 py-2.5 font-mono text-[13px] text-story-ink dark:text-[#e5e7eb] focus:outline-none focus:ring-2 transition-colors ${
+                  dir && !isAbsolutePath(dir)
+                    ? 'border-sunset-red/50 dark:border-rose-500/40 focus:border-sunset-red dark:focus:border-rose-500/60 focus:ring-sunset-red/20 dark:focus:ring-rose-500/20'
+                    : 'border-[#D8D4EC] dark:border-white/10 focus:border-adv-purple dark:focus:border-cyan-400/40 focus:ring-adv-purple/20 dark:focus:ring-cyan-400/20'
+                }`}
               />
+              {dir && !isAbsolutePath(dir) && (
+                <p className="mt-1 font-mono text-[11px] text-sunset-red dark:text-rose-400/80">
+                  Must be absolute (e.g. C:\scans\output or /data/scans)
+                </p>
+              )}
             </div>
           </div>
 
@@ -103,8 +118,8 @@ function RunModal({
               Cancel
             </button>
             <button
-              disabled={loading || !dir}
-              onClick={() => onRun(dir)}
+              disabled={loading || !dir || !isAbsolutePath(dir)}
+              onClick={() => { saveDir(dir); onRun(dir) }}
               className="flex-1 py-2.5 rounded-full font-display font-bold text-[14px] text-white disabled:opacity-50 hover:-translate-y-0.5 transition-transform"
               style={{
                 background: 'linear-gradient(135deg, #FF8C42, #E06A1A)',

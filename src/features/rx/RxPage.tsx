@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { useRxStreamContext } from './RxStreamContext'
-import type { Tab } from './RxStreamContext'
+import type { Tab, ChartKey } from './RxStreamContext'
 import { useVortexConfig } from '@/features/vortex/useVortexConfig'
 import { useTheme } from '@/hooks/useTheme'
 import type { RxStatus } from '@/types/rx'
@@ -11,9 +11,8 @@ import { FftChart } from '@/components/signal/FftChart'
 import { SpectrogramChart } from '@/components/signal/SpectrogramChart'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'time',        label: 'Time Domain',  icon: '∿' },
-  { id: 'fft',         label: 'FFT',          icon: '⌇' },
-  { id: 'spectrogram', label: 'Spectrogram',  icon: '▦' },
+  { id: 'combined',    label: 'FFT + Time',   icon: '⌇∿' },
+  { id: 'spectrogram', label: 'Spectrogram',  icon: '▦'  },
 ]
 
 const STATUS_CHIP: Record<RxStatus, { dot: string; label: string }> = {
@@ -34,7 +33,7 @@ const NO_DATA_MSG: Record<RxStatus, string> = {
   error:      'Connection lost — reconnecting…',
 }
 
-function GraphPlaceholder({ type }: { type: 'time' | 'fft' | 'spectrogram' }) {
+function GraphPlaceholder({ type }: { type: ChartKey }) {
   return (
     <svg
       viewBox="0 0 200 80"
@@ -172,24 +171,34 @@ export function RxPage() {
                 transition={{ duration: 0.2 }}
                 className="absolute inset-3 rounded-[12px] overflow-hidden"
               >
-                {tab === 'time' && data && (
-                  <TimeDomainChart
-                    x={data.time.x}
-                    y={data.time.y}
-                    theme={theme}
-                    zoomLayout={zoomLayouts.time}
-                    onRelayout={(e) => handleRelayout('time', e)}
-                  />
-                )}
-
-                {tab === 'fft' && data && (
-                  <FftChart
-                    x={data.fft.x}
-                    y={data.fft.y}
-                    theme={theme}
-                    zoomLayout={zoomLayouts.fft}
-                    onRelayout={(e) => handleRelayout('fft', e)}
-                  />
+                {tab === 'combined' && data && (
+                  <div className="flex flex-col h-full">
+                    <div className="flex-1 overflow-hidden">
+                      <FftChart
+                        x={data.fft.x}
+                        y={data.fft.y}
+                        theme={theme}
+                        zoomLayout={zoomLayouts.fft}
+                        onRelayout={(e) => handleRelayout('fft', e)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-1 shrink-0">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5BC8F5]/40 to-transparent" />
+                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase select-none text-[#5BC8F5]/50 dark:text-[#5BC8F5]/35 px-1">
+                        ⌇ fft · time ∿
+                      </span>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5BC8F5]/40 to-transparent" />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <TimeDomainChart
+                        x={data.time.x}
+                        y={data.time.y}
+                        theme={theme}
+                        zoomLayout={zoomLayouts.time}
+                        onRelayout={(e) => handleRelayout('time', e)}
+                      />
+                    </div>
+                  </div>
                 )}
 
                 {tab === 'spectrogram' && data && (
@@ -201,9 +210,30 @@ export function RxPage() {
                   />
                 )}
 
-                {!data && (
+                {!data && tab === 'combined' && (
+                  <div className="flex flex-col h-full">
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                      <GraphPlaceholder type="fft" />
+                      <span className="font-body text-sm text-whisper-gray dark:text-white/30">
+                        {NO_DATA_MSG[status]}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-1 shrink-0">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5BC8F5]/40 to-transparent" />
+                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase select-none text-[#5BC8F5]/50 dark:text-[#5BC8F5]/35 px-1">
+                        ⌇ fft · time ∿
+                      </span>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5BC8F5]/40 to-transparent" />
+                    </div>
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                      <GraphPlaceholder type="time" />
+                    </div>
+                  </div>
+                )}
+
+                {!data && tab === 'spectrogram' && (
                   <div className="flex flex-col items-center justify-center h-full gap-4">
-                    <GraphPlaceholder type={tab} />
+                    <GraphPlaceholder type="spectrogram" />
                     <span className="font-body text-sm text-whisper-gray dark:text-white/30">
                       {NO_DATA_MSG[status]}
                     </span>
