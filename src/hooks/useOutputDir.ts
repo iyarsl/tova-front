@@ -1,10 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useScanDefaults } from './useScanDefaults'
 
 const KEY = 'scan_output_dir'
-const FALLBACK = ''
 
 export function useOutputDir(): [string, (value: string) => void] {
-  const [dir, setDir] = useState(() => localStorage.getItem(KEY) ?? FALLBACK)
+  const { defaults } = useScanDefaults()
+  const [dir, setDir] = useState(() => localStorage.getItem(KEY) ?? '')
+
+  useEffect(() => {
+    if (defaults?.output_dir && localStorage.getItem(KEY) === null) {
+      setDir(defaults.output_dir)
+    }
+  }, [defaults?.output_dir])
 
   function save(value: string) {
     localStorage.setItem(KEY, value)

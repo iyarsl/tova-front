@@ -1,14 +1,14 @@
 import { useCallback, useState } from 'react'
 import type { ScanRow, ScanRowErrors } from '@/types/scan'
 
-function makeRow(): ScanRow {
+function makeRow(defaults?: Pick<ScanRow, 'gain_db' | 'out_freq_mhz'>): ScanRow {
   return {
     id: crypto.randomUUID(),
     duration:          null,
     entrance_freq_ghz: null,
-    out_freq_mhz:      null,
+    out_freq_mhz:      defaults?.out_freq_mhz ?? null,
     bandwidth:         null,
-    gain_db:           null,
+    gain_db:           defaults?.gain_db ?? null,
     sample_rate:       null,
   }
 }
@@ -41,8 +41,8 @@ export function useScanRows() {
   const [rows, setRows] = useState<ScanRow[]>([])
   const [errors, setErrors] = useState<Record<string, ScanRowErrors>>({})
 
-  const addRow = useCallback(() =>
-    setRows(prev => [...prev, makeRow()]), [])
+  const addRow = useCallback((defaults?: Pick<ScanRow, 'gain_db' | 'out_freq_mhz'>) =>
+    setRows(prev => [...prev, makeRow(defaults)]), [])
 
   const removeRow = useCallback((id: string) =>
     setRows(prev => prev.filter(r => r.id !== id)), [])

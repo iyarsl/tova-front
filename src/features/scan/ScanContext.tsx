@@ -1,5 +1,6 @@
-import { createContext, use, useState, type ReactNode } from 'react'
+import { createContext, use, useState, useCallback, type ReactNode } from 'react'
 import { useScanRows } from './useScanRows'
+import { useScanDefaults } from '@/hooks/useScanDefaults'
 
 type ScanContextValue = ReturnType<typeof useScanRows> & {
   importedFileName: string | null
@@ -12,11 +13,18 @@ const ScanContext = createContext<ScanContextValue | null>(null)
 
 export function ScanProvider({ children }: { children: ReactNode }) {
   const scanRows = useScanRows()
+  const { defaults } = useScanDefaults()
   const [importedFileName, setImportedFileName] = useState<string | null>(null)
   const [results, setResults] = useState<string[] | null>(null)
 
+  const addRow = useCallback(() => {
+    scanRows.addRow(
+      defaults ? { gain_db: defaults.gain_db, out_freq_mhz: defaults.out_freq_mhz } : undefined
+    )
+  }, [scanRows.addRow, defaults])
+
   return (
-    <ScanContext.Provider value={{ ...scanRows, importedFileName, setImportedFileName, results, setResults }}>
+    <ScanContext.Provider value={{ ...scanRows, addRow, importedFileName, setImportedFileName, results, setResults }}>
       {children}
     </ScanContext.Provider>
   )
