@@ -6,8 +6,8 @@ import {
   useRef,
   useState,
 } from 'react'
-import { config } from '@/config'
-import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout, ChartTab, ChartKey } from '@/types/rx'
+import { config, MAX_CAPTURE_SEC } from '@/config'
+import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout, ChartTab, ChartKey, CapturePayload } from '@/types/rx'
 
 // ---- types ------------------------------------------------------------------
 
@@ -37,6 +37,8 @@ type RxStreamContextType = {
   zoomLayouts: Record<ChartKey, TabZoom>
   /** Call from Plot onRelayout to capture zoom state */
   handleRelayout: (chart: ChartKey, event: Plotly.PlotRelayoutEvent) => void
+  /** Slice the last durationSec of buffered raw IQ into a CapturePayload, or null if no data */
+  buildCapture: (durationSec: number) => CapturePayload | null
 }
 
 // ---- context ----------------------------------------------------------------
@@ -47,6 +49,21 @@ const RxStreamContext = createContext<RxStreamContextType | null>(null)
 
 const SPEC_ROWS    = 80
 const RECONNECT_MS = 3_000
+
+// ---- helpers ----------------------------------------------------------------
+
+function decodeBase64IQ(b64: string): Float32Array {
+  const binary = atob(b64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return new Float32Array(bytes.buffer)
+}
+
+function buildFileName(sampleRate: number): string {
+  const now = new Date()
+  const p = (n: number, d = 2) => String(n).padStart(d, '0')
+  return `capture_${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}_${p(now.getHours())}-${p(now.getMinutes())}-${p(now.getSeconds())}_${sampleRate}sps.fc32`
+}
 
 // ---- provider ---------------------------------------------------------------
 
@@ -72,6 +89,11 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   const spectroRef  = useRef<number[][]>([])
   const reconnTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const unmounted   = useRef(false)
+
+  // Rolling raw IQ buffer for capture feature
+  const rawIqChunksRef      = useRef<{ samples: Float32Array; sampleRate: number }[]>([])
+  const rawIqTotalFloatsRef = useRef(0)
+  const latestSrRef         = useRef(0)
 
   // render-rate control refs (see useRxStream.ts for rationale)
   const isStreaming  = useRef(false)
@@ -144,6 +166,19 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
               sampleRate: msg.sample_rate,
             }
             workerRef.current?.postMessage(input)
+
+            // Accumulate raw IQ for the capture buffer
+            const decoded = decodeBase64IQ(msg.samples)
+            const sr = msg.sample_rate
+            latestSrRef.current = sr
+            rawIqChunksRef.current.push({ samples: decoded, sampleRate: sr })
+            rawIqTotalFloatsRef.current += decoded.length
+            // Trim oldest chunks beyond MAX_CAPTURE_SEC
+            const maxFloats = MAX_CAPTURE_SEC * sr * 2
+            while (rawIqTotalFloatsRef.current > maxFloats && rawIqChunksRef.current.length > 0) {
+              const dropped = rawIqChunksRef.current.shift()!
+              rawIqTotalFloatsRef.current -= dropped.samples.length
+            }
           }
           break
         case 'silence':
@@ -196,6 +231,31 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
       workerRef.current?.terminate()
     }
   }, [connect, onWorkerMessage, stopRendering])
+
+  // -- capture ----------------------------------------------------------------
+
+  const buildCapture = useCallback((durationSec: number): CapturePayload | null => {
+    const chunks = rawIqChunksRef.current
+    if (chunks.length === 0) return null
+    const sr = latestSrRef.current
+    if (sr <= 0) return null
+
+    const totalLen = rawIqTotalFloatsRef.current
+    const combined = new Float32Array(totalLen)
+    let offset = 0
+    for (const chunk of chunks) {
+      combined.set(chunk.samples, offset)
+      offset += chunk.samples.length
+    }
+
+    const cappedSec = Math.min(durationSec, MAX_CAPTURE_SEC)
+    // Floor to whole complex samples (each = 2 floats) so slice is always a multiple of 8 bytes
+    const maxFloats = Math.floor(cappedSec * sr) * 2
+    const sliceStart = Math.max(0, combined.length - maxFloats)
+    const samples = combined.slice(sliceStart)
+
+    return { samples, sampleRate: sr, fileName: buildFileName(sr) }
+  }, [])
 
   // -- freeze toggle ----------------------------------------------------------
 
@@ -263,6 +323,7 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
         displayData,
         zoomLayouts,
         handleRelayout,
+        buildCapture,
       }}
     >
       {children}

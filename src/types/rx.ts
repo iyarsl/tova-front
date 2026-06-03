@@ -48,3 +48,10 @@ export interface WorkerOutput {
   timeY: number[]     // I-channel amplitude values (length = input length)
   sampleRate: number
 }
+
+/** Raw IQ snapshot passed from RX page to File Player via router state */
+export type CapturePayload = {
+  samples: Float32Array
+  sampleRate: number
+  fileName: string
+}

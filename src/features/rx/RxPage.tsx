@@ -1,6 +1,9 @@
+import { useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
+import { useToast } from '@/components/Toast'
 import { useRxStreamContext } from './RxStreamContext'
 import type { Tab, ChartKey } from './RxStreamContext'
 import { useVortexConfig } from '@/features/vortex/useVortexConfig'
@@ -87,10 +90,37 @@ export function RxPage() {
     displayData,
     zoomLayouts,
     handleRelayout,
+    buildCapture,
   } = useRxStreamContext()
 
   const { config: vortexConfig } = useVortexConfig()
   const { theme } = useTheme()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const handleSaveToPlayer = useCallback(() => {
+    const capture = buildCapture(3)
+    if (!capture) {
+      toast('Not enough data — stream a signal first', 'error')
+      return
+    }
+    navigate('/player', { state: { capture } })
+  }, [buildCapture, navigate, toast])
+
+  const handleDownload = useCallback(() => {
+    const capture = buildCapture(3)
+    if (!capture) {
+      toast('Not enough data — stream a signal first', 'error')
+      return
+    }
+    const blob = new Blob([capture.samples.buffer as ArrayBuffer], { type: 'application/octet-stream' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = capture.fileName
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [buildCapture, toast])
 
   const centerFreq = vortexConfig ? (vortexConfig.rfin_hz / 1e6).toFixed(0) : '—'
   const data = displayData
@@ -156,6 +186,42 @@ export function RxPage() {
             >
               {!frozen ? '⏹ Freeze' : '▶ Resume'}
             </button>
+
+            {/* Capture controls — visible only when frozen */}
+            {frozen && (
+                <div
+                  className="flex items-center gap-2 pl-3 border-l border-tale-gray/20 dark:border-white/10"
+                >
+                  {/* Save to Player */}
+                  <button
+                    onClick={handleSaveToPlayer}
+                    title="Load last N seconds into Signal Player"
+                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs transition-all hover:-translate-y-0.5 active:scale-95"
+                    style={{
+                      background: 'linear-gradient(135deg, #5BC8F5, #3BA8D5)',
+                      border: '2px solid transparent',
+                      color: '#FFFFFF',
+                      boxShadow: '0 3px 10px rgba(91,200,245,0.40)',
+                    }}
+                  >
+                    → Player
+                  </button>
+
+                  {/* Download */}
+                  <button
+                    onClick={handleDownload}
+                    title="Download as .fc32 file"
+                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs border transition-all hover:-translate-y-0.5 active:scale-95"
+                    style={{
+                      border: '2px solid rgba(91,200,245,0.45)',
+                      color: '#5BC8F5',
+                      background: 'transparent',
+                    }}
+                  >
+                    ↓ .fc32
+                  </button>
+                </div>
+            )}
           </div>
         </div>
 
