@@ -47,16 +47,6 @@ function RadarRings() {
   )
 }
 
-// Small mono telemetry chip in the HUD strip.
-function HudChip({ label, value, accent }: { label: string; value: string; accent: string }) {
-  return (
-    <div className="flex flex-col gap-0.5 px-3.5 py-2 rounded-xl bg-white/55 backdrop-blur-sm border border-white/70 shadow-sm">
-      <span className="font-mono text-[9px] tracking-[0.18em] text-whisper-gray uppercase">{label}</span>
-      <span className="font-mono text-[13px] font-semibold tabular-nums" style={{ color: accent }}>{value}</span>
-    </div>
-  )
-}
-
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
 export function HeroPage() {
@@ -79,10 +69,6 @@ export function HeroPage() {
     await new Promise(r => setTimeout(r, 550))
     navigate('/vortex')
   }
-
-  const freq = online && data ? `${(data.rfin_hz / 1e9).toFixed(2)} GHz` : '— · —'
-  const gain = online && data ? `${data.gain_db} dB` : '—'
-  const ifbw = online && data ? `${data.ifbw_mhz} MHz` : '—'
 
   const reveal = (delay: number) => ({
     initial: { opacity: 0, y: 22 },
@@ -195,13 +181,6 @@ export function HeroPage() {
                 )}
               </button>
             </div>
-          </motion.div>
-
-          {/* HUD telemetry strip */}
-          <motion.div {...reveal(0.74)} className="mt-7 flex gap-3 justify-center xl:justify-start">
-            <HudChip label="Freq" value={freq} accent="#E06A1A" />
-            <HudChip label="Gain" value={gain} accent="#7B3FC8" />
-            <HudChip label="IF BW" value={ifbw} accent="#2B9FD6" />
           </motion.div>
         </div>
 
