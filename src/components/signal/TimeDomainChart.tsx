@@ -20,7 +20,7 @@ export function TimeDomainChart({ x, y, theme, zoomLayout = {}, onRelayout, yTit
       data={[{
         x,
         y,
-        type:  'scattergl',
+        type:  'scatter',
         mode:  'lines',
         line:  { color: lineColor, width: 1.5 },
         name:  'Amplitude',
