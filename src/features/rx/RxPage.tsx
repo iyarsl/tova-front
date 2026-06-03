@@ -10,7 +10,7 @@ import { SpectrogramChart } from '@/components/signal/SpectrogramChart'
 import { RxAnalyzeView } from './RxAnalyzeView'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'analyze',     label: 'Analyze',      icon: '⌇' },
+  { id: 'analyze',     label: 'FFT + Time Domain', icon: '⌇' },
   { id: 'spectrogram', label: 'Spectrogram',  icon: '▦' },
 ]
 

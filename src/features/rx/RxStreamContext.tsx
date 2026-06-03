@@ -99,6 +99,12 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   const latestOutput = useRef<WorkerOutput | null>(null)
   const rafPending   = useRef<number | null>(null)
 
+  // worker backpressure: never queue. Hold only the newest unprocessed frame and
+  // send it once the worker reports back. Frames arriving while the worker is busy
+  // overwrite the pending one (drop stale) — bounds in-flight work to 1 + 1 pending.
+  const workerBusy   = useRef(false)
+  const pendingLive  = useRef<RawFrame | null>(null)
+
   // filter / re-filter refs
   const bandRef        = useRef<readonly [number, number] | undefined>(undefined)
   const lastFrameRef   = useRef<RawFrame | null>(null)
@@ -116,10 +122,28 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   const stopRendering = useCallback(() => {
     isStreaming.current  = false
     latestOutput.current = null
+    pendingLive.current  = null
     if (rafPending.current !== null) {
       cancelAnimationFrame(rafPending.current)
       rafPending.current = null
     }
+  }, [])
+
+  /** Send the newest queued live frame iff the worker is free. Drops stale frames. */
+  const pumpLive = useCallback(() => {
+    const worker = workerRef.current
+    if (!worker || workerBusy.current) return
+    const frame = pendingLive.current
+    if (!frame) return
+    pendingLive.current = null
+    workerBusy.current  = true
+    const input: WorkerInput = {
+      samples:    frame.samples,
+      length:     frame.length,
+      sampleRate: frame.sampleRate,
+      filterBand: bandRef.current,
+    }
+    worker.postMessage(input)
   }, [])
 
   const flushOutput = useCallback(() => {
@@ -140,31 +164,34 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const onWorkerMessage = useCallback((e: MessageEvent<WorkerOutput>) => {
+    workerBusy.current = false   // worker is free again
     const msg = e.data
 
     // On-demand re-filter results carry a requestId; live frames do not.
     if (msg.requestId !== undefined) {
       const pending = refilterRef.current
-      if (!pending || msg.requestId !== pending.id) return  // superseded or rejected (e.g. resumed)
-      refilterRef.current = null
-
-      const { timeY, envDb, sampleRate: sr } = msg
-      const timeX = timeY.map((_, i) => (i / sr) * 1000)
-      const time = { x: timeX, y: timeY, envDb }
-      if (pending.target === 'frozen') {
-        setFrozenData(prev => (prev ? { ...prev, time } : prev))
-      } else {
-        setData(prev => (prev ? { ...prev, time } : prev))
+      if (pending && msg.requestId === pending.id) {
+        refilterRef.current = null
+        const { timeY, envDb, sampleRate: sr } = msg
+        const timeX = timeY.map((_, i) => (i / sr) * 1000)
+        const time = { x: timeX, y: timeY, envDb }
+        if (pending.target === 'frozen') {
+          setFrozenData(prev => (prev ? { ...prev, time } : prev))
+        } else {
+          setData(prev => (prev ? { ...prev, time } : prev))
+        }
       }
+      pumpLive()  // re-filter done — service any queued live frame
       return
     }
 
     // Live stream frame.
-    if (!isStreaming.current) return
-    latestOutput.current = msg
-    if (rafPending.current !== null) return
-    rafPending.current = requestAnimationFrame(flushOutput)
-  }, [flushOutput])
+    if (isStreaming.current) {
+      latestOutput.current = msg
+      if (rafPending.current === null) rafPending.current = requestAnimationFrame(flushOutput)
+    }
+    pumpLive()  // send the next queued frame, if any
+  }, [flushOutput, pumpLive])
 
   // -- on-demand re-filter ----------------------------------------------------
 
@@ -177,6 +204,7 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
 
     const id = ++reqCounter.current
     refilterRef.current = { id, target: frozenRef.current ? 'frozen' : 'live' }
+    workerBusy.current  = true   // hold off live frames until this returns
     const input: WorkerInput = {
       samples:    frame.samples,
       length:     frame.length,
@@ -220,18 +248,14 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
           if (msg.samples && msg.length && msg.sample_rate) {
             isStreaming.current = true
             setStatus('streaming')
-            lastFrameRef.current = {
+            const frame: RawFrame = {
               samples:    msg.samples,
               length:     msg.length,
               sampleRate: msg.sample_rate,
             }
-            const input: WorkerInput = {
-              samples:    msg.samples,
-              length:     msg.length,
-              sampleRate: msg.sample_rate,
-              filterBand: bandRef.current,
-            }
-            workerRef.current?.postMessage(input)
+            lastFrameRef.current = frame
+            pendingLive.current  = frame   // overwrite any unprocessed frame (drop stale)
+            pumpLive()
           }
           break
         case 'silence':
@@ -261,7 +285,7 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
       setStatus('error')
       reconnTimer.current = setTimeout(connect, RECONNECT_MS)
     }
-  }, [wsUrl, stopRendering])
+  }, [wsUrl, stopRendering, pumpLive])
 
   // -- lifecycle — runs once, lives for the app session ----------------------
 

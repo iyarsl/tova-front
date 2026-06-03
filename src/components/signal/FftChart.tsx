@@ -18,7 +18,7 @@ export function FftChart({ x, y, theme, zoomLayout = {}, onRelayout }: Props) {
       data={[{
         x,
         y,
-        type:      'scatter',
+        type:      'scattergl',
         mode:      'lines',
         fill:      'tozeroy',
         fillcolor: 'rgba(34,211,238,0.07)',
