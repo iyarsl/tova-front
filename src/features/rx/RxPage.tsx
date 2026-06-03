@@ -1,6 +1,9 @@
+import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
+import { useToast } from '@/components/Toast'
 import { useRxStreamContext } from './RxStreamContext'
 import type { Tab, ChartKey } from './RxStreamContext'
 import { useVortexConfig } from '@/features/vortex/useVortexConfig'
@@ -87,10 +90,39 @@ export function RxPage() {
     displayData,
     zoomLayouts,
     handleRelayout,
+    buildCapture,
   } = useRxStreamContext()
 
   const { config: vortexConfig } = useVortexConfig()
   const { theme } = useTheme()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const [captureSec, setCaptureSec] = useState(3)
+
+  const handleSaveToPlayer = useCallback(() => {
+    const capture = buildCapture(captureSec)
+    if (!capture) {
+      toast('Not enough data — stream a signal first', 'error')
+      return
+    }
+    navigate('/player', { state: { capture } })
+  }, [buildCapture, captureSec, navigate, toast])
+
+  const handleDownload = useCallback(() => {
+    const capture = buildCapture(captureSec)
+    if (!capture) {
+      toast('Not enough data — stream a signal first', 'error')
+      return
+    }
+    const blob = new Blob([capture.samples.buffer as ArrayBuffer], { type: 'application/octet-stream' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = capture.fileName
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [buildCapture, captureSec, toast])
 
   const centerFreq = vortexConfig ? (vortexConfig.rfin_hz / 1e6).toFixed(0) : '—'
   const data = displayData
@@ -156,6 +188,56 @@ export function RxPage() {
             >
               {!frozen ? '⏹ Freeze' : '▶ Resume'}
             </button>
+
+            {/* Capture controls — visible only when frozen */}
+            {frozen && (
+                <div
+                  className="flex items-center gap-2 pl-3 border-l border-white/20 dark:border-white/10"
+                >
+                  {/* Duration input */}
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min={1}
+                      max={30}
+                      step={1}
+                      value={captureSec}
+                      onChange={(e) => setCaptureSec(Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 3)))}
+                      className="w-12 px-2 py-1 text-center rounded-lg font-mono text-xs border border-tale-gray/30 dark:border-white/10 bg-white/60 dark:bg-white/5 text-tale-gray dark:text-white outline-none focus:border-sky-400/60 transition-colors"
+                    />
+                    <span className="font-mono text-[11px] text-tale-gray/60 dark:text-white/60">s</span>
+                  </div>
+
+                  {/* Save to Player */}
+                  <button
+                    onClick={handleSaveToPlayer}
+                    title="Load last N seconds into Signal Player"
+                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs transition-all hover:-translate-y-0.5 active:scale-95"
+                    style={{
+                      background: 'linear-gradient(135deg, #5BC8F5, #3BA8D5)',
+                      border: '2px solid transparent',
+                      color: '#FFFFFF',
+                      boxShadow: '0 3px 10px rgba(91,200,245,0.40)',
+                    }}
+                  >
+                    → Player
+                  </button>
+
+                  {/* Download */}
+                  <button
+                    onClick={handleDownload}
+                    title="Download as .fc32 file"
+                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs border transition-all hover:-translate-y-0.5 active:scale-95"
+                    style={{
+                      border: '2px solid rgba(91,200,245,0.45)',
+                      color: '#5BC8F5',
+                      background: 'transparent',
+                    }}
+                  >
+                    ↓ .fc32
+                  </button>
+                </div>
+            )}
           </div>
         </div>
 

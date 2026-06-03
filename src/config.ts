@@ -7,3 +7,6 @@ export const config = {
   rxWsUrl:         import.meta.env.VITE_RX_WS_URL         ?? 'ws://localhost:5000/rx/ws',
   rxChunkDuration: Number(import.meta.env.VITE_RX_CHUNK_DURATION ?? 0.25),
 } as const
+
+/** Maximum seconds of raw IQ kept in the rolling capture buffer */
+export const MAX_CAPTURE_SEC = 30

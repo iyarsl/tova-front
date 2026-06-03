@@ -1,4 +1,5 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
@@ -10,6 +11,7 @@ import { SpectrogramChart } from '@/components/signal/SpectrogramChart'
 import { FileDropzone } from './FileDropzone'
 import { usePlayer } from './PlayerContext'
 import type { PlayerTab } from './useFilePlayer'
+import type { CapturePayload } from '@/types/rx'
 
 const TABS: { id: PlayerTab; label: string; icon: string }[] = [
   { id: 'time',        label: 'Time Domain', icon: '∿' },
@@ -33,6 +35,8 @@ function formatTime(seconds: number): string {
 export function PlayerPage() {
   const { toast } = useToast()
   const { theme } = useTheme()
+  const location = useLocation()
+  const navigate = useNavigate()
 
   const player = usePlayer()
 
@@ -43,6 +47,19 @@ export function PlayerPage() {
   )
   const [srError, setSrError]   = useState('')
   const srInputRef = useRef<HTMLInputElement>(null)
+
+  // --- auto-load from RX capture ---------------------------------------------
+  useEffect(() => {
+    const state = location.state as { capture?: CapturePayload } | null
+    if (!state?.capture) return
+    const { samples, sampleRate: sr, fileName } = state.capture
+    setSrInput(String(sr))
+    player.loadFromBuffer(samples, sr, fileName)
+    // Clear state so navigating back doesn't re-trigger
+    navigate(location.pathname, { replace: true, state: null })
+    toast(`Loaded ${fileName}`, 'success')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state])
 
   // --- file loading ----------------------------------------------------------
   // Validate sample rate at play-time, not load-time — user should be able to
