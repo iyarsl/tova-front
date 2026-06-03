@@ -29,8 +29,10 @@ dist-ssr
 !.env.example
 
 
- .playwright-mcp
- .playwright-mcp/
+.playwright-mcp/
+
+# Windows bash crash dumps
+*.stackdump
 
 # Local verification screenshots
 rx-analyze-*.png
