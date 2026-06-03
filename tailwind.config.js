@@ -78,6 +78,11 @@ export default {
         'dora-bounce-in': 'doraBounceIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
         'radar':          'radar 3s ease-out infinite',
         'sweep':          'sweep 4s linear infinite',
+        'sweep-slow':     'sweep 7s linear infinite',
+        'glow-pulse':     'glowPulse 2.6s ease-in-out infinite',
+        'blip':           'blip 3.4s ease-in-out infinite',
+        'scan-grid':      'scanGrid 5s linear infinite',
+        'rise-in':        'riseIn 0.9s cubic-bezier(0.22,1,0.36,1) forwards',
       },
       keyframes: {
         fadeIn: {
@@ -117,6 +122,24 @@ export default {
         sweep: {
           '0%':   { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(360deg)' },
+        },
+        glowPulse: {
+          '0%, 100%': { opacity: '0.55', transform: 'scale(1)' },
+          '50%':      { opacity: '1',    transform: 'scale(1.06)' },
+        },
+        blip: {
+          '0%, 100%':  { opacity: '0',   transform: 'scale(0.4)' },
+          '8%, 22%':   { opacity: '1',   transform: 'scale(1)' },
+          '40%':       { opacity: '0',   transform: 'scale(1.6)' },
+        },
+        scanGrid: {
+          '0%':   { transform: 'translateY(-30%)', opacity: '0' },
+          '40%':  { opacity: '0.8' },
+          '100%': { transform: 'translateY(130%)', opacity: '0' },
+        },
+        riseIn: {
+          '0%':   { opacity: '0', transform: 'translateY(40px) scale(0.96)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
       },
     },

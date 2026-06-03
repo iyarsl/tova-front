@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
-import mapGuide from '@/assets/dora/map.png'
 
 type NavItem = { to: string; label: string; icon: string }
 
@@ -72,6 +71,8 @@ export function Sidebar() {
             <span className="font-display font-extrabold text-xl text-dora-orange dark:text-cyan-400 whitespace-nowrap">
               Dora
             </span>
+            {/* Subtle Dora-purple accent dot */}
+            <span className="w-1.5 h-1.5 rounded-full bg-adv-purple/70 dark:bg-adv-purple/50 flex-shrink-0" />
           </div>
         )}
         {collapsed && (
@@ -96,67 +97,34 @@ export function Sidebar() {
       )}
 
       {/* Nav */}
-      <nav className="flex-1 py-2 flex flex-col gap-0.5 px-2 relative">
-        {/* Map trail dotted line (light mode only, expanded) */}
-        {!collapsed && (
-          <div
-            className="absolute left-[22px] top-3 bottom-3 w-0 dark:hidden"
-            style={{ borderLeft: '2px dashed #FFD4A6' }}
-          />
-        )}
-
+      <nav className="flex-1 py-2 flex flex-col gap-0.5 px-2">
         {navItems.map(item => (
           <NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `relative flex items-center gap-3 px-3 py-[9px] rounded-[14px] text-[14px] font-display font-semibold transition-all duration-150 ${
+              `relative flex items-center gap-3 px-3 py-[9px] rounded-[12px] text-[14px] font-display font-semibold transition-colors duration-150 ${
                 isActive
-                  ? 'bg-gradient-to-r from-pastel-orange to-[#FFD4A6] text-dora-orange border-l-[3px] border-dora-orange dark:bg-cyan-400/10 dark:text-cyan-400 dark:border dark:border-cyan-400/20'
-                  : 'text-map-brown dark:text-[#9ca3af] hover:bg-[rgba(255,140,66,0.10)] dark:hover:bg-white/5 hover:translate-x-0.5'
+                  ? 'bg-pastel-orange text-dora-orange border-l-[3px] border-dora-orange dark:bg-cyan-400/10 dark:text-cyan-400 dark:border dark:border-cyan-400/20'
+                  : 'text-map-brown dark:text-[#9ca3af] hover:bg-[rgba(255,140,66,0.08)] dark:hover:bg-white/5'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                {!collapsed && (
-                  <span
-                    className={`absolute left-[-6px] w-3 h-3 rounded-full border-2 dark:hidden flex-shrink-0 ${
-                      isActive
-                        ? 'bg-dora-orange border-dora-orange'
-                        : 'bg-white border-[#FFD4A6]'
-                    }`}
-                    style={{ top: '50%', transform: 'translateY(-50%)' }}
-                  />
-                )}
-                <span className={`text-base flex-shrink-0 w-5 text-center z-10 ${
+                <span className={`text-base flex-shrink-0 w-5 text-center ${
                   isActive ? 'text-dora-orange dark:text-cyan-400' : ''
                 }`}>
                   {item.icon}
                 </span>
                 {!collapsed && (
-                  <span className="whitespace-nowrap overflow-hidden z-10">{item.label}</span>
+                  <span className="whitespace-nowrap overflow-hidden">{item.label}</span>
                 )}
               </>
             )}
           </NavLink>
         ))}
       </nav>
-
-      {/* Map guide mascot — "I'm the Map!" */}
-      {!collapsed && (
-        <div className="px-4 pb-1 flex flex-col items-center select-none pointer-events-none">
-          <img
-            src={mapGuide}
-            alt=""
-            aria-hidden
-            className="w-[88px] animate-float-slow drop-shadow-[0_8px_14px_rgba(45,42,62,0.18)] dark:opacity-90"
-          />
-          <span className="mt-1 font-display font-bold text-[10px] tracking-[0.14em] uppercase text-map-brown/70 dark:text-[#4b5563]">
-            Map · your guide
-          </span>
-        </div>
-      )}
 
       {/* Status pill */}
       <div className="px-3 py-4 border-t border-[#FFE4C4] dark:border-white/[0.07]">

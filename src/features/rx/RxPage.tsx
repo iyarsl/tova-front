@@ -9,7 +9,6 @@ import type { RxStatus } from '@/types/rx'
 import { TimeDomainChart } from '@/components/signal/TimeDomainChart'
 import { FftChart } from '@/components/signal/FftChart'
 import { SpectrogramChart } from '@/components/signal/SpectrogramChart'
-import bootsBuddy from '@/assets/dora/boots2.png'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'time',        label: 'Time Domain',  icon: '∿' },
@@ -204,9 +203,8 @@ export function RxPage() {
 
                 {!data && (
                   <div className="flex flex-col items-center justify-center h-full gap-3">
-                    <div className="flex items-end gap-3 text-sky-blue-d dark:text-white">
+                    <div className="text-sky-blue-d dark:text-white">
                       <GraphPlaceholder type={tab} />
-                      <img src={bootsBuddy} alt="" aria-hidden className="w-14 animate-float-slow opacity-90 drop-shadow-[0_8px_14px_rgba(45,42,62,0.15)]" />
                     </div>
                     <span className="font-body text-sm text-whisper-gray dark:text-white/30">
                       {NO_DATA_MSG[status]}

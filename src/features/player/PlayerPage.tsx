@@ -9,7 +9,6 @@ import { FftChart } from '@/components/signal/FftChart'
 import { SpectrogramChart } from '@/components/signal/SpectrogramChart'
 import { FileDropzone } from './FileDropzone'
 import { usePlayer } from './PlayerContext'
-import doraStand from '@/assets/dora/dora-a.png'
 import type { PlayerTab } from './useFilePlayer'
 
 const TABS: { id: PlayerTab; label: string; icon: string }[] = [
@@ -430,17 +429,12 @@ export function PlayerPage() {
               )}
 
               {!player.signalData && (
-                <div className="flex flex-col items-center justify-center h-full gap-4">
-                  <img
-                    src={doraStand}
-                    alt=""
-                    aria-hidden
-                    className="w-24 animate-float drop-shadow-[0_12px_22px_rgba(45,42,62,0.18)] dark:opacity-80"
-                  />
+                <div className="flex flex-col items-center justify-center h-full gap-3">
+                  <span className="text-3xl text-dora-orange/30 dark:text-[#1f2937]">◈</span>
                   <span className="font-display font-bold text-[15px] text-tale-gray dark:text-[#4b5563]">
                     {player.isLoaded
                       ? 'Loading first frame…'
-                      : 'Drop a .fc32 file to start exploring'
+                      : 'Drop a .fc32 file to begin'
                     }
                   </span>
                 </div>
