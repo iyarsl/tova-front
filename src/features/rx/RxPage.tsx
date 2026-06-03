@@ -6,13 +6,11 @@ import type { Tab } from './RxStreamContext'
 import { useVortexConfig } from '@/features/vortex/useVortexConfig'
 import { useTheme } from '@/hooks/useTheme'
 import type { RxStatus } from '@/types/rx'
-import { TimeDomainChart } from '@/components/signal/TimeDomainChart'
-import { FftChart } from '@/components/signal/FftChart'
 import { SpectrogramChart } from '@/components/signal/SpectrogramChart'
+import { RxAnalyzeView } from './RxAnalyzeView'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'time',        label: 'Time Domain',  icon: '∿' },
-  { id: 'fft',         label: 'FFT',          icon: '⌇' },
+  { id: 'analyze',     label: 'Analyze',      icon: '⌇' },
   { id: 'spectrogram', label: 'Spectrogram',  icon: '▦' },
 ]
 
@@ -34,7 +32,7 @@ const NO_DATA_MSG: Record<RxStatus, string> = {
   error:      'Connection lost — reconnecting…',
 }
 
-function GraphPlaceholder({ type }: { type: 'time' | 'fft' | 'spectrogram' }) {
+function GraphPlaceholder({ type }: { type: 'analyze' | 'spectrogram' }) {
   return (
     <svg
       viewBox="0 0 200 80"
@@ -47,11 +45,7 @@ function GraphPlaceholder({ type }: { type: 'time' | 'fft' | 'spectrogram' }) {
       <line x1="20" y1="10" x2="20" y2="70" />
       <line x1="20" y1="70" x2="190" y2="70" />
 
-      {type === 'time' && (
-        <path d="M20 40 Q50 10 80 40 Q110 70 140 40 Q160 20 190 40" strokeLinecap="round" />
-      )}
-
-      {type === 'fft' && (
+      {type === 'analyze' && (
         <>
           <line x1="40"  y1="70" x2="40"  y2="55" />
           <line x1="60"  y1="70" x2="60"  y2="35" />
@@ -88,6 +82,10 @@ export function RxPage() {
     displayData,
     zoomLayouts,
     handleRelayout,
+    linked,
+    setLinked,
+    bottomMode,
+    setBottomMode,
   } = useRxStreamContext()
 
   const { config: vortexConfig } = useVortexConfig()
@@ -172,23 +170,16 @@ export function RxPage() {
                 transition={{ duration: 0.2 }}
                 className="absolute inset-3 rounded-[12px] overflow-hidden"
               >
-                {tab === 'time' && data && (
-                  <TimeDomainChart
-                    x={data.time.x}
-                    y={data.time.y}
+                {tab === 'analyze' && data && (
+                  <RxAnalyzeView
+                    data={data}
                     theme={theme}
-                    zoomLayout={zoomLayouts.time}
-                    onRelayout={(e) => handleRelayout('time', e)}
-                  />
-                )}
-
-                {tab === 'fft' && data && (
-                  <FftChart
-                    x={data.fft.x}
-                    y={data.fft.y}
-                    theme={theme}
-                    zoomLayout={zoomLayouts.fft}
-                    onRelayout={(e) => handleRelayout('fft', e)}
+                    zoomLayouts={zoomLayouts}
+                    onRelayout={handleRelayout}
+                    linked={linked}
+                    setLinked={setLinked}
+                    bottomMode={bottomMode}
+                    setBottomMode={setBottomMode}
                   />
                 )}
 

@@ -7,9 +7,11 @@ type Props = {
   theme: 'dark' | 'light'
   zoomLayout?: ZoomLayout
   onRelayout?: (event: Plotly.PlotRelayoutEvent) => void
+  /** Y-axis title — defaults to 'Amplitude'; the RX analyze view passes 'Power (dB)'. */
+  yTitle?: string
 }
 
-export function TimeDomainChart({ x, y, theme, zoomLayout = {}, onRelayout }: Props) {
+export function TimeDomainChart({ x, y, theme, zoomLayout = {}, onRelayout, yTitle = 'Amplitude' }: Props) {
   const { bgColor, paperColor, gridColor, textColor } = getChartColors(theme)
   const lineColor = '#22d3ee'
 
@@ -40,7 +42,7 @@ export function TimeDomainChart({ x, y, theme, zoomLayout = {}, onRelayout }: Pr
           gridcolor:     gridColor,
           zerolinecolor: gridColor,
           tickfont:      { size: 10 },
-          title:         { text: 'Amplitude', font: { size: 10, color: textColor } },
+          title:         { text: yTitle, font: { size: 10, color: textColor } },
           ...(zoomLayout.yRange && { range: zoomLayout.yRange as [number, number], autorange: false }),
         },
       }}

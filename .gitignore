@@ -32,6 +32,9 @@ dist-ssr
  .playwright-mcp
  .playwright-mcp/
 
+# Local verification screenshots
+rx-analyze-*.png
+
 .vite/
 .claude/
 
