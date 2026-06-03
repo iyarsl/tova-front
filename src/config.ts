@@ -9,4 +9,4 @@ export const config = {
 } as const
 
 /** Maximum seconds of raw IQ kept in the rolling capture buffer */
-export const MAX_CAPTURE_SEC = 30
+export const MAX_CAPTURE_SEC = 3

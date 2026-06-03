@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
@@ -98,19 +98,17 @@ export function RxPage() {
   const navigate = useNavigate()
   const { toast } = useToast()
 
-  const [captureSec, setCaptureSec] = useState(3)
-
   const handleSaveToPlayer = useCallback(() => {
-    const capture = buildCapture(captureSec)
+    const capture = buildCapture(3)
     if (!capture) {
       toast('Not enough data — stream a signal first', 'error')
       return
     }
     navigate('/player', { state: { capture } })
-  }, [buildCapture, captureSec, navigate, toast])
+  }, [buildCapture, navigate, toast])
 
   const handleDownload = useCallback(() => {
-    const capture = buildCapture(captureSec)
+    const capture = buildCapture(3)
     if (!capture) {
       toast('Not enough data — stream a signal first', 'error')
       return
@@ -122,7 +120,7 @@ export function RxPage() {
     a.download = capture.fileName
     a.click()
     URL.revokeObjectURL(url)
-  }, [buildCapture, captureSec, toast])
+  }, [buildCapture, toast])
 
   const centerFreq = vortexConfig ? (vortexConfig.rfin_hz / 1e6).toFixed(0) : '—'
   const data = displayData
@@ -194,20 +192,6 @@ export function RxPage() {
                 <div
                   className="flex items-center gap-2 pl-3 border-l border-white/20 dark:border-white/10"
                 >
-                  {/* Duration input */}
-                  <div className="flex items-center gap-1">
-                    <input
-                      type="number"
-                      min={1}
-                      max={30}
-                      step={1}
-                      value={captureSec}
-                      onChange={(e) => setCaptureSec(Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 3)))}
-                      className="w-12 px-2 py-1 text-center rounded-lg font-mono text-xs border border-tale-gray/30 dark:border-white/10 bg-white/60 dark:bg-white/5 text-tale-gray dark:text-white outline-none focus:border-sky-400/60 transition-colors"
-                    />
-                    <span className="font-mono text-[11px] text-tale-gray/60 dark:text-white/60">s</span>
-                  </div>
-
                   {/* Save to Player */}
                   <button
                     onClick={handleSaveToPlayer}
