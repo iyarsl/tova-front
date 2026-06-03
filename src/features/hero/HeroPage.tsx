@@ -40,7 +40,7 @@ function RadarRings() {
           }`}
           style={{ width: 320, height: 320, animationDelay: `${i}s` }} />
       ))}
-      <span className="absolute w-[160px] h-[2px] origin-left motion-reduce:hidden animate-sweep"
+      <span className="absolute w-[160px] h-[2px] origin-left animate-sweep motion-reduce:animate-none"
         style={{ background: 'linear-gradient(90deg, rgba(255,140,66,0.6), rgba(155,93,229,0.28), transparent)' }} />
       <span className="absolute w-3 h-3 rounded-full bg-dora-orange animate-pulse-slow shadow-[0_0_14px_rgba(255,140,66,0.7)]" />
     </div>

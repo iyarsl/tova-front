@@ -46,13 +46,20 @@ export function DoraSkyCanvas() {
       <div className="absolute left-1/2 top-[52%] -translate-x-[42%] -translate-y-1/2
         w-[min(78vw,760px)] aspect-square">
 
-        {/* Rotating conic sweep, masked to a disc */}
-        <div className="absolute inset-0 rounded-full motion-reduce:hidden animate-sweep-slow"
+        {/* Rotating conic sweep, masked to a disc. Stays visible (static) under
+            reduced-motion so the radar never looks dead. */}
+        <div className="absolute inset-0 rounded-full animate-sweep-slow motion-reduce:animate-none"
           style={{
-            background: 'conic-gradient(from 0deg, rgba(255,140,66,0.32), rgba(255,140,66,0.05) 32deg, transparent 80deg, transparent 360deg)',
+            background: 'conic-gradient(from 0deg, rgba(255,140,66,0.55) 0deg, rgba(255,140,66,0.18) 26deg, rgba(255,140,66,0.04) 60deg, transparent 92deg, transparent 360deg)',
             maskImage: 'radial-gradient(circle, #000 70%, transparent 71%)',
             WebkitMaskImage: 'radial-gradient(circle, #000 70%, transparent 71%)',
           }} />
+
+        {/* Bright leading edge of the sweep — rotates with the wedge */}
+        <div className="absolute inset-0 animate-sweep-slow motion-reduce:animate-none">
+          <span className="absolute left-1/2 top-1/2 h-[2px] w-1/2 origin-left -translate-y-1/2"
+            style={{ background: 'linear-gradient(90deg, rgba(255,140,66,0.9), rgba(255,140,66,0.15), transparent)' }} />
+        </div>
 
         {/* Rings, range ticks, crosshair, bearings */}
         <svg className="absolute inset-0 h-full w-full" viewBox="0 0 400 400" fill="none">
