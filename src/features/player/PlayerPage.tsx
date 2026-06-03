@@ -48,18 +48,15 @@ export function PlayerPage() {
   const [srError, setSrError]   = useState('')
   const srInputRef = useRef<HTMLInputElement>(null)
 
-  // --- auto-load from RX capture ---------------------------------------------
+  const locationState = location.state as { capture?: CapturePayload } | null
   useEffect(() => {
-    const state = location.state as { capture?: CapturePayload } | null
-    if (!state?.capture) return
-    const { samples, sampleRate: sr, fileName } = state.capture
+    if (!locationState?.capture) return
+    const { samples, sampleRate: sr, fileName } = locationState.capture
     setSrInput(String(sr))
     player.loadFromBuffer(samples, sr, fileName)
-    // Clear state so navigating back doesn't re-trigger
     navigate(location.pathname, { replace: true, state: null })
     toast(`Loaded ${fileName}`, 'success')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state])
+  }, [locationState])
 
   // --- file loading ----------------------------------------------------------
   // Validate sample rate at play-time, not load-time — user should be able to

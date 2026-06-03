@@ -190,7 +190,7 @@ export function RxPage() {
             {/* Capture controls — visible only when frozen */}
             {frozen && (
                 <div
-                  className="flex items-center gap-2 pl-3 border-l border-white/20 dark:border-white/10"
+                  className="flex items-center gap-2 pl-3 border-l border-tale-gray/20 dark:border-white/10"
                 >
                   {/* Save to Player */}
                   <button
