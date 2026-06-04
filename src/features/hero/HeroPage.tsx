@@ -30,6 +30,8 @@ function ArrowIcon({ className }: { className?: string }) {
 }
 
 // Live RF radar rings that radiate behind Dora — orange core fading to purple.
+// Disabled: radar effect around the Dora image is commented out.
+/*
 function RadarRings() {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -46,6 +48,7 @@ function RadarRings() {
     </div>
   )
 }
+*/
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -192,7 +195,7 @@ export function HeroPage() {
           className="relative hidden xl:flex items-center justify-center h-full pointer-events-none">
 
           <div className="relative w-[460px] h-[460px] flex items-end justify-center">
-            <RadarRings />
+            {/* <RadarRings /> */}
             <div className="relative z-10 animate-float">
               <img src={doraHero} alt="Dora the explorer"
                 className="w-[clamp(300px,32vw,420px)] drop-shadow-[0_24px_40px_rgba(45,42,62,0.28)]" />
