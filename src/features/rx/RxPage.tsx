@@ -129,7 +129,7 @@ export function RxPage() {
 
   return (
     <PageTransition>
-      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
+      <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
         <Topbar title="RX Graphs" />
 
         {/* Tab bar */}
@@ -226,7 +226,7 @@ export function RxPage() {
         </div>
 
         {/* Chart area */}
-        <div className="flex-1 relative overflow-hidden p-4 bg-sky-canvas dark:bg-base-950">
+        <div className="flex-1 relative overflow-hidden p-4 bg-transparent dark:bg-base-950">
           <div className="absolute inset-4 rounded-[20px] border border-sky-blue-d/40 dark:border-white/[0.07] bg-pastel-blue dark:bg-base-900/40 p-3 overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
@@ -279,7 +279,9 @@ export function RxPage() {
                 {!data && tab === 'combined' && (
                   <div className="flex flex-col h-full">
                     <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                      <GraphPlaceholder type="fft" />
+                      <div className="text-sky-blue-d dark:text-white">
+                        <GraphPlaceholder type="fft" />
+                      </div>
                       <span className="font-body text-sm text-whisper-gray dark:text-white/30">
                         {NO_DATA_MSG[status]}
                       </span>
@@ -292,14 +294,18 @@ export function RxPage() {
                       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5BC8F5]/40 to-transparent" />
                     </div>
                     <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                      <GraphPlaceholder type="time" />
+                      <div className="text-sky-blue-d dark:text-white">
+                        <GraphPlaceholder type="time" />
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {!data && tab === 'spectrogram' && (
-                  <div className="flex flex-col items-center justify-center h-full gap-4">
-                    <GraphPlaceholder type="spectrogram" />
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <div className="text-sky-blue-d dark:text-white">
+                      <GraphPlaceholder type="spectrogram" />
+                    </div>
                     <span className="font-body text-sm text-whisper-gray dark:text-white/30">
                       {NO_DATA_MSG[status]}
                     </span>

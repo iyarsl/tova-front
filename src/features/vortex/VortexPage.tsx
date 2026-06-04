@@ -257,16 +257,52 @@ export function VortexPage() {
 
   if (isLoading) return (
     <PageTransition>
-      <div className="flex-1 flex items-center justify-center text-tale-gray dark:text-[#6b7280] font-body text-sm">
-        Loading device config…
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-transparent dark:bg-base-950 transition-colors">
+        <div className="relative flex items-center justify-center w-44 h-44">
+          {[0, 1, 2].map(i => (
+            <span
+              key={i}
+              className="absolute rounded-full border-2 border-dora-orange/40 dark:border-cyan-400/30 animate-radar"
+              style={{ width: 150, height: 150, animationDelay: `${i}s` }}
+            />
+          ))}
+          {/* Pulsing core at the centre of the radar */}
+          <span className="relative z-10 w-3.5 h-3.5 rounded-full bg-dora-orange animate-pulse-slow shadow-[0_0_12px_rgba(255,140,66,0.5)]" />
+        </div>
+        <div className="flex items-center gap-1.5 font-display font-bold text-[15px] text-tale-gray dark:text-[#9ca3af]">
+          Searching for device
+          <span className="flex gap-1">
+            {[0, 1, 2].map(i => (
+              <span key={i} className="w-1.5 h-1.5 rounded-full bg-dora-orange animate-pulse-slow" style={{ animationDelay: `${i * 0.2}s` }} />
+            ))}
+          </span>
+        </div>
       </div>
     </PageTransition>
   )
 
   if (isError || !config) return (
     <PageTransition>
-      <div className="flex-1 flex items-center justify-center text-sunset-red dark:text-rose-500 font-body text-sm">
-        ✕ Cannot reach device at {import.meta.env.VITE_API_BASE_URL}
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center bg-transparent dark:bg-base-950 transition-colors">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center bg-[#FFE0E0]/70 dark:bg-rose-500/10 border-2 border-sunset-red/30"
+        >
+          <svg className="w-8 h-8 text-sunset-red dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="16.5" y1="16.5" x2="22" y2="22" />
+            <line x1="11" y1="8" x2="11" y2="12" />
+            <line x1="11" y1="14.5" x2="11" y2="14.5" />
+          </svg>
+        </div>
+        <h2 className="font-display font-extrabold text-[22px] text-story-ink dark:text-[#f9fafb]">
+          Device not found
+        </h2>
+        <p className="font-body text-sm text-tale-gray dark:text-[#9ca3af] max-w-sm">
+          Couldn&apos;t reach the backend. Start it and we&apos;ll keep looking.
+        </p>
+        <code className="font-mono text-xs text-sunset-red dark:text-rose-400 bg-[#FFE0E0]/70 dark:bg-rose-500/10 px-3 py-1.5 rounded-full border border-sunset-red/30">
+          {import.meta.env.VITE_API_BASE_URL}
+        </code>
       </div>
     </PageTransition>
   )
@@ -280,7 +316,7 @@ export function VortexPage() {
 
   return (
     <PageTransition>
-      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
+      <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
         <Topbar title="Vortex Config" />
 
         {resumed && (

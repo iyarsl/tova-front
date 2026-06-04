@@ -194,7 +194,7 @@ export function ScanPage() {
 
   return (
     <PageTransition>
-      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
+      <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
         <Topbar title="Scan Table" />
 
         <div className="flex-1 overflow-y-auto p-5">

@@ -1,6 +1,7 @@
 import { useLocation, Navigate, Route, Routes } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { Sidebar }     from '@/components/Sidebar'
+import { AdventureBackdrop } from '@/components/AdventureBackdrop'
 import { HeroPage }    from '@/features/hero/HeroPage'
 import { VortexPage }  from '@/features/vortex/VortexPage'
 import { ScanPage }    from '@/features/scan/ScanPage'
@@ -11,8 +12,11 @@ function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen w-screen overflow-hidden dark:bg-base-950 bg-sky-canvas">
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {children}
+      <main className="relative flex-1 flex flex-col overflow-hidden">
+        <AdventureBackdrop />
+        <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+          {children}
+        </div>
       </main>
     </div>
   )
