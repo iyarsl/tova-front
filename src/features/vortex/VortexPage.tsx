@@ -6,6 +6,7 @@ import {
   availableBandwidths, isOutputLocked, isIfbwDisabled,
   IFBW_320_OUTPUT_MHZ,
 } from './constraints'
+import { config as appConfig } from '@/config'
 
 function ConfigCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -283,8 +284,21 @@ export function VortexPage() {
       <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
         <Topbar title="Vortex Config" />
 
+        {/* VORTEX flag status banner */}
+        {appConfig.useVortex ? (
+          <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-meadow-green/40 bg-pastel-green dark:bg-emerald-500/5 dark:border-emerald-500/20 text-meadow-green-dk dark:text-emerald-400 font-body text-xs flex items-center gap-2">
+            <span className="text-sm">⚡</span>
+            <span>VORTEX <strong>enabled</strong> — hardware used in scans</span>
+          </div>
+        ) : (
+          <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-xs flex items-center gap-2">
+            <span>⊘</span>
+            <span>VORTEX <strong>disabled</strong> (VITE_USE_VORTEX=false) — scans receive directly on the USRP</span>
+          </div>
+        )}
+
         {resumed && (
-          <div className="mx-5 mt-4 px-4 py-3 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-sm flex items-center gap-2">
+          <div className="mx-5 mt-3 px-4 py-3 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-sm flex items-center gap-2">
             <span>⚠</span> Control released — reload to regain access
           </div>
         )}

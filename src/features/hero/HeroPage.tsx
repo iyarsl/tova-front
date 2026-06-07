@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { DoraSkyCanvas } from './DoraSkyCanvas'
 import { fetchConfig } from '@/api/vortex'
 import { useQuery } from '@tanstack/react-query'
+import { config as appConfig } from '@/config'
 
 type ConnectState = 'idle' | 'connecting' | 'success'
 
@@ -31,11 +32,12 @@ export function HeroPage() {
   const { data, isError } = useQuery({
     queryKey: ['vortex-config'],
     queryFn: fetchConfig,
+    enabled: appConfig.useVortex,
     retry: 1,
     refetchInterval: false,
   })
 
-  const online = !isError && !!data
+  const online = appConfig.useVortex && !isError && !!data
 
   async function handleConnect() {
     setConnectState('connecting')
@@ -90,7 +92,14 @@ export function HeroPage() {
 
             {/* Status */}
             <div className="flex items-center justify-center gap-2 mb-7">
-              {online ? (
+              {!appConfig.useVortex ? (
+                <>
+                  <span className="font-mono text-xs text-[#7A5C3A]">⊘</span>
+                  <span className="font-mono text-xs text-[#7A5C3A]">
+                    VORTEX disabled
+                  </span>
+                </>
+              ) : online ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-meadow-green animate-pulse-slow" />
                   <span className="font-mono text-xs text-meadow-green-dk">

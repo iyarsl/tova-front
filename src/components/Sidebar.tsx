@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
+import { config as appConfig } from '@/config'
 
 type NavItem = { to: string; label: string; icon: string }
 
@@ -51,11 +52,14 @@ export function Sidebar() {
   const { data, isError } = useQuery({
     queryKey: ['vortex-config'],
     queryFn: fetchConfig,
+    enabled: appConfig.useVortex,
     refetchInterval: 5000,
     retry: false,
   })
 
-  const connected = !isError && !!data
+  // Three-way status: vortex disabled (flag off) / connected / disconnected
+  const vortexDisabled = !appConfig.useVortex
+  const connected      = !vortexDisabled && !isError && !!data
 
   return (
     <motion.aside
@@ -146,19 +150,23 @@ export function Sidebar() {
       <div className="px-3 py-4 border-t border-[#FFE4C4] dark:border-white/[0.07]">
         <div
           className={`flex items-center gap-2 px-3 py-2 rounded-[14px] text-xs font-body font-bold ${
-            connected
-              ? 'bg-pastel-green border border-meadow-green/40 text-meadow-green-dk dark:bg-emerald-500/10 dark:border dark:border-emerald-500/20 dark:text-emerald-400'
-              : 'bg-[#FFE0E0] border border-sunset-red/40 text-[#B03030] dark:bg-rose-500/10 dark:border dark:border-rose-500/20 dark:text-rose-400'
+            vortexDisabled
+              ? 'bg-[#FFF6CC] border border-sunshine/50 text-[#7A5C3A] dark:bg-amber-500/10 dark:border dark:border-amber-500/20 dark:text-amber-400'
+              : connected
+                ? 'bg-pastel-green border border-meadow-green/40 text-meadow-green-dk dark:bg-emerald-500/10 dark:border dark:border-emerald-500/20 dark:text-emerald-400'
+                : 'bg-[#FFE0E0] border border-sunset-red/40 text-[#B03030] dark:bg-rose-500/10 dark:border dark:border-rose-500/20 dark:text-rose-400'
           }`}
         >
-          {connected ? (
+          {vortexDisabled ? (
+            <span className="text-[11px] flex-shrink-0">⊘</span>
+          ) : connected ? (
             <SunIcon className="w-4 h-4 flex-shrink-0 animate-sun-pulse text-sunshine dark:text-emerald-400" />
           ) : (
             <SearchIcon className="w-4 h-4 flex-shrink-0 animate-searching text-sunset-red dark:text-rose-400" />
           )}
           {!collapsed && (
             <span className="whitespace-nowrap">
-              {connected ? `v${data?.version}` : 'Disconnected'}
+              {vortexDisabled ? 'VORTEX off' : connected ? `v${data?.version}` : 'Disconnected'}
             </span>
           )}
         </div>
