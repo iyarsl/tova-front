@@ -256,10 +256,25 @@ export function VortexPage() {
   useEffect(() => { setLocalBw(null) },     [config?.ifbw_mhz])
   useEffect(() => { setLocalInvert(null) }, [config?.gain_mode])
 
-  if (isLoading) return (
+  if (isLoading && appConfig.useVortex) return (
     <PageTransition>
       <div className="flex-1 flex items-center justify-center text-tale-gray dark:text-[#6b7280] font-body text-sm">
         Loading device config…
+      </div>
+    </PageTransition>
+  )
+
+  if (!appConfig.useVortex && (isError || !config)) return (
+    <PageTransition>
+      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
+        <Topbar title="Vortex Config" />
+        <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-xs flex items-center gap-2">
+          <span>⊘</span>
+          <span>VORTEX <strong>disabled</strong> (VITE_USE_VORTEX=false) — scans receive directly on the USRP</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center text-whisper-gray dark:text-[#4b5563] font-body text-sm">
+          Device not connected — VORTEX control unavailable
+        </div>
       </div>
     </PageTransition>
   )

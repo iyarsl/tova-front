@@ -6,7 +6,6 @@ import {
 import { useToast } from '@/components/Toast'
 import type { AppError } from '@/api/client'
 import type { VortexConfig } from '@/types/vortex'
-import { config as appConfig } from '@/config'
 
 const QK = ['vortex-config']
 
@@ -17,7 +16,6 @@ export function useVortexConfig() {
   const query = useQuery({
     queryKey: QK,
     queryFn: fetchConfig,
-    enabled: appConfig.useVortex,
     refetchInterval: 5000,
     refetchIntervalInBackground: false,
   })
