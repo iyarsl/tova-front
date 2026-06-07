@@ -5,8 +5,7 @@ import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { ScanTable } from './ScanTable'
 import { useScan } from './ScanContext'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { fetchConfig } from '@/api/vortex'
+import { useMutation } from '@tanstack/react-query'
 import { runScan } from '@/api/scan'
 import type { ApiScanRow } from '@/types/scan'
 import { useToast } from '@/components/Toast'
@@ -18,42 +17,7 @@ import { ScanDefaultsModal } from './ScanDefaultsModal'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { parseExcelToScanRows } from '@/utils/parseExcel'
 import { downloadScanTemplate } from '@/utils/downloadTemplate'
-
-function DeviceStatePanel() {
-  const { data } = useQuery({
-    queryKey: ['vortex-config'],
-    queryFn: fetchConfig,
-    refetchInterval: 5000,
-  })
-
-  if (!data) return null
-
-  const items = [
-    { label: 'RF In',   value: `${data.rfin_ghz.toFixed(4)} GHz` },
-    { label: 'Output',  value: `${data.output_mhz.toFixed(1)} MHz` },
-    { label: 'Gain',    value: `${data.gain_db} dB` },
-    { label: 'IF BW',   value: `${data.ifbw_mhz} MHz` },
-    { label: 'Version', value: data.version },
-  ]
-
-  return (
-    <div className="mb-5 rounded-[16px] border border-[#C5A3F5] dark:border-white/[0.12] bg-pastel-purple dark:bg-base-900 overflow-hidden transition-colors">
-      <div className="px-4 py-2 border-b border-[#C5A3F5]/50 dark:border-white/[0.12] bg-[#E6D8FF]/60 dark:bg-base-950/70">
-        <span className="text-[10px] font-body font-bold tracking-[0.12em] uppercase text-adv-purple dark:text-[#6b7280]">
-          Live Device State
-        </span>
-      </div>
-      <div className="flex divide-x divide-[#C5A3F5]/40 dark:divide-white/[0.08]">
-        {items.map(({ label, value }) => (
-          <div key={label} className="flex-1 px-4 py-3">
-            <div className="font-body text-[10px] font-bold text-whisper-gray dark:text-[#9ca3af] uppercase tracking-wider mb-1">{label}</div>
-            <div className="font-mono text-[14px] text-dora-orange dark:text-cyan-400">{value}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+import { config } from '@/config'
 
 function isAbsolutePath(p: string): boolean {
   return /^([a-zA-Z]:[\\/]|\/|\\\\)/.test(p)
@@ -176,7 +140,7 @@ export function ScanPage() {
         gain_db:           gain_db!,
         sample_rate:       sample_rate!,
       }))
-      return runScan(apiRows, dir, mock)
+      return runScan(apiRows, dir, mock, config.useVortex)
     },
     onSuccess: (files) => {
       setResults(files)
@@ -199,8 +163,6 @@ export function ScanPage() {
 
         <div className="flex-1 overflow-y-auto p-5">
           <div className="max-w-6xl mx-auto space-y-5">
-            <DeviceStatePanel />
-
             <input
               id="excel-file-import"
               type="file"

@@ -22,8 +22,9 @@ export async function runScan(
   rows: ApiScanRow[],
   output_dir: string,
   mock: boolean,
+  use_vortex: boolean,
 ): Promise<string[]> {
-  const res = await client.post('/scan/run', { rows, output_dir, mock })
+  const res = await client.post('/scan/run', { rows, output_dir, mock, use_vortex })
   return z.array(z.string()).parse(res.data)
 }
 

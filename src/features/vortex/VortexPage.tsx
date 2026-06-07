@@ -6,6 +6,7 @@ import {
   availableBandwidths, isOutputLocked, isIfbwDisabled,
   IFBW_320_OUTPUT_MHZ,
 } from './constraints'
+import { config as appConfig } from '@/config'
 
 function ConfigCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -255,7 +256,7 @@ export function VortexPage() {
   useEffect(() => { setLocalBw(null) },     [config?.ifbw_mhz])
   useEffect(() => { setLocalInvert(null) }, [config?.gain_mode])
 
-  if (isLoading) return (
+  if (isLoading && appConfig.useVortex) return (
     <PageTransition>
       <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-transparent dark:bg-base-950 transition-colors">
         <div className="relative flex items-center justify-center w-44 h-44">
@@ -276,6 +277,21 @@ export function VortexPage() {
               <span key={i} className="w-1.5 h-1.5 rounded-full bg-dora-orange animate-pulse-slow" style={{ animationDelay: `${i * 0.2}s` }} />
             ))}
           </span>
+        </div>
+      </div>
+    </PageTransition>
+  )
+
+  if (!appConfig.useVortex && (isError || !config)) return (
+    <PageTransition>
+      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
+        <Topbar title="Vortex Config" />
+        <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-xs flex items-center gap-2">
+          <span>⊘</span>
+          <span>VORTEX <strong>disabled</strong> (VITE_USE_VORTEX=false) — scans receive directly on the USRP</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center text-whisper-gray dark:text-[#4b5563] font-body text-sm">
+          Device not connected — VORTEX control unavailable
         </div>
       </div>
     </PageTransition>
@@ -319,8 +335,21 @@ export function VortexPage() {
       <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
         <Topbar title="Vortex Config" />
 
+        {/* VORTEX flag status banner */}
+        {appConfig.useVortex ? (
+          <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-meadow-green/40 bg-pastel-green dark:bg-emerald-500/5 dark:border-emerald-500/20 text-meadow-green-dk dark:text-emerald-400 font-body text-xs flex items-center gap-2">
+            <span className="text-sm">⚡</span>
+            <span>VORTEX <strong>enabled</strong> — hardware used in scans</span>
+          </div>
+        ) : (
+          <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-xs flex items-center gap-2">
+            <span>⊘</span>
+            <span>VORTEX <strong>disabled</strong> (VITE_USE_VORTEX=false) — scans receive directly on the USRP</span>
+          </div>
+        )}
+
         {resumed && (
-          <div className="mx-5 mt-4 px-4 py-3 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-sm flex items-center gap-2">
+          <div className="mx-5 mt-3 px-4 py-3 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-sm flex items-center gap-2">
             <span>⚠</span> Control released — reload to regain access
           </div>
         )}

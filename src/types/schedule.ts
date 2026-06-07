@@ -6,6 +6,7 @@ export interface CreateScheduledScanPayload {
   rows: ApiScanRow[]
   output_dir: string
   mock: boolean
+  use_vortex: boolean
   scheduled_at: string
   recurrence: Recurrence
   custom_interval_minutes?: number
@@ -16,6 +17,7 @@ export interface ScheduledScan {
   rows: ApiScanRow[]
   output_dir: string
   mock: boolean
+  use_vortex: boolean
   scheduled_at: string
   recurrence: Recurrence
   custom_interval_minutes?: number

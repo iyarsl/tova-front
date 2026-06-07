@@ -6,6 +6,7 @@ import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import type { ScanRow } from '@/types/scan'
 import type { Recurrence } from '@/types/schedule'
+import { config } from '@/config'
 
 interface Props {
   rows: ScanRow[]
@@ -46,6 +47,7 @@ export function ScheduleModal({ rows, onClose }: Props) {
         }) as import('@/types/scan').ApiScanRow),
         output_dir: dir,
         mock: false,
+        use_vortex: config.useVortex,
         scheduled_at: new Date(scheduledAt).toISOString(),
         recurrence,
         ...(recurrence === 'custom'
