@@ -78,8 +78,7 @@ export function ScanDefaultsModal({ onClose }: Props) {
         className="w-full max-w-md rounded-[24px] border-2 border-[#EDE3FF] bg-cream-page shadow-dora-modal dark:border-white/[0.07] dark:bg-base-900 overflow-hidden"
       >
         <div
-          className="h-[4px]"
-          style={{ background: 'linear-gradient(90deg, #FF8C42, #FFCA3A, #56C271, #5BC8F5, #9B5DE5)' }}
+          className="h-[4px] bg-[linear-gradient(90deg,#FF8C42,#FFCA3A,#56C271,#5BC8F5,#9B5DE5)]"
         />
         <div className="p-7">
           <h3 className="font-display font-bold text-[20px] text-story-ink dark:text-[#f9fafb] mb-1">
@@ -149,11 +148,7 @@ export function ScanDefaultsModal({ onClose }: Props) {
             <button
               disabled={mutation.isPending}
               onClick={handleSave}
-              className="flex-1 py-2.5 rounded-full font-display font-bold text-[14px] text-white disabled:opacity-50 hover:-translate-y-0.5 transition-transform"
-              style={{
-                background: 'linear-gradient(135deg, #9B5DE5, #7B3DC5)',
-                boxShadow: '0 4px 14px rgba(155,93,229,0.40)',
-              }}
+              className="flex-1 py-2.5 rounded-full font-display font-bold text-[14px] text-white disabled:opacity-50 hover:-translate-y-0.5 transition-transform bg-[linear-gradient(135deg,#9B5DE5,#7B3DC5)] shadow-dora-purple-btn"
             >
               {mutation.isPending ? 'Saving…' : 'Save Defaults'}
             </button>

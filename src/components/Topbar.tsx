@@ -9,8 +9,7 @@ export function Topbar({ title }: TopbarProps) {
         {title}
         {/* Thin purple→orange hairline accent */}
         <span
-          className="absolute -bottom-1 left-0 h-[2px] w-9 rounded-full"
-          style={{ background: 'linear-gradient(90deg, #9B5DE5, #FF8C42)' }}
+          className="absolute -bottom-1 left-0 h-[2px] w-9 rounded-full bg-[linear-gradient(90deg,#9B5DE5,#FF8C42)]"
         />
       </h1>
 

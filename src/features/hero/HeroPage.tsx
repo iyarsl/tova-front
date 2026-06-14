@@ -30,26 +30,6 @@ function ArrowIcon({ className }: { className?: string }) {
   )
 }
 
-// Live RF radar rings that radiate behind Dora — orange core fading to purple.
-// Disabled: radar effect around the Dora image is commented out.
-/*
-function RadarRings() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {[0, 1, 2].map(i => (
-        <span key={i}
-          className={`absolute rounded-full border-2 motion-reduce:hidden animate-radar ${
-            i === 2 ? 'border-adv-purple/35' : 'border-dora-orange/45'
-          }`}
-          style={{ width: 320, height: 320, animationDelay: `${i}s` }} />
-      ))}
-      <span className="absolute w-[160px] h-[2px] origin-left animate-sweep motion-reduce:animate-none"
-        style={{ background: 'linear-gradient(90deg, rgba(255,140,66,0.6), rgba(155,93,229,0.28), transparent)' }} />
-      <span className="absolute w-3 h-3 rounded-full bg-dora-orange animate-pulse-slow shadow-[0_0_14px_rgba(255,140,66,0.7)]" />
-    </div>
-  )
-}
-*/
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -130,8 +110,8 @@ export function HeroPage() {
           {/* Huge display headline */}
           <motion.h1 {...reveal(0.28)}
             className="font-display font-extrabold leading-[0.9] tracking-tight
-              text-[clamp(4rem,11vw,8rem)] text-transparent bg-clip-text"
-            style={{ backgroundImage: 'linear-gradient(120deg, #FF8C42 0%, #E06A1A 38%, #9B5DE5 72%, #5BC8F5 100%)' }}>
+              text-[clamp(4rem,11vw,8rem)] text-transparent bg-clip-text
+              bg-[linear-gradient(120deg,#FF8C42_0%,#E06A1A_38%,#9B5DE5_72%,#5BC8F5_100%)]">
             Dora
           </motion.h1>
 
@@ -150,31 +130,28 @@ export function HeroPage() {
             <div className="relative">
               {/* glow ring */}
               {connectState === 'idle' && (
-                <span aria-hidden className="absolute -inset-1.5 rounded-full motion-reduce:hidden animate-glow-pulse"
-                  style={{ background: 'radial-gradient(circle, rgba(255,140,66,0.45), transparent 70%)' }} />
+                <span aria-hidden className="absolute -inset-1.5 rounded-full motion-reduce:hidden animate-glow-pulse bg-[radial-gradient(circle,rgba(255,140,66,0.45),transparent_70%)]" />
               )}
               <button
                 onClick={handleConnect}
                 disabled={connectState !== 'idle'}
-                className="relative group flex items-center gap-3 py-4 pl-7 pr-6 rounded-full
+                className={`relative group flex items-center gap-3 py-4 pl-7 pr-6 rounded-full
                   font-display font-bold text-lg text-white overflow-hidden
                   transition-transform duration-200 hover:-translate-y-0.5
-                  disabled:cursor-default disabled:hover:translate-y-0"
-                style={{
-                  background: connectState === 'success'
-                    ? 'linear-gradient(135deg, #56C271, #3DAD5A)'
+                  disabled:cursor-default disabled:hover:translate-y-0
+                  shadow-[0_8px_26px_rgba(255,140,66,0.45)]
+                  ${connectState === 'success'
+                    ? 'bg-[linear-gradient(135deg,#56C271,#3DAD5A)]'
                     : connectState === 'connecting'
-                      ? 'linear-gradient(135deg, #E06A1A, #C25A12)'
-                      : 'linear-gradient(135deg, #FF8C42, #E06A1A)',
-                  boxShadow: '0 8px 26px rgba(255,140,66,0.45)',
-                }}>
+                      ? 'bg-[linear-gradient(135deg,#E06A1A,#C25A12)]'
+                      : 'bg-[linear-gradient(135deg,#FF8C42,#E06A1A)]'
+                  }`}>
                 {connectState === 'idle' && (
                   <>
                     <span className="relative z-10">Connect</span>
                     <ArrowIcon className="relative z-10 w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
                     {/* hover shimmer */}
-                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"
-                      style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)' }} />
+                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent)]" />
                   </>
                 )}
                 {connectState === 'connecting' && (
@@ -202,14 +179,13 @@ export function HeroPage() {
           className="relative hidden xl:flex items-center justify-center h-full pointer-events-none">
 
           <div className="relative w-[460px] h-[460px] flex items-end justify-center">
-            {/* <RadarRings /> */}
+
             <div className="relative z-10 animate-float">
               <img src={doraHero} alt="Dora the explorer"
                 className="w-[clamp(300px,32vw,420px)] drop-shadow-[0_24px_40px_rgba(45,42,62,0.28)]" />
             </div>
             {/* ground glow */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-56 h-7 rounded-full"
-              style={{ background: 'radial-gradient(ellipse, rgba(255,140,66,0.28), transparent 70%)' }} />
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-56 h-7 rounded-full bg-[radial-gradient(ellipse,rgba(255,140,66,0.28),transparent_70%)]" />
             {/* Boots */}
             <img src={bootsBuddy} alt="" aria-hidden
               className="absolute bottom-3 left-2 w-28 z-20 animate-float-slow drop-shadow-[0_12px_22px_rgba(45,42,62,0.22)]" />

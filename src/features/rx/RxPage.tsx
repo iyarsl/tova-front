@@ -195,14 +195,8 @@ export function RxPage() {
                   {/* Save to Player */}
                   <button
                     onClick={handleSaveToPlayer}
-                    title="Load last N seconds into Signal Player"
-                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs transition-all hover:-translate-y-0.5 active:scale-95"
-                    style={{
-                      background: 'linear-gradient(135deg, #5BC8F5, #3BA8D5)',
-                      border: '2px solid transparent',
-                      color: '#FFFFFF',
-                      boxShadow: '0 3px 10px rgba(91,200,245,0.40)',
-                    }}
+                    title="Load last 3 seconds into Signal Player"
+                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs text-white border-2 border-transparent bg-[linear-gradient(135deg,#5BC8F5,#3BA8D5)] shadow-[0_3px_10px_rgba(91,200,245,0.40)] transition-all hover:-translate-y-0.5 active:scale-95"
                   >
                     → Player
                   </button>
@@ -211,12 +205,7 @@ export function RxPage() {
                   <button
                     onClick={handleDownload}
                     title="Download as .fc32 file"
-                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs border transition-all hover:-translate-y-0.5 active:scale-95"
-                    style={{
-                      border: '2px solid rgba(91,200,245,0.45)',
-                      color: '#5BC8F5',
-                      background: 'transparent',
-                    }}
+                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs text-sky-blue-d border-2 border-sky-blue-d/45 bg-transparent transition-all hover:-translate-y-0.5 active:scale-95"
                   >
                     ↓ .fc32
                   </button>

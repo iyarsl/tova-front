@@ -10,19 +10,14 @@ export function DoraSkyCanvas() {
 
       {/* Bright sky base — same lineage as the calm shell */}
       <div
-        className="absolute inset-0"
-        style={{ background: 'linear-gradient(160deg, #E3F4FF 0%, #E9F1FF 44%, #F2F6FF 100%)' }}
+        className="absolute inset-0 bg-[linear-gradient(160deg,#E3F4FF_0%,#E9F1FF_44%,#F2F6FF_100%)]"
       />
 
       {/* Colour blooms — blue-dominant, warm bloom low-right where Dora stands */}
-      <div className="absolute -top-24 right-[-6%] w-[560px] h-[560px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(91,200,245,0.30), transparent 68%)' }} />
-      <div className="absolute -top-28 -left-24 w-[520px] h-[520px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(99,156,255,0.22), transparent 68%)' }} />
-      <div className="absolute bottom-[-22%] right-[10%] w-[620px] h-[620px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(255,140,66,0.18), transparent 70%)' }} />
-      <div className="absolute bottom-[-16%] left-[6%] w-[460px] h-[460px] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(155,93,229,0.13), transparent 70%)' }} />
+      <div className="absolute -top-24 right-[-6%] w-[560px] h-[560px] rounded-full bg-[radial-gradient(circle,rgba(91,200,245,0.30),transparent_68%)]" />
+      <div className="absolute -top-28 -left-24 w-[520px] h-[520px] rounded-full bg-[radial-gradient(circle,rgba(99,156,255,0.22),transparent_68%)]" />
+      <div className="absolute bottom-[-22%] right-[10%] w-[620px] h-[620px] rounded-full bg-[radial-gradient(circle,rgba(255,140,66,0.18),transparent_70%)]" />
+      <div className="absolute bottom-[-16%] left-[6%] w-[460px] h-[460px] rounded-full bg-[radial-gradient(circle,rgba(155,93,229,0.13),transparent_70%)]" />
 
       {/* Perspective scan grid + travelling scan line */}
       <div className="absolute inset-x-0 bottom-0 h-[55%] overflow-hidden opacity-70">
@@ -38,8 +33,7 @@ export function DoraSkyCanvas() {
               x2={720 + (i - 8) * 300} y2="500" />
           ))}
         </svg>
-        <div className="absolute inset-x-0 top-0 h-24 motion-reduce:hidden animate-scan-grid"
-          style={{ background: 'linear-gradient(180deg, transparent, rgba(91,200,245,0.35), transparent)' }} />
+        <div className="absolute inset-x-0 top-0 h-24 motion-reduce:hidden animate-scan-grid bg-[linear-gradient(180deg,transparent,rgba(91,200,245,0.35),transparent)]" />
       </div>
 
       {/* The radar dial — showpiece, low-centre-right */}
@@ -48,17 +42,14 @@ export function DoraSkyCanvas() {
 
         {/* Rotating conic sweep, masked to a disc. Stays visible (static) under
             reduced-motion so the radar never looks dead. */}
-        <div className="absolute inset-0 rounded-full animate-sweep-slow motion-reduce:animate-none"
-          style={{
-            background: 'conic-gradient(from 0deg, rgba(255,140,66,0.55) 0deg, rgba(255,140,66,0.18) 26deg, rgba(255,140,66,0.04) 60deg, transparent 92deg, transparent 360deg)',
-            maskImage: 'radial-gradient(circle, #000 70%, transparent 71%)',
-            WebkitMaskImage: 'radial-gradient(circle, #000 70%, transparent 71%)',
-          }} />
+        <div className="absolute inset-0 rounded-full animate-sweep-slow motion-reduce:animate-none
+          bg-[conic-gradient(from_0deg,rgba(255,140,66,0.55)_0deg,rgba(255,140,66,0.18)_26deg,rgba(255,140,66,0.04)_60deg,transparent_92deg,transparent_360deg)]
+          [mask-image:radial-gradient(circle,#000_70%,transparent_71%)]
+          [-webkit-mask-image:radial-gradient(circle,#000_70%,transparent_71%)]" />
 
         {/* Bright leading edge of the sweep — rotates with the wedge */}
         <div className="absolute inset-0 animate-sweep-slow motion-reduce:animate-none">
-          <span className="absolute left-1/2 top-1/2 h-[2px] w-1/2 origin-left -translate-y-1/2"
-            style={{ background: 'linear-gradient(90deg, rgba(255,140,66,0.9), rgba(255,140,66,0.15), transparent)' }} />
+          <span className="absolute left-1/2 top-1/2 h-[2px] w-1/2 origin-left -translate-y-1/2 bg-[linear-gradient(90deg,rgba(255,140,66,0.9),rgba(255,140,66,0.15),transparent)]" />
         </div>
 
         {/* Rings, range ticks, crosshair, bearings */}
@@ -93,8 +84,8 @@ export function DoraSkyCanvas() {
           { x: '40%', y: '26%', d: '1.7s', c: 'bg-meadow-green' },
         ].map((b, i) => (
           <span key={i}
-            className={`absolute w-2.5 h-2.5 rounded-full motion-reduce:hidden animate-blip ${b.c}`}
-            style={{ left: b.x, top: b.y, animationDelay: b.d, boxShadow: '0 0 10px currentColor' }} />
+            className={`absolute w-2.5 h-2.5 rounded-full motion-reduce:hidden animate-blip shadow-[0_0_10px_currentColor] ${b.c}`}
+            style={{ left: b.x, top: b.y, animationDelay: b.d }} />
         ))}
       </div>
     </div>

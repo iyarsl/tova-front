@@ -9,32 +9,25 @@ export function AdventureBackdrop() {
 
       {/* Cool sky base wash (light only) — echoes original bg-sky-canvas #E3F4FF */}
       <div
-        className="absolute inset-0 dark:hidden"
-        style={{ background: 'linear-gradient(160deg, #E3F4FF 0%, #EAF1FF 46%, #F2F6FF 100%)' }}
+        className="absolute inset-0 dark:hidden bg-[linear-gradient(160deg,#E3F4FF_0%,#EAF1FF_46%,#F2F6FF_100%)]"
       />
 
       {/* Soft colour blooms — blue-dominant, warm only as small accent (light only) */}
       <div className="absolute inset-0 dark:hidden">
-        <div className="absolute -top-32 -left-24 w-[620px] h-[620px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(91,200,245,0.26), transparent 68%)' }} />
-        <div className="absolute -top-24 right-[-8%] w-[560px] h-[560px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(99,156,255,0.22), transparent 68%)' }} />
-        <div className="absolute bottom-[-18%] left-[14%] w-[600px] h-[600px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(120,180,255,0.18), transparent 70%)' }} />
-        <div className="absolute bottom-[-12%] right-[6%] w-[440px] h-[440px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(155,93,229,0.12), transparent 70%)' }} />
-        <div className="absolute top-[28%] -right-16 w-[360px] h-[360px] rounded-full"
-          style={{ background: 'radial-gradient(circle, rgba(255,140,66,0.10), transparent 70%)' }} />
+        <div className="absolute -top-32 -left-24 w-[620px] h-[620px] rounded-full bg-[radial-gradient(circle,rgba(91,200,245,0.26),transparent_68%)]" />
+        <div className="absolute -top-24 right-[-8%] w-[560px] h-[560px] rounded-full bg-[radial-gradient(circle,rgba(99,156,255,0.22),transparent_68%)]" />
+        <div className="absolute bottom-[-18%] left-[14%] w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(120,180,255,0.18),transparent_70%)]" />
+        <div className="absolute bottom-[-12%] right-[6%] w-[440px] h-[440px] rounded-full bg-[radial-gradient(circle,rgba(155,93,229,0.12),transparent_70%)]" />
+        <div className="absolute top-[28%] -right-16 w-[360px] h-[360px] rounded-full bg-[radial-gradient(circle,rgba(255,140,66,0.10),transparent_70%)]" />
       </div>
 
       {/* Slow-turning compass rose — bottom-right watermark */}
       <svg
-        className="absolute -bottom-10 -right-10 w-64 h-64 text-adv-purple/[0.09] dark:text-white/[0.03]"
+        className="absolute -bottom-10 -right-10 w-64 h-64 text-adv-purple/[0.09] dark:text-white/[0.03] animate-[sweep_90s_linear_infinite] origin-center"
         viewBox="0 0 100 100"
         fill="none"
         stroke="currentColor"
         strokeWidth={1.2}
-        style={{ animation: 'sweep 90s linear infinite', transformOrigin: '50% 50%' }}
       >
         <circle cx="50" cy="50" r="46" />
         <circle cx="50" cy="50" r="34" />

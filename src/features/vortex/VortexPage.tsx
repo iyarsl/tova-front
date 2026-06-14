@@ -282,7 +282,7 @@ export function VortexPage() {
     </PageTransition>
   )
 
-  if (!appConfig.useVortex && (isError || !config)) return (
+  if (!appConfig.useVortex) return (
     <PageTransition>
       <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
         <Topbar title="Vortex Config" />
