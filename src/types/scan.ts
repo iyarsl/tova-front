@@ -20,3 +20,9 @@ export type ApiScanRow = {
 }
 
 export type ScanRowErrors = Partial<Record<keyof Omit<ScanRow, 'id'>, string>>
+
+export type ScanDefaults = {
+  gain_db:      number
+  out_freq_mhz: number
+  output_dir:   string
+}

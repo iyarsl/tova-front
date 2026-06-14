@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { useOutputDir } from '@/hooks/useOutputDir'
 import { motion } from 'framer-motion'
 import { useCreateSchedule } from './useScheduledScans'
+import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import type { ScanRow } from '@/types/scan'
 import type { Recurrence } from '@/types/schedule'
+import { config } from '@/config'
 
 interface Props {
   rows: ScanRow[]
@@ -15,13 +18,15 @@ function isAbsolutePath(p: string): boolean {
 }
 
 export function ScheduleModal({ rows, onClose }: Props) {
-  const [dir, setDir]               = useState('')
+  const [savedDir, saveDir]         = useOutputDir()
+  const [dir, setDir]               = useState(() => isAbsolutePath(savedDir) ? savedDir : '')
   const [scheduledAt, setScheduledAt] = useState('')
   const [recurrence, setRecurrence] = useState<Recurrence>('none')
   const [customValue, setCustomValue] = useState(2)
   const [customUnit, setCustomUnit]   = useState<'seconds' | 'minutes' | 'hours' | 'days' | 'weeks'>('hours')
 
   const createMut = useCreateSchedule()
+  const { defaults } = useScanDefaults()
 
   const [minDateTime] = useState(() => {
     const d  = new Date(Date.now() + 60_000)
@@ -36,16 +41,20 @@ export function ScheduleModal({ rows, onClose }: Props) {
     if (!scheduledAt || !dir) return
     createMut.mutate(
       {
-        rows: rows.map(({ id: _, ...rest }) => rest as import('@/types/scan').ApiScanRow),
+        rows: rows.map(({ id: _, out_freq_mhz: _o, ...rest }) => ({
+          ...rest,
+          out_freq_mhz: defaults?.out_freq_mhz ?? 1250,
+        }) as import('@/types/scan').ApiScanRow),
         output_dir: dir,
         mock: false,
+        use_vortex: config.useVortex,
         scheduled_at: new Date(scheduledAt).toISOString(),
         recurrence,
         ...(recurrence === 'custom'
           ? { custom_interval_minutes: customValue * unitToMinutes[customUnit] }
           : {}),
       },
-      { onSuccess: () => onClose() },
+      { onSuccess: () => { saveDir(dir); onClose() } },
     )
   }
 

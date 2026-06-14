@@ -1,5 +1,8 @@
 /** Shared tab type for all signal chart views */
-export type ChartTab = 'time' | 'fft' | 'spectrogram'
+export type ChartTab = 'combined' | 'spectrogram'
+
+/** Per-chart zoom key — independent of tab layout */
+export type ChartKey = 'time' | 'fft' | 'spectrogram'
 
 /** Persisted x/y axis range for a single Plotly chart tab */
 export type ZoomLayout = {
@@ -44,4 +47,11 @@ export interface WorkerOutput {
   fftX: number[]      // frequency offset in MHz from center (same length as fftY)
   timeY: number[]     // I-channel amplitude values (length = input length)
   sampleRate: number
+}
+
+/** Raw IQ snapshot passed from RX page to File Player via router state */
+export type CapturePayload = {
+  samples: Float32Array
+  sampleRate: number
+  fileName: string
 }

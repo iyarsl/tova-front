@@ -8,20 +8,22 @@ export type ThemeContextValue = {
 }
 
 export const ThemeContext = createContext<ThemeContextValue>({
-  theme: 'dark',
+  theme: 'light',
   toggle: () => {},
 })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
-    const stored = localStorage.getItem('theme')
-    return stored === 'light' ? 'light' : 'dark'
+    // Key bumped to 'dora-theme' so the Dora light theme becomes the canonical
+    // default — older saved 'theme' values no longer force dark on first load.
+    const stored = localStorage.getItem('dora-theme')
+    return stored === 'dark' ? 'dark' : 'light'
   })
 
   useEffect(() => {
     const root = document.documentElement
     root.classList.toggle('dark', theme === 'dark')
-    localStorage.setItem('theme', theme)
+    localStorage.setItem('dora-theme', theme)
   }, [theme])
 
   const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
