@@ -29,8 +29,10 @@ dist-ssr
 !.env.example
 
 
- .playwright-mcp
- .playwright-mcp/
+.playwright-mcp/
+.agents/
+skills-lock.json
+*.stackdump
 
 .vite/
 .claude/
