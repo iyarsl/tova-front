@@ -1,6 +1,6 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { DoraSkyCanvas } from './DoraSkyCanvas'
 import { fetchConfig } from '@/api/vortex'
 import { useQuery } from '@tanstack/react-query'
@@ -33,6 +33,12 @@ function ArrowIcon({ className }: { className?: string }) {
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
+const reveal = (delay: number) => ({
+  initial: { opacity: 0, y: 22 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.7, ease: EASE_OUT, delay },
+})
+
 export function HeroPage() {
   const navigate = useNavigate()
   const [connectState, setConnectState] = useState<ConnectState>('idle')
@@ -54,12 +60,6 @@ export function HeroPage() {
     await new Promise(r => setTimeout(r, 550))
     navigate('/vortex')
   }
-
-  const reveal = (delay: number) => ({
-    initial: { opacity: 0, y: 22 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.7, ease: EASE_OUT, delay },
-  })
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-sky-canvas">
@@ -83,7 +83,7 @@ export function HeroPage() {
         <div className="max-w-xl text-center xl:text-left">
 
           {/* Eyebrow status */}
-          <motion.div {...reveal(0.15)}
+          <m.div {...reveal(0.15)}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/55 backdrop-blur-sm border border-white/70 mb-6">
             {!appConfig.useVortex ? (
               <>
@@ -105,34 +105,34 @@ export function HeroPage() {
                 </span>
               </>
             )}
-          </motion.div>
+          </m.div>
 
           {/* Huge display headline */}
-          <motion.h1 {...reveal(0.28)}
+          <m.h1 {...reveal(0.28)}
             className="font-display font-extrabold leading-[0.9] tracking-tight
               text-[clamp(4rem,11vw,8rem)] text-transparent bg-clip-text
               bg-[linear-gradient(120deg,#FF8C42_0%,#E06A1A_38%,#9B5DE5_72%,#5BC8F5_100%)]">
             Dora
-          </motion.h1>
+          </m.h1>
 
-          <motion.p {...reveal(0.4)}
+          <m.p {...reveal(0.4)}
             className="mt-2 font-display font-bold text-[clamp(1.1rem,2.4vw,1.6rem)] text-story-ink">
             RF Signal Explorer
-          </motion.p>
+          </m.p>
 
-          <motion.p {...reveal(0.5)}
+          <m.p {...reveal(0.5)}
             className="mt-3 font-body text-tale-gray text-[15px] leading-relaxed max-w-md mx-auto xl:mx-0">
             Sweep the spectrum, lock the Vortex, and chart every signal — your command center for live RF.
-          </motion.p>
+          </m.p>
 
           {/* CTA */}
-          <motion.div {...reveal(0.62)} className="mt-8 flex justify-center xl:justify-start">
+          <m.div {...reveal(0.62)} className="mt-8 flex justify-center xl:justify-start">
             <div className="relative">
               {/* glow ring */}
               {connectState === 'idle' && (
                 <span aria-hidden className="absolute -inset-1.5 rounded-full motion-reduce:hidden animate-glow-pulse bg-[radial-gradient(circle,rgba(255,140,66,0.45),transparent_70%)]" />
               )}
-              <button
+              <button type="button"
                 onClick={handleConnect}
                 disabled={connectState !== 'idle'}
                 className={`relative group flex items-center gap-3 py-4 pl-7 pr-6 rounded-full
@@ -168,11 +168,11 @@ export function HeroPage() {
                 )}
               </button>
             </div>
-          </motion.div>
+          </m.div>
         </div>
 
         {/* Dora — large hero focal */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 48, scale: 0.92 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.55 }}
@@ -190,13 +190,13 @@ export function HeroPage() {
             <img src={bootsBuddy} alt="" aria-hidden
               className="absolute bottom-3 left-2 w-28 z-20 animate-float-slow drop-shadow-[0_12px_22px_rgba(45,42,62,0.22)]" />
           </div>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Connect success flash */}
       <AnimatePresence>
         {connectState === 'success' && (
-          <motion.div
+          <m.div
             initial={{ scaleX: 0, opacity: 0.6 }}
             animate={{ scaleX: 1, opacity: 0 }}
             transition={{ duration: 0.55, ease: 'easeIn' }}
@@ -206,3 +206,4 @@ export function HeroPage() {
     </div>
   )
 }
+

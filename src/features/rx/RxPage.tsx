@@ -1,6 +1,6 @@
-import { useCallback } from 'react'
+﻿import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { useToast } from '@/components/Toast'
@@ -135,7 +135,7 @@ export function RxPage() {
         {/* Tab bar */}
         <div className="flex items-center gap-1 px-5 pt-3 pb-0 border-b border-[#F0EBD8] dark:border-white/[0.07] bg-cream-page dark:bg-base-900 transition-colors">
           {TABS.map(t => (
-            <button
+            <button type="button"
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`relative flex items-center gap-2 px-5 py-2.5 text-[13px] font-display font-bold tracking-wide uppercase transition-colors rounded-t-[12px] ${
@@ -166,7 +166,7 @@ export function RxPage() {
             </span>
 
             {/* Freeze / Resume button */}
-            <button
+            <button type="button"
               onClick={handleToggle}
               className="px-4 py-1.5 rounded-full font-display font-bold text-xs border-2 transition-all hover:-translate-y-0.5"
               style={
@@ -193,7 +193,7 @@ export function RxPage() {
                   className="flex items-center gap-2 pl-3 border-l border-tale-gray/20 dark:border-white/10"
                 >
                   {/* Save to Player */}
-                  <button
+                  <button type="button"
                     onClick={handleSaveToPlayer}
                     title="Load last 3 seconds into Signal Player"
                     className="px-3 py-1.5 rounded-full font-display font-bold text-xs text-white border-2 border-transparent bg-[linear-gradient(135deg,#5BC8F5,#3BA8D5)] shadow-[0_3px_10px_rgba(91,200,245,0.40)] transition-all hover:-translate-y-0.5 active:scale-95"
@@ -202,7 +202,7 @@ export function RxPage() {
                   </button>
 
                   {/* Download */}
-                  <button
+                  <button type="button"
                     onClick={handleDownload}
                     title="Download as .fc32 file"
                     className="px-3 py-1.5 rounded-full font-display font-bold text-xs text-sky-blue-d border-2 border-sky-blue-d/45 bg-transparent transition-all hover:-translate-y-0.5 active:scale-95"
@@ -218,7 +218,7 @@ export function RxPage() {
         <div className="flex-1 relative overflow-hidden p-4 bg-transparent dark:bg-base-950">
           <div className="absolute inset-4 rounded-[20px] border border-sky-blue-d/40 dark:border-white/[0.07] bg-pastel-blue dark:bg-base-900/40 p-3 overflow-hidden">
             <AnimatePresence mode="wait">
-              <motion.div
+              <m.div
                 key={tab}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -300,7 +300,7 @@ export function RxPage() {
                     </span>
                   </div>
                 )}
-              </motion.div>
+              </m.div>
             </AnimatePresence>
           </div>
         </div>
@@ -308,3 +308,4 @@ export function RxPage() {
     </PageTransition>
   )
 }
+

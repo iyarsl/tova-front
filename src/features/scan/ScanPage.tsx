@@ -1,6 +1,6 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useOutputDir } from '@/hooks/useOutputDir'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { ScanTable } from './ScanTable'
@@ -37,7 +37,7 @@ function RunModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[rgba(45,42,62,0.45)] backdrop-blur-sm">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1,    y: 0  }}
         exit={{    opacity: 0, scale: 0.92, y: 20  }}
@@ -55,10 +55,11 @@ function RunModal({
 
           <div className="space-y-4 mb-6">
             <div>
-              <label className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
+              <label htmlFor="run-output-dir" className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
                 Output Directory
               </label>
               <input
+                id="run-output-dir"
                 value={dir}
                 onChange={e => setDir(e.target.value)}
                 placeholder="C:\scans\output"
@@ -77,13 +78,13 @@ function RunModal({
           </div>
 
           <div className="flex gap-3">
-            <button
+            <button type="button"
               onClick={onClose}
               className="flex-1 py-2.5 rounded-full border-2 border-[#D8D4EC] dark:border-white/10 text-tale-gray dark:text-[#9ca3af] font-body text-[13px] font-semibold hover:bg-pastel-purple/30 dark:hover:bg-white/5 transition-colors"
             >
               Cancel
             </button>
-            <button
+            <button type="button"
               disabled={loading || !dir || !isAbsolutePath(dir)}
               onClick={() => { saveDir(dir); onRun(dir) }}
               className="flex-1 py-2.5 rounded-full font-display font-bold text-[14px] text-white disabled:opacity-50 hover:-translate-y-0.5 transition-transform"
@@ -96,7 +97,7 @@ function RunModal({
             </button>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }
@@ -177,8 +178,9 @@ export function ScanPage() {
                 {rows.length} row{rows.length !== 1 ? 's' : ''}
               </span>
               <div className="flex gap-2 flex-wrap items-center">
-                <button
+                <button type="button"
                   onClick={() => setShowDefaultsModal(true)}
+                  aria-label="Scan defaults"
                   title="Scan defaults"
                   className="p-2 rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors"
                 >
@@ -187,13 +189,13 @@ export function ScanPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => { clearErrors(); handleValidate() }}
                   className="px-4 py-2 rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 font-display font-bold text-xs tracking-wide uppercase hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors"
                 >
                   Validate
                 </button>
-                <button
+                <button type="button"
                   onClick={downloadScanTemplate}
                   title="Download Excel template"
                   className="px-4 py-2 rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 font-display font-bold text-xs tracking-wide uppercase hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors flex items-center gap-1.5"
@@ -218,7 +220,7 @@ export function ScanPage() {
                   title={rows.length === 0 ? 'Add scan rows to enable scheduling' : undefined}
                   className="inline-flex"
                 >
-                  <button
+                  <button type="button"
                     onClick={() => {
                       const ok = validateAll()
                       if (!ok) { toast('Fix validation errors before scheduling', 'error'); return }
@@ -236,7 +238,7 @@ export function ScanPage() {
                     Schedule
                   </button>
                 </span>
-                <button
+                <button type="button"
                   onClick={() => {
                     const ok = validateAll()
                     if (!ok) { toast('Fix validation errors before running', 'error'); return }
@@ -256,7 +258,7 @@ export function ScanPage() {
             {/* Import success badge */}
             <AnimatePresence>
               {importedFileName && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
@@ -268,14 +270,14 @@ export function ScanPage() {
                   <span className="font-mono text-[11px] text-[#1A6A8A] dark:text-cyan-400 flex-1">
                     Loaded from <span className="font-semibold">"{importedFileName}"</span>
                   </span>
-                  <button
+                  <button type="button"
                     onClick={() => setImportedFileName(null)}
                     className="text-sky-blue-d/50 dark:text-cyan-400/50 hover:text-sky-blue-d dark:hover:text-cyan-400 transition-colors leading-none"
                     aria-label="Dismiss"
                   >
                     ×
                   </button>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
 
@@ -283,7 +285,7 @@ export function ScanPage() {
 
             <AnimatePresence>
               {results && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
@@ -293,7 +295,7 @@ export function ScanPage() {
                     <div className="text-xs tracking-[0.08em] font-body font-bold text-meadow-green-dk dark:text-emerald-400 uppercase">
                       Output Files
                     </div>
-                    <button
+                    <button type="button"
                       onClick={() => setResults(null)}
                       aria-label="Close output files"
                       className="text-meadow-green-dk/50 dark:text-emerald-400/50 hover:text-meadow-green-dk dark:hover:text-emerald-400 transition-colors leading-none text-lg"
@@ -306,7 +308,7 @@ export function ScanPage() {
                       <div key={f} className="font-mono text-xs text-tale-gray dark:text-[#9ca3af]">{f}</div>
                     ))}
                   </div>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
 
@@ -365,3 +367,4 @@ export function ScanPage() {
     </PageTransition>
   )
 }
+

@@ -1,4 +1,4 @@
-import { createContext, use, useState, useCallback, type ReactNode } from 'react'
+import { createContext, use, useState, useCallback, useMemo, type ReactNode } from 'react'
 import { useScanRows } from './useScanRows'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
 
@@ -23,8 +23,13 @@ export function ScanProvider({ children }: { children: ReactNode }) {
     )
   }, [scanRows.addRow, defaults])
 
+  const ctxValue = useMemo<ScanContextValue>(
+    () => ({ ...scanRows, addRow, importedFileName, setImportedFileName, results, setResults }),
+    [scanRows, addRow, importedFileName, results],
+  )
+
   return (
-    <ScanContext.Provider value={{ ...scanRows, addRow, importedFileName, setImportedFileName, results, setResults }}>
+    <ScanContext.Provider value={ctxValue}>
       {children}
     </ScanContext.Provider>
   )

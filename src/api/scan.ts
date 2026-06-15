@@ -13,7 +13,7 @@ const ScanRowSchema = z.object({
   sample_rate:       z.number(),
 })
 
-export async function validateScan(path: string): Promise<ApiScanRow[]> {
+async function validateScan(path: string): Promise<ApiScanRow[]> {
   const res = await client.post('/scan/validate', { path })
   return z.array(ScanRowSchema).parse(res.data)
 }

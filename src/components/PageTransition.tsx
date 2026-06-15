@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 
 const variants = {
   initial: { opacity: 0, x: 40 },
@@ -8,7 +8,7 @@ const variants = {
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
   return (
-    <motion.div
+    <m.div
       variants={variants}
       initial="initial"
       animate="enter"
@@ -17,6 +17,6 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       className="h-full w-full"
     >
       {children}
-    </motion.div>
+    </m.div>
   )
 }

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+﻿import { useState, useRef, useEffect, useCallback } from 'react'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { useVortexConfig } from './useVortexConfig'
@@ -40,6 +40,7 @@ type NumericFieldProps = {
 }
 
 function NumericField({ label, value, min, max, step, unit, disabled, locked, onCommit }: NumericFieldProps) {
+  const fieldId = `vortex-${label.toLowerCase().replace(/\s+/g, '-')}`
   const [draft, setDraft] = useState<number | null>(null)
   const [text, setText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -63,11 +64,13 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
   // Ref tracks latest draft so commit-on-release always has the freshest value
   const pendingRef = useRef<number | null>(null)
 
-  // When the server value lands (after optimistic update or refetch), clear our draft
-  useEffect(() => {
+  // Inline reset: when server value changes, clear draft without an extra render cycle
+  const [prevValue, setPrevValue] = useState(value)
+  if (value !== prevValue) {
+    setPrevValue(value)
     setDraft(null)
     pendingRef.current = null
-  }, [value])
+  }
 
   const scheduleCommit = useCallback((v: number) => {
     if (commitTimerRef.current) clearTimeout(commitTimerRef.current)
@@ -101,7 +104,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
     if (holdIntervalRef.current) { clearInterval(holdIntervalRef.current); holdIntervalRef.current = null }
     if (pendingRef.current !== null) {
       onCommit(pendingRef.current)
-      // intentionally do NOT reset draft here — value useEffect handles it
+      // intentionally do NOT reset draft here — inline prev-value check handles it during render
     }
   }, [onCommit])
 
@@ -151,7 +154,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
 
       {/* Label + lock */}
       <div className="flex items-center justify-between mb-3">
-        <label className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">{label}</label>
+        <label htmlFor={fieldId} className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">{label}</label>
         {locked && <span className="text-[#7A5C3A] dark:text-amber-400/80 text-xs">🔒</span>}
       </div>
 
@@ -165,6 +168,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
         {/* Top: value input */}
         <div className="flex items-center px-4 pt-3 pb-2 gap-3">
           <input
+            id={fieldId}
             type="text"
             inputMode="decimal"
             value={text ?? fmt(current)}
@@ -189,7 +193,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
 
         {/* Bottom: − bar + */}
         <div className="flex items-stretch h-9">
-          <button
+          <button type="button"
             onMouseDown={() => { stepBy(-1); startHold(-1) }}
             onMouseUp={commitOnRelease}
             onMouseLeave={commitOnRelease}
@@ -218,7 +222,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
             </div>
           </div>
 
-          <button
+          <button type="button"
             onMouseDown={() => { stepBy(1); startHold(1) }}
             onMouseUp={commitOnRelease}
             onMouseLeave={commitOnRelease}
@@ -402,7 +406,7 @@ export function VortexPage() {
                     const available = bws.includes(bw)
                     const active    = displayBw === bw
                     return (
-                      <button
+                      <button type="button"
                         key={bw}
                         disabled={!available || bwDisabled || resumed}
                         onClick={() => {
@@ -433,7 +437,10 @@ export function VortexPage() {
             <ConfigCard title="Spectrum">
               <div className="flex items-center justify-between">
                 <span className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">Invert Spectrum</span>
-                <button
+                <button type="button"
+                  role="switch"
+                  aria-checked={displayInvert}
+                  aria-label="Invert spectrum"
                   disabled={resumed}
                   onClick={() => {
                     const next = !displayInvert
@@ -473,7 +480,7 @@ export function VortexPage() {
 
           {/* Action buttons */}
           <div className="max-w-3xl mx-auto flex gap-3 mt-5">
-            <button
+            <button type="button"
               disabled={resumed || saveMut.isPending}
               onClick={() => saveMut.mutate()}
               className="flex-1 py-3 rounded-full font-display font-bold tracking-wide text-[14px] text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5"
@@ -484,7 +491,7 @@ export function VortexPage() {
             >
               {saveMut.isPending ? 'Saving…' : 'Save to Flash'}
             </button>
-            <button
+            <button type="button"
               disabled={resumed || resumeMut.isPending}
               onClick={() => { resumeMut.mutate(); setResumed(true) }}
               className="flex-1 py-3 rounded-full font-display font-bold tracking-wide text-[14px] text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5"
@@ -501,3 +508,4 @@ export function VortexPage() {
     </PageTransition>
   )
 }
+

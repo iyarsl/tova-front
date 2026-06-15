@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 
 type Theme = 'dark' | 'light'
 
@@ -26,10 +26,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('dora-theme', theme)
   }, [theme])
 
-  const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark')
+  const toggle = useCallback(() => setTheme(t => t === 'dark' ? 'light' : 'dark'), [])
+  const ctxValue = useMemo(() => ({ theme, toggle }), [theme, toggle])
 
   return (
-    <ThemeContext value={{ theme, toggle }}>
+    <ThemeContext value={ctxValue}>
       {children}
     </ThemeContext>
   )

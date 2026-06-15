@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+﻿import { useState, useEffect } from 'react'
+import { m } from 'framer-motion'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { useToast } from '@/components/Toast'
 import type { AppError } from '@/api/client'
@@ -16,21 +16,26 @@ function isAbsolutePath(p: string): boolean {
   return /^([a-zA-Z]:[\\/]|\/|\\\\)/.test(p)
 }
 
+const inputClass = (hasError: boolean) =>
+  `w-full bg-white dark:bg-base-950/60 border-2 rounded-[12px] px-3 py-2.5 font-mono text-[13px] text-story-ink dark:text-[#e5e7eb] focus:outline-none focus:ring-2 transition-colors ${
+    hasError
+      ? 'border-sunset-red/50 dark:border-rose-500/40 focus:border-sunset-red dark:focus:border-rose-500/60 focus:ring-sunset-red/20 dark:focus:ring-rose-500/20'
+      : 'border-[#D8D4EC] dark:border-white/10 focus:border-adv-purple dark:focus:border-cyan-400/40 focus:ring-adv-purple/20 dark:focus:ring-cyan-400/20'
+  }`
+
 export function ScanDefaultsModal({ onClose }: Props) {
   const { defaults, mutation } = useScanDefaults()
   const { toast } = useToast()
 
-  const [gainStr, setGainStr]       = useState('')
-  const [outFreqStr, setOutFreqStr] = useState('')
-  const [outputDir, setOutputDir]   = useState('')
+  type FormState = { gainStr: string; outFreqStr: string; outputDir: string }
+  const [form, setForm] = useState<FormState>({ gainStr: '', outFreqStr: '', outputDir: '' })
+  const { gainStr, outFreqStr, outputDir } = form
 
   const [errors, setErrors] = useState<{ gain?: string; outFreq?: string; outputDir?: string }>({})
 
   useEffect(() => {
     if (!defaults) return
-    setGainStr(String(defaults.gain_db))
-    setOutFreqStr(String(defaults.out_freq_mhz))
-    setOutputDir(defaults.output_dir)
+    setForm({ gainStr: String(defaults.gain_db), outFreqStr: String(defaults.out_freq_mhz), outputDir: defaults.output_dir })
   }, [defaults])
 
   function validate() {
@@ -62,16 +67,9 @@ export function ScanDefaultsModal({ onClose }: Props) {
     )
   }
 
-  const inputClass = (hasError: boolean) =>
-    `w-full bg-white dark:bg-base-950/60 border-2 rounded-[12px] px-3 py-2.5 font-mono text-[13px] text-story-ink dark:text-[#e5e7eb] focus:outline-none focus:ring-2 transition-colors ${
-      hasError
-        ? 'border-sunset-red/50 dark:border-rose-500/40 focus:border-sunset-red dark:focus:border-rose-500/60 focus:ring-sunset-red/20 dark:focus:ring-rose-500/20'
-        : 'border-[#D8D4EC] dark:border-white/10 focus:border-adv-purple dark:focus:border-cyan-400/40 focus:ring-adv-purple/20 dark:focus:ring-cyan-400/20'
-    }`
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[rgba(45,42,62,0.45)] backdrop-blur-sm">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1,    y: 0  }}
         exit={{    opacity: 0, scale: 0.92, y: 20  }}
@@ -90,16 +88,17 @@ export function ScanDefaultsModal({ onClose }: Props) {
 
           <div className="space-y-4 mb-6">
             <div>
-              <label className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
+              <label htmlFor="defaults-gain" className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
                 Gain (dB)
               </label>
               <input
+                id="defaults-gain"
                 type="number"
                 min={0}
                 max={90}
                 step={0.5}
                 value={gainStr}
-                onChange={e => { setGainStr(e.target.value); setErrors(prev => ({ ...prev, gain: undefined })) }}
+                onChange={e => { setForm(f => ({ ...f, gainStr: e.target.value })); setErrors(prev => ({ ...prev, gain: undefined })) }}
                 placeholder="20"
                 className={inputClass(!!errors.gain)}
               />
@@ -107,16 +106,17 @@ export function ScanDefaultsModal({ onClose }: Props) {
             </div>
 
             <div>
-              <label className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
+              <label htmlFor="defaults-out-freq" className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
                 Output Frequency (MHz)
               </label>
               <input
+                id="defaults-out-freq"
                 type="number"
                 min={0}
                 max={3500}
                 step={0.1}
                 value={outFreqStr}
-                onChange={e => { setOutFreqStr(e.target.value); setErrors(prev => ({ ...prev, outFreq: undefined })) }}
+                onChange={e => { setForm(f => ({ ...f, outFreqStr: e.target.value })); setErrors(prev => ({ ...prev, outFreq: undefined })) }}
                 placeholder="1250"
                 className={inputClass(!!errors.outFreq)}
               />
@@ -124,13 +124,14 @@ export function ScanDefaultsModal({ onClose }: Props) {
             </div>
 
             <div>
-              <label className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
+              <label htmlFor="defaults-output-dir" className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
                 Output Directory
               </label>
               <input
+                id="defaults-output-dir"
                 type="text"
                 value={outputDir}
-                onChange={e => { setOutputDir(e.target.value); setErrors(prev => ({ ...prev, outputDir: undefined })) }}
+                onChange={e => { setForm(f => ({ ...f, outputDir: e.target.value })); setErrors(prev => ({ ...prev, outputDir: undefined })) }}
                 placeholder="C:\scans\output"
                 className={inputClass(!!errors.outputDir)}
               />
@@ -139,13 +140,13 @@ export function ScanDefaultsModal({ onClose }: Props) {
           </div>
 
           <div className="flex gap-3">
-            <button
+            <button type="button"
               onClick={onClose}
               className="flex-1 py-2.5 rounded-full border-2 border-[#D8D4EC] dark:border-white/10 text-tale-gray dark:text-[#9ca3af] font-body text-[13px] font-semibold hover:bg-pastel-purple/30 dark:hover:bg-white/5 transition-colors"
             >
               Cancel
             </button>
-            <button
+            <button type="button"
               disabled={mutation.isPending}
               onClick={handleSave}
               className="flex-1 py-2.5 rounded-full font-display font-bold text-[14px] text-white disabled:opacity-50 hover:-translate-y-0.5 transition-transform bg-[linear-gradient(135deg,#9B5DE5,#7B3DC5)] shadow-dora-purple-btn"
@@ -154,7 +155,8 @@ export function ScanDefaultsModal({ onClose }: Props) {
             </button>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }
+

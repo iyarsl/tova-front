@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -309,22 +310,24 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
 
   // -- context value ----------------------------------------------------------
 
+  const ctxValue = useMemo(() => ({
+    data,
+    status,
+    sampleRate,
+    tab,
+    setTab,
+    frozen,
+    frozenData,
+    handleToggle,
+    displayData,
+    zoomLayouts,
+    handleRelayout,
+    buildCapture,
+  }), [data, status, sampleRate, tab, frozen, frozenData, handleToggle, displayData, zoomLayouts, handleRelayout, buildCapture])
+
   return (
     <RxStreamContext.Provider
-      value={{
-        data,
-        status,
-        sampleRate,
-        tab,
-        setTab,
-        frozen,
-        frozenData,
-        handleToggle,
-        displayData,
-        zoomLayouts,
-        handleRelayout,
-        buildCapture,
-      }}
+      value={ctxValue}
     >
       {children}
     </RxStreamContext.Provider>

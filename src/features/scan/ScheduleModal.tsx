@@ -1,6 +1,6 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useOutputDir } from '@/hooks/useOutputDir'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useCreateSchedule } from './useScheduledScans'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { DateTimePicker } from '@/components/DateTimePicker'
@@ -16,6 +16,8 @@ interface Props {
 function isAbsolutePath(p: string): boolean {
   return /^([a-zA-Z]:[\\/]|\/|\\\\)/.test(p)
 }
+
+const unitToMinutes = { seconds: 1 / 60, minutes: 1, hours: 60, days: 1440, weeks: 10080 } as const
 
 export function ScheduleModal({ rows, onClose }: Props) {
   const [savedDir, saveDir]         = useOutputDir()
@@ -34,8 +36,6 @@ export function ScheduleModal({ rows, onClose }: Props) {
     return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}` +
            `T${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`
   })
-
-  const unitToMinutes = { seconds: 1 / 60, minutes: 1, hours: 60, days: 1440, weeks: 10080 } as const
 
   function handleSubmit() {
     if (!scheduledAt || !dir) return
@@ -60,7 +60,7 @@ export function ScheduleModal({ rows, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 dark:bg-base-950/80 bg-black/40 backdrop-blur-sm">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -73,10 +73,11 @@ export function ScheduleModal({ rows, onClose }: Props) {
         <div className="space-y-4 mb-5">
           {/* Output directory */}
           <div>
-            <label className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af] uppercase tracking-wider block mb-1.5">
+            <label htmlFor="schedule-dir" className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af] uppercase tracking-wider block mb-1.5">
               Output Directory
             </label>
             <input
+              id="schedule-dir"
               value={dir}
               onChange={e => setDir(e.target.value)}
               placeholder="/path/to/output"
@@ -95,10 +96,11 @@ export function ScheduleModal({ rows, onClose }: Props) {
 
           {/* Date / time */}
           <div>
-            <label className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af] uppercase tracking-wider block mb-1.5">
+            <label htmlFor="schedule-time" className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af] uppercase tracking-wider block mb-1.5">
               Scheduled Time
             </label>
             <DateTimePicker
+              id="schedule-time"
               value={scheduledAt}
               min={minDateTime}
               onChange={setScheduledAt}
@@ -107,10 +109,11 @@ export function ScheduleModal({ rows, onClose }: Props) {
 
           {/* Recurrence */}
           <div>
-            <label className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af] uppercase tracking-wider block mb-1.5">
+            <label htmlFor="schedule-recurrence" className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af] uppercase tracking-wider block mb-1.5">
               Recurrence
             </label>
             <select
+              id="schedule-recurrence"
               value={recurrence}
               onChange={e => setRecurrence(e.target.value as Recurrence)}
               className="w-full dark:bg-base-950/60 bg-[#f9fafb] border dark:border-white/10 border-black/[0.08] rounded-[8px] px-3 py-2.5 font-mono text-[13px] dark:text-[#e5e7eb] text-[#111827] focus:outline-none dark:focus:border-cyan-400/40 focus:border-cyan-500/40 transition-colors"
@@ -125,11 +128,12 @@ export function ScheduleModal({ rows, onClose }: Props) {
 
           {recurrence === 'custom' && (
             <div>
-              <label className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af] uppercase tracking-wider block mb-1.5">
+              <label htmlFor="schedule-custom-interval" className="font-body text-xs dark:text-[#6b7280] text-[#9ca3af] uppercase tracking-wider block mb-1.5">
                 Repeat every
               </label>
               <div className="flex gap-2">
                 <input
+                  id="schedule-custom-interval"
                   type="number"
                   min={customUnit === 'seconds' ? 5 : 1}
                   value={customValue}
@@ -165,13 +169,13 @@ export function ScheduleModal({ rows, onClose }: Props) {
         </div>
 
         <div className="flex gap-3">
-          <button
+          <button type="button"
             onClick={onClose}
             className="flex-1 py-2.5 rounded-[8px] border dark:border-white/10 border-black/[0.08] dark:text-[#9ca3af] text-[#6b7280] font-body text-[13px] dark:hover:bg-white/5 hover:bg-[#f3f4f6] transition-colors"
           >
             Cancel
           </button>
-          <button
+          <button type="button"
             disabled={createMut.isPending || !scheduledAt || !dir || !isAbsolutePath(dir)}
             onClick={handleSubmit}
             className="flex-1 py-2.5 rounded-[8px] dark:bg-cyan-400 bg-[#0891b2] dark:text-[#030712] text-white font-display font-semibold text-[13px] tracking-wider uppercase disabled:opacity-50 hover:opacity-90 transition-opacity"
@@ -179,7 +183,8 @@ export function ScheduleModal({ rows, onClose }: Props) {
             {createMut.isPending ? 'Scheduling…' : 'Schedule'}
           </button>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }
+

@@ -6,7 +6,7 @@ export function isOutputLocked(ifbw_mhz: number): boolean {
   return ifbw_mhz === 320
 }
 
-export function is320Hidden(version: string): boolean {
+function is320Hidden(version: string): boolean {
   return version === '1.0.1A'
 }
 
@@ -20,6 +20,6 @@ export function availableBandwidths(version: string): number[] {
   return [80, 160, 320]
 }
 
-export function effectiveOutput(config: Pick<VortexConfig, 'output_mhz' | 'ifbw_mhz'>): number {
+function effectiveOutput(config: Pick<VortexConfig, 'output_mhz' | 'ifbw_mhz'>): number {
   return isOutputLocked(config.ifbw_mhz) ? IFBW_320_OUTPUT_MHZ : config.output_mhz
 }

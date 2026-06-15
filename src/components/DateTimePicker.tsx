@@ -6,7 +6,7 @@ import {
   useState,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, m } from 'framer-motion'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,6 +29,7 @@ export interface DateTimePickerProps {
   value:    string               // "YYYY-MM-DDTHH:MM:SS" or ""
   min:      string               // "YYYY-MM-DDTHH:MM:SS"
   onChange: (v: string) => void
+  id?:      string
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -306,6 +307,14 @@ function PickerPanel({ rect, parts, minParts, onChangeParts, onClose }: PickerPa
   const [viewMonth, setViewMonth] = useState(parts.month)
   const panelRef = useRef<HTMLDivElement>(null)
 
+  // Sync calendar view when the selected date changes externally
+  const [prevParts, setPrevParts] = useState(parts)
+  if (parts !== prevParts) {
+    setPrevParts(parts)
+    setViewYear(parts.year)
+    setViewMonth(parts.month)
+  }
+
   // Close on outside mousedown
   useEffect(() => {
     const handle = (e: MouseEvent) => {
@@ -355,7 +364,7 @@ function PickerPanel({ rect, parts, minParts, onChangeParts, onClose }: PickerPa
   }
 
   return createPortal(
-    <motion.div
+    <m.div
       ref={panelRef}
       style={style}
       initial={{ opacity: 0, y: shouldFlip ? 6 : -6, scale: 0.97 }}
@@ -394,14 +403,14 @@ function PickerPanel({ rect, parts, minParts, onChangeParts, onClose }: PickerPa
           onChangeTime={handleChangeTime}
         />
       </div>
-    </motion.div>,
+    </m.div>,
     document.body,
   )
 }
 
 // ─── DateTimePicker (public) ──────────────────────────────────────────────────
 
-export function DateTimePicker({ value, min, onChange }: DateTimePickerProps) {
+export function DateTimePicker({ value, min, onChange, id }: DateTimePickerProps) {
   const [open, setOpen]           = useState(false)
   const [panelRect, setPanelRect] = useState<PanelRect | null>(null)
   const triggerRef                = useRef<HTMLButtonElement>(null)
@@ -461,6 +470,7 @@ export function DateTimePicker({ value, min, onChange }: DateTimePickerProps) {
       {/* Trigger */}
       <button
         ref={triggerRef}
+        id={id}
         type="button"
         onClick={handleOpen}
         className={[

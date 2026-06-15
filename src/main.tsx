@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { LazyMotion, domAnimation } from 'framer-motion'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { ToastProvider } from '@/components/Toast'
 import { RxStreamProvider } from '@/features/rx/RxStreamContext'
@@ -32,6 +33,7 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <LazyMotion features={domAnimation} strict>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
@@ -47,5 +49,6 @@ createRoot(document.getElementById('root')!).render(
         </ThemeProvider>
       </QueryClientProvider>
     </BrowserRouter>
+    </LazyMotion>
   </StrictMode>,
 )

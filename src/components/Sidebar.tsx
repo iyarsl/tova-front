@@ -1,6 +1,6 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { m } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
 import { config as appConfig } from '@/config'
@@ -62,7 +62,7 @@ export function Sidebar() {
   const connected      = !vortexDisabled && !isError && !!data
 
   return (
-    <motion.aside
+    <m.aside
       animate={{ width: collapsed ? 64 : 240 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       className="flex-shrink-0 h-full flex flex-col bg-warm-fog dark:bg-base-900 border-r border-[#FFE4C4] dark:border-white/[0.07] shadow-dora-sidebar dark:shadow-none overflow-hidden transition-colors"
@@ -82,7 +82,7 @@ export function Sidebar() {
         {collapsed && (
           <SearchIcon className="w-6 h-6 text-dora-orange dark:text-cyan-400 mx-auto" />
         )}
-        <button
+        <button type="button"
           onClick={() => setCollapsed(c => !c)}
           className="w-7 h-7 flex items-center justify-center rounded-full bg-white dark:bg-base-800 border border-[#FFD4A6] dark:border-white/10 text-dora-orange dark:text-[#9ca3af] hover:border-dora-orange dark:hover:text-cyan-400 shadow-sm transition-colors ml-auto flex-shrink-0"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -155,6 +155,7 @@ export function Sidebar() {
           )}
         </div>
       </div>
-    </motion.aside>
+    </m.aside>
   )
 }
+

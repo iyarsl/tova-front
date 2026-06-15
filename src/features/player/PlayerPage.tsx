@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { useToast } from '@/components/Toast'
@@ -49,14 +49,15 @@ export function PlayerPage() {
   const srInputRef = useRef<HTMLInputElement>(null)
 
   const locationState = location.state as { capture?: CapturePayload } | null
+  const locationPathname = location.pathname
   useEffect(() => {
     if (!locationState?.capture) return
     const { samples, sampleRate: sr, fileName } = locationState.capture
     setSrInput(String(sr))
     player.loadFromBuffer(samples, sr, fileName)
-    navigate(location.pathname, { replace: true, state: null })
+    navigate(locationPathname, { replace: true, state: null })
     toast(`Loaded ${fileName}`, 'success')
-  }, [locationState])
+  }, [locationState, player.loadFromBuffer, navigate, locationPathname, toast])
 
   // --- file loading ----------------------------------------------------------
   // Validate sample rate at play-time, not load-time — user should be able to
@@ -181,11 +182,12 @@ export function PlayerPage() {
 
             {/* Sample rate input */}
             <div className="flex flex-col gap-1">
-              <label className="font-mono text-[10px] tracking-widest uppercase dark:text-[#4b5563] text-whisper-gray">
+              <label htmlFor="player-sample-rate" className="font-mono text-[10px] tracking-widest uppercase dark:text-[#4b5563] text-whisper-gray">
                 Sample Rate
               </label>
               <div className="flex items-center gap-1.5">
                 <input
+                  id="player-sample-rate"
                   ref={srInputRef}
                   type="number"
                   value={srInput}
@@ -226,7 +228,7 @@ export function PlayerPage() {
             {/* Transport buttons */}
             <div className="flex items-center gap-1.5">
               {/* Step back */}
-              <button
+              <button type="button"
                 onClick={player.stepBack}
                 disabled={controlsDisabled}
                 title="Skip back 10 frames"
@@ -245,7 +247,7 @@ export function PlayerPage() {
               </button>
 
               {/* Play / Pause */}
-              <button
+              <button type="button"
                 onClick={player.isPlaying ? player.pause : player.play}
                 disabled={controlsDisabled}
                 className={`
@@ -266,7 +268,7 @@ export function PlayerPage() {
               </button>
 
               {/* Step forward */}
-              <button
+              <button type="button"
                 onClick={player.stepForward}
                 disabled={controlsDisabled}
                 title="Skip forward 10 frames"
@@ -299,6 +301,7 @@ export function PlayerPage() {
             {/* Scrubber */}
             <div className="flex-1 relative flex items-center">
               <input
+                aria-label="Playback position"
                 type="range"
                 min={0}
                 max={Math.max(0, player.totalChunks - 1)}
@@ -358,7 +361,7 @@ export function PlayerPage() {
         {/* ── Tab bar ────────────────────────────────────────────────────── */}
         <div className="flex items-center gap-1 px-5 pt-3 pb-0 border-b dark:border-white/[0.07] border-[#F0EBD8] dark:bg-base-900 bg-cream-page/85 backdrop-blur-sm transition-colors flex-shrink-0">
           {TABS.map(t => (
-            <button
+            <button type="button"
               key={t.id}
               onClick={() => player.setTab(t.id)}
               className={`relative flex items-center gap-2 px-4 py-2.5 text-[13px] font-display font-bold tracking-wide uppercase transition-colors rounded-t-lg ${
@@ -370,7 +373,7 @@ export function PlayerPage() {
               <span className="text-base">{t.icon}</span>
               {t.label}
               {player.tab === t.id && (
-                <motion.div
+                <m.div
                   layoutId="player-tab-indicator"
                   className="absolute bottom-0 left-0 right-0 h-[3px] rounded-full bg-gradient-to-r from-dora-orange to-dora-orange-dark"
                 />
@@ -405,7 +408,7 @@ export function PlayerPage() {
           onDrop={handleChartDrop}
         >
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={player.tab}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -453,10 +456,11 @@ export function PlayerPage() {
                   </span>
                 </div>
               )}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
       </div>
     </PageTransition>
   )
 }
+

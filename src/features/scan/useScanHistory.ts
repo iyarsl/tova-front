@@ -7,7 +7,7 @@ const QK = ['scan-history']
 const HISTORY_WINDOW_MS = 48 * 60 * 60 * 1000
 
 export function useScanHistory() {
-  const query = useQuery({
+  const { data: rawData, isLoading, error } = useQuery({
     queryKey: QK,
     queryFn: () => fetchScanHistory(200),
     refetchInterval: 10_000,
@@ -16,9 +16,9 @@ export function useScanHistory() {
   })
 
   const cutoff = Date.now() - HISTORY_WINDOW_MS
-  const filtered = query.data?.filter(e => new Date(e.ran_at).getTime() >= cutoff)
+  const data = rawData?.filter(e => new Date(e.ran_at).getTime() >= cutoff)
 
-  return { ...query, data: filtered }
+  return { data, isLoading, error }
 }
 
 export function useDeleteHistory() {

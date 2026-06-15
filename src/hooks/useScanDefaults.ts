@@ -7,7 +7,7 @@ const QUERY_KEY = ['scan-defaults'] as const
 export function useScanDefaults() {
   const qc = useQueryClient()
 
-  const query = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchScanDefaults,
     staleTime: Infinity,
@@ -20,5 +20,5 @@ export function useScanDefaults() {
     },
   })
 
-  return { defaults: query.data, isLoading: query.isLoading, mutation }
+  return { defaults: data, isLoading, mutation }
 }
