@@ -40,10 +40,10 @@ export function App() {
       <Routes location={location} key={location.pathname}>
         {/* Public */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<HeroPage />} />
 
-        {/* Protected — all other pages require auth */}
+        {/* Protected — device pages require auth */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<HeroPage />} />
           <Route element={<AppShellLayout />}>
             <Route path="/vortex" element={<VortexPage />} />
             <Route path="/config" element={<ScanPage />}   />

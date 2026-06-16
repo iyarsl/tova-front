@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import doraHero from '@/assets/dora/dora-d.png'
 import bootsBuddy from '@/assets/dora/boots2.png'
 import { config as appConfig } from '@/config'
+import { useAuth } from '@/hooks/useAuth'
 
 type ConnectState = 'idle' | 'connecting' | 'success'
 
@@ -41,6 +42,7 @@ const reveal = (delay: number) => ({
 
 export function HeroPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [connectState, setConnectState] = useState<ConnectState>('idle')
 
   const { data, isError } = useQuery({
@@ -56,6 +58,12 @@ export function HeroPage() {
   async function handleConnect() {
     setConnectState('connecting')
     await new Promise(r => setTimeout(r, 900))
+
+    if (!user) {
+      navigate('/login', { state: { from: { pathname: '/vortex' } } })
+      return
+    }
+
     setConnectState('success')
     await new Promise(r => setTimeout(r, 550))
     navigate('/vortex')
