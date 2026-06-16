@@ -14,6 +14,7 @@ export function useArduinoPorts() {
 
   const [isRestarting, setIsRestarting] = useState(false)
   const restartedAtRef = useRef(0)
+  const restartSafetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const query = useQuery({
     queryKey: QK,
@@ -54,10 +55,12 @@ export function useArduinoPorts() {
 
   const restartMut = useMutation({
     mutationFn: restartArduino,
-    onMutate: () => {
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: QK })
+      if (restartSafetyTimerRef.current) clearTimeout(restartSafetyTimerRef.current)
       restartedAtRef.current = Date.now()
       setIsRestarting(true)
-      setTimeout(() => setIsRestarting(false), REBOOT_SAFETY_MS)
+      restartSafetyTimerRef.current = setTimeout(() => setIsRestarting(false), REBOOT_SAFETY_MS)
     },
     onError: (err: AppError) => {
       setIsRestarting(false)
@@ -72,6 +75,7 @@ export function useArduinoPorts() {
     ports: query.data ?? [],
     isLoading: query.isLoading,
     isRestarting,
+    pendingPortName: toggleMut.isPending ? toggleMut.variables?.name : undefined,
     toggleMut,
     restartMut,
   }

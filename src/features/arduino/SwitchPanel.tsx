@@ -4,7 +4,7 @@ import { useArduinoPorts } from './useArduinoPorts'
 import { PortSwitch } from './PortSwitch'
 
 export function SwitchPanel() {
-  const { ports, isLoading, isRestarting, toggleMut, restartMut } = useArduinoPorts()
+  const { ports, isLoading, isRestarting, pendingPortName, toggleMut, restartMut } = useArduinoPorts()
 
   if (isLoading) return (
     <PageTransition>
@@ -39,7 +39,7 @@ export function SwitchPanel() {
                       key={p.name}
                       name={p.name}
                       on={p.on}
-                      disabled={isRestarting || toggleMut.isPending}
+                      disabled={isRestarting || pendingPortName === p.name}
                       onToggle={() => toggleMut.mutate({ name: p.name, on: !p.on })}
                     />
                   ))}
