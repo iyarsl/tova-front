@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { to: '/config', label: 'Scan Table',    icon: '⊞' },
   { to: '/rx',     label: 'RX Graphs',     icon: '◈' },
   { to: '/player', label: 'File Player',   icon: '▶' },
+  { to: '/arduino', label: 'Switch Panel', icon: '⏻' },
 ]
 
 function SearchIcon({ className }: { className?: string }) {
