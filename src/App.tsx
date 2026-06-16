@@ -6,6 +6,7 @@ import { VortexPage }  from '@/features/vortex/VortexPage'
 import { ScanPage }    from '@/features/scan/ScanPage'
 import { RxPage }      from '@/features/rx/RxPage'
 import { PlayerPage }  from '@/features/player/PlayerPage'
+import { SwitchPanel } from '@/features/arduino/SwitchPanel'
 
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -40,6 +41,7 @@ export function App() {
           <Route path="/config" element={<ScanPage />}    />
           <Route path="/rx"     element={<RxPage />}      />
           <Route path="/player" element={<PlayerPage />}  />
+          <Route path="/arduino" element={<SwitchPanel />} />
           <Route path="*"       element={<Navigate to="/vortex" replace />} />
         </Routes>
       </AnimatePresence>
