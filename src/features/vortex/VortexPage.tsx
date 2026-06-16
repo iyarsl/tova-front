@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { useVortexConfig } from './useVortexConfig'
+import { useControlLock } from './useControlLock'
 import {
   availableBandwidths, isOutputLocked, isIfbwDisabled,
   IFBW_320_OUTPUT_MHZ,
@@ -247,8 +248,10 @@ export function VortexPage() {
     config, isLoading, isError,
     rfinMut, outputMut, gainMut, ifbwMut, invertMut, saveMut, resumeMut,
   } = useVortexConfig()
+  const { hasControl, locked } = useControlLock()
 
   const [resumed, setResumed] = useState(false)
+  const readOnly = resumed || !hasControl
   const [localBw, setLocalBw] = useState<number | null>(null)
   const [localInvert, setLocalInvert] = useState<boolean | null>(null)
 
@@ -289,6 +292,12 @@ export function VortexPage() {
           </div>
         )}
 
+        {!resumed && !hasControl && locked && (
+          <div className="mx-5 mt-4 px-4 py-3 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-sm flex items-center gap-2">
+            <span>🔒</span> Another session is controlling the device — view only
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-5">
           <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -299,7 +308,7 @@ export function VortexPage() {
                 value={config.rfin_ghz}
                 min={0.01} max={26} step={0.001}
                 unit="GHz"
-                disabled={resumed}
+                disabled={readOnly}
                 onCommit={v => rfinMut.mutate(v)}
               />
             </ConfigCard>
@@ -311,7 +320,7 @@ export function VortexPage() {
                 value={outLocked ? IFBW_320_OUTPUT_MHZ : config.output_mhz}
                 min={0} max={3500} step={0.1}
                 unit="MHz"
-                disabled={resumed}
+                disabled={readOnly}
                 locked={outLocked}
                 onCommit={v => outputMut.mutate(v)}
               />
@@ -324,7 +333,7 @@ export function VortexPage() {
                 value={config.gain_db}
                 min={0} max={90} step={0.5}
                 unit="dB"
-                disabled={resumed}
+                disabled={readOnly}
                 onCommit={v => gainMut.mutate(v)}
               />
             </ConfigCard>
@@ -332,14 +341,14 @@ export function VortexPage() {
             {/* IF Bandwidth */}
             <ConfigCard title="IF Bandwidth">
               <div className="space-y-3">
-                <div className={`flex rounded-[14px] border border-[#FFD4A6] dark:border-white/10 overflow-hidden bg-white dark:bg-transparent ${bwDisabled || resumed ? 'opacity-40' : ''}`}>
+                <div className={`flex rounded-[14px] border border-[#FFD4A6] dark:border-white/10 overflow-hidden bg-white dark:bg-transparent ${bwDisabled || readOnly ? 'opacity-40' : ''}`}>
                   {[80, 160, 320].map(bw => {
                     const available = bws.includes(bw)
                     const active    = displayBw === bw
                     return (
                       <button
                         key={bw}
-                        disabled={!available || bwDisabled || resumed}
+                        disabled={!available || bwDisabled || readOnly}
                         onClick={() => {
                           const prev = localBw ?? config.ifbw_mhz
                           setLocalBw(bw)
@@ -369,7 +378,7 @@ export function VortexPage() {
               <div className="flex items-center justify-between">
                 <span className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">Invert Spectrum</span>
                 <button
-                  disabled={resumed}
+                  disabled={readOnly}
                   onClick={() => {
                     const next = !displayInvert
                     setLocalInvert(next)
@@ -409,7 +418,7 @@ export function VortexPage() {
           {/* Action buttons */}
           <div className="max-w-3xl mx-auto flex gap-3 mt-5">
             <button
-              disabled={resumed || saveMut.isPending}
+              disabled={readOnly || saveMut.isPending}
               onClick={() => saveMut.mutate()}
               className="flex-1 py-3 rounded-full font-display font-bold tracking-wide text-[14px] text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5"
               style={{
@@ -420,7 +429,7 @@ export function VortexPage() {
               {saveMut.isPending ? 'Saving…' : 'Save to Flash'}
             </button>
             <button
-              disabled={resumed || resumeMut.isPending}
+              disabled={readOnly || resumeMut.isPending}
               onClick={() => { resumeMut.mutate(); setResumed(true) }}
               className="flex-1 py-3 rounded-full font-display font-bold tracking-wide text-[14px] text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5"
               style={{

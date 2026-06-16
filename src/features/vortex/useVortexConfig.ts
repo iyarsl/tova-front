@@ -37,7 +37,8 @@ export function useVortexConfig() {
       onError: (err: AppError, _v, ctx) => {
         if (ctx?.prev) qc.setQueryData(QK, ctx.prev)
         void qc.invalidateQueries({ queryKey: QK })
-        toast(err.message, 'error')
+        const message = err.status === 423 ? "You don't have control of the device" : err.message
+        toast(message, 'error')
       },
       onSuccess: () => {
         toast(successMsg, 'success')
