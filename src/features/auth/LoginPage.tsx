@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { z } from 'zod'
 import { DoraSkyCanvas } from '@/features/hero/DoraSkyCanvas'
@@ -45,10 +45,10 @@ function EyeIcon({ open, className }: { open: boolean; className?: string }) {
 }
 
 export function LoginPage() {
-  const { login } = useAuth()
+  const { user, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: Location })?.from?.pathname ?? '/'
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname ?? '/'
 
   const [username, setUsername]     = useState('')
   const [password, setPassword]     = useState('')
@@ -56,6 +56,10 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [credError, setCredError]   = useState('')
+
+  if (user) {
+    return <Navigate to={from} replace />
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

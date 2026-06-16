@@ -4,7 +4,8 @@
  * ⚠️  SECURITY NOTE — this is a UI-only barrier, NOT real security.
  * Hashes ship in the compiled JS bundle and are bypassable by anyone
  * with dev-tools access. The backend at :8000 remains fully open.
- * See docs/auth-decision.md for the recorded trade-off.
+ * This was a deliberate, recorded trade-off: real LAN protection would
+ * require a reverse proxy or backend auth, both out of scope here.
  *
  * To add or change a user, generate a SHA-256 hex hash of the new
  * password and add it below. Quick way (browser console):

@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react'
+import { createContext, useState } from 'react'
 import { verifyCredentials } from '@/features/auth/verifyCredentials'
 import { logger } from '@/utils/logger'
 
@@ -39,12 +39,6 @@ function readStoredSession(): string | null {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<string | null>(() => readStoredSession())
-
-  // Re-check expiry on every mount (handles tabs that were left open overnight)
-  useEffect(() => {
-    const stored = readStoredSession()
-    if (stored !== user) setUser(stored)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function login(username: string, password: string): Promise<boolean> {
     const ok = await verifyCredentials(username, password)
