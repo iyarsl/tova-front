@@ -1,5 +1,5 @@
-import { createContext, use, useCallback, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { createContext, use, useCallback, useMemo, useState } from 'react'
+import { AnimatePresence, m } from 'framer-motion'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -13,7 +13,7 @@ type ToastContextValue = {
   toast: (message: string, type?: ToastType) => void
 }
 
-export const ToastContext = createContext<ToastContextValue>({ toast: () => {} })
+const ToastContext = createContext<ToastContextValue>({ toast: () => {} })
 
 export function useToast() {
   return use(ToastContext)
@@ -42,13 +42,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000)
   }, [])
 
+  const ctxValue = useMemo(() => ({ toast }), [toast])
+
   return (
-    <ToastContext value={{ toast }}>
+    <ToastContext value={ctxValue}>
       {children}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
         <AnimatePresence>
           {toasts.map(t => (
-            <motion.div
+            <m.div
               key={t.id}
               initial={{ opacity: 0, x: 60, scale: 0.95 }}
               animate={{ opacity: 1, x: 0,  scale: 1 }}
@@ -58,7 +60,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             >
               <span className="text-base font-bold">{icons[t.type]}</span>
               <span className="font-body">{t.message}</span>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+﻿import { useRef, useState } from 'react'
 import type { ScanRow, ScanRowErrors } from '@/types/scan'
 
 type Props = {
@@ -10,24 +10,24 @@ type Props = {
 }
 
 type ColDef = {
-  key:       keyof Omit<ScanRow, 'id'>
-  header:    string
-  subHeader: string
-  width:     string
-  type:      'number' | 'select'
-  options?:  number[]
-  min?:      number
-  max?:      number
-  step?:     number
+  key:          keyof Omit<ScanRow, 'id'>
+  header:       string
+  subHeader:    string
+  width:        string
+  type:         'number' | 'select'
+  options?:     number[]
+  min?:         number
+  max?:         number
+  step?:        number
+  displayScale?: number
 }
 
 const COLS: ColDef[] = [
   { key: 'duration',           header: 'Duration',       subHeader: 's',    width: 'w-24',  type: 'number', min: 0.01, step: 0.1 },
   { key: 'entrance_freq_ghz',  header: 'Entrance Freq',  subHeader: 'GHz',  width: 'w-36',  type: 'number', min: 0.01, max: 26, step: 0.001 },
-  { key: 'out_freq_mhz',       header: 'Out Freq',       subHeader: 'MHz',  width: 'w-32',  type: 'number', min: 0, max: 3500, step: 0.1 },
   { key: 'bandwidth',          header: 'Bandwidth',      subHeader: 'MHz',  width: 'w-32',  type: 'select', options: [80, 160, 320] },
   { key: 'gain_db',            header: 'Gain',           subHeader: 'dB',   width: 'w-24',  type: 'number', min: 0, max: 90, step: 0.5 },
-  { key: 'sample_rate',        header: 'Sample Rate',    subHeader: 'Hz',   width: 'w-36',  type: 'number', min: 1, step: 1000 },
+  { key: 'sample_rate',        header: 'Sample Rate',    subHeader: 'MHz',  width: 'w-36',  type: 'number', min: 0.001, step: 0.1, displayScale: 1_000_000 },
 ]
 
 type CellProps = {
@@ -49,7 +49,7 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
         onUpdate(row.id, col.key, null as never)
       } else {
         const n = parseFloat(raw)
-        if (!isNaN(n)) onUpdate(row.id, col.key, n as never)
+        if (!isNaN(n)) onUpdate(row.id, col.key, (col.displayScale ? n * col.displayScale : n) as never)
       }
     }
   }
@@ -92,9 +92,10 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
       <div className="h-10 flex items-center px-0 border-r border-[#FFD4A6]/50 dark:border-white/[0.10]">
         <input
           ref={inputRef}
+          aria-label={col.header}
           autoFocus
           type="number"
-          defaultValue={value === null ? '' : String(value)}
+          defaultValue={value === null ? '' : String(col.displayScale ? (value as number) / col.displayScale : value)}
           min={col.min}
           max={col.max}
           step={col.step}
@@ -110,13 +111,20 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
   }
 
   return (
-    <div className={cellBase} onClick={() => setEditing(true)}>
+    <button
+      type="button"
+      aria-label={col.header}
+      className={`${cellBase} w-full text-left bg-transparent`}
+      onClick={() => setEditing(true)}
+    >
       {value === null
         ? <span className="text-whisper-gray dark:text-[#4b5563]">—</span>
-        : typeof value === 'number' ? value.toLocaleString() : String(value)
+        : typeof value === 'number'
+          ? (col.displayScale ? (value / col.displayScale).toLocaleString() : value.toLocaleString())
+          : String(value)
       }
       {error && <span className="ml-2 text-sunset-red text-xs">⚠</span>}
-    </div>
+    </button>
   )
 }
 
@@ -129,7 +137,7 @@ export function ScanTable({ rows, errors, onUpdate, onAdd, onRemove }: Props) {
         <table className="w-full border-collapse min-w-max">
           <thead>
             <tr className="bg-gradient-to-r from-pastel-orange to-[#FFD4A6] dark:bg-base-950 border-b-2 border-[#FFD4A6] dark:border-white/[0.12]">
-              <th className="w-10 px-3 py-0 border-r border-[#FFD4A6]/50 dark:border-white/[0.10]" />
+              <th scope="col" aria-label="Row number" className="w-10 px-3 py-0 border-r border-[#FFD4A6]/50 dark:border-white/[0.10]" />
               {COLS.map(col => (
                 <th
                   key={col.key}
@@ -161,7 +169,7 @@ export function ScanTable({ rows, errors, onUpdate, onAdd, onRemove }: Props) {
                   <td className="w-10 border-r border-[#FFD4A6]/40 dark:border-white/[0.10] bg-[#FFF8EE] dark:bg-base-950/50">
                     <div className="h-10 flex items-center justify-center">
                       {hovered === row.id ? (
-                        <button
+                        <button type="button"
                           onClick={() => onRemove(row.id)}
                           className="w-5 h-5 flex items-center justify-center text-sunset-red hover:text-[#B03030] hover:bg-[#FFE0E0] rounded text-xs transition-colors dark:text-rose-400 dark:hover:text-rose-300 dark:hover:bg-rose-500/20"
                           aria-label="Remove row"
@@ -189,7 +197,7 @@ export function ScanTable({ rows, errors, onUpdate, onAdd, onRemove }: Props) {
 
             <tr>
               <td colSpan={COLS.length + 1}>
-                <button
+                <button type="button"
                   onClick={onAdd}
                   className="w-full h-10 flex items-center justify-center gap-2 text-xs font-body font-semibold text-whisper-gray hover:text-dora-orange hover:bg-pastel-orange/40 dark:text-[#4b5563] dark:hover:text-cyan-400 dark:hover:bg-cyan-400/5 transition-colors"
                 >
@@ -204,3 +212,4 @@ export function ScanTable({ rows, errors, onUpdate, onAdd, onRemove }: Props) {
     </div>
   )
 }
+

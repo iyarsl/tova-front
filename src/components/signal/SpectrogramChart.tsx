@@ -1,6 +1,8 @@
 import type { ZoomLayout } from '@/types/rx'
 import { getChartColors, Plot } from '@/utils/chartTheme'
 
+const DEFAULT_ZOOM: ZoomLayout = {}
+
 type Props = {
   history: number[][]
   theme: 'dark' | 'light'
@@ -8,7 +10,7 @@ type Props = {
   onRelayout?: (event: Plotly.PlotRelayoutEvent) => void
 }
 
-export function SpectrogramChart({ history, theme, zoomLayout = {}, onRelayout }: Props) {
+export function SpectrogramChart({ history, theme, zoomLayout = DEFAULT_ZOOM, onRelayout }: Props) {
   const { bgColor, paperColor, gridColor, textColor } = getChartColors(theme)
 
   return (
