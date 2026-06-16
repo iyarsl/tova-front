@@ -4,6 +4,7 @@ import { m } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
 import { config as appConfig } from '@/config'
+import { useAuth } from '@/hooks/useAuth'
 
 type NavItem = { to: string; label: string; icon: string }
 
@@ -47,8 +48,19 @@ function SunIcon({ className }: { className?: string }) {
   )
 }
 
+function LogoutIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  )
+}
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
+  const { user, logout } = useAuth()
   const { data, isError } = useQuery({
     queryKey: ['vortex-config'],
     queryFn: fetchConfig,
@@ -130,8 +142,27 @@ export function Sidebar() {
         ))}
       </nav>
 
+      {/* User / logout */}
+      <div className="px-3 pb-2 pt-3 border-t border-[#FFE4C4] dark:border-white/[0.07]">
+        <div className="flex items-center gap-2">
+          {!collapsed && (
+            <span className="flex-1 font-body text-xs font-bold text-map-brown dark:text-[#9ca3af] truncate px-1">
+              {user}
+            </span>
+          )}
+          <button
+            onClick={logout}
+            title="Sign out"
+            aria-label="Sign out"
+            className="flex items-center justify-center w-7 h-7 rounded-full bg-white dark:bg-base-800 border border-[#FFD4A6] dark:border-white/10 text-map-brown dark:text-[#9ca3af] hover:border-sunset-red hover:text-sunset-red dark:hover:border-rose-500/50 dark:hover:text-rose-400 transition-colors shadow-sm flex-shrink-0"
+          >
+            <LogoutIcon className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
       {/* Status pill */}
-      <div className="px-3 py-4 border-t border-[#FFE4C4] dark:border-white/[0.07]">
+      <div className="px-3 pb-4 border-[#FFE4C4] dark:border-white/[0.07]">
         <div
           className={`flex items-center gap-2 px-3 py-2 rounded-[14px] text-xs font-body font-bold ${
             vortexDisabled
