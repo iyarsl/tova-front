@@ -53,13 +53,6 @@ const RECONNECT_MS = 3_000
 
 // ---- helpers ----------------------------------------------------------------
 
-function decodeBase64IQ(b64: string): Float32Array {
-  const binary = atob(b64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-  return new Float32Array(bytes.buffer)
-}
-
 function buildFileName(sampleRate: number): string {
   const now = new Date()
   const p = (n: number, d = 2) => String(n).padStart(d, '0')
@@ -133,6 +126,18 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
 
   const onWorkerMessage = useCallback((e: MessageEvent<WorkerOutput>) => {
     if (!isStreaming.current) return
+
+    // Accumulate raw IQ for the capture buffer on every frame (not RAF-throttled)
+    const { rawSamples, sampleRate: sr } = e.data
+    latestSrRef.current = sr
+    rawIqChunksRef.current.push({ samples: rawSamples, sampleRate: sr })
+    rawIqTotalFloatsRef.current += rawSamples.length
+    const maxFloats = MAX_CAPTURE_SEC * sr * 2
+    while (rawIqTotalFloatsRef.current > maxFloats && rawIqChunksRef.current.length > 0) {
+      const dropped = rawIqChunksRef.current.shift()!
+      rawIqTotalFloatsRef.current -= dropped.samples.length
+    }
+
     latestOutput.current = e.data
     if (rafPending.current !== null) return
     rafPending.current = requestAnimationFrame(flushOutput)
@@ -167,19 +172,6 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
               sampleRate: msg.sample_rate,
             }
             workerRef.current?.postMessage(input)
-
-            // Accumulate raw IQ for the capture buffer
-            const decoded = decodeBase64IQ(msg.samples)
-            const sr = msg.sample_rate
-            latestSrRef.current = sr
-            rawIqChunksRef.current.push({ samples: decoded, sampleRate: sr })
-            rawIqTotalFloatsRef.current += decoded.length
-            // Trim oldest chunks beyond MAX_CAPTURE_SEC
-            const maxFloats = MAX_CAPTURE_SEC * sr * 2
-            while (rawIqTotalFloatsRef.current > maxFloats && rawIqChunksRef.current.length > 0) {
-              const dropped = rawIqChunksRef.current.shift()!
-              rawIqTotalFloatsRef.current -= dropped.samples.length
-            }
           }
           break
         case 'silence':

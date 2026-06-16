@@ -1,5 +1,6 @@
-﻿import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useOutputDir } from '@/hooks/useOutputDir'
+import { isAbsolutePath } from '@/utils/path'
 import { m } from 'framer-motion'
 import { useCreateSchedule } from './useScheduledScans'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
@@ -13,15 +14,14 @@ interface Props {
   onClose: () => void
 }
 
-function isAbsolutePath(p: string): boolean {
-  return /^([a-zA-Z]:[\\/]|\/|\\\\)/.test(p)
-}
-
 const unitToMinutes = { seconds: 1 / 60, minutes: 1, hours: 60, days: 1440, weeks: 10080 } as const
 
 export function ScheduleModal({ rows, onClose }: Props) {
   const [savedDir, saveDir]         = useOutputDir()
-  const [dir, setDir]               = useState(() => isAbsolutePath(savedDir) ? savedDir : '')
+  const [dir, setDir]               = useState('')
+  useEffect(() => {
+    if (!dir && isAbsolutePath(savedDir)) setDir(savedDir)
+  }, [savedDir])
   const [scheduledAt, setScheduledAt] = useState('')
   const [recurrence, setRecurrence] = useState<Recurrence>('none')
   const [customValue, setCustomValue] = useState(2)

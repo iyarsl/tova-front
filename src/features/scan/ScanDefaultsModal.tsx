@@ -2,6 +2,7 @@
 import { m } from 'framer-motion'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { useToast } from '@/components/Toast'
+import { isAbsolutePath } from '@/utils/path'
 import type { AppError } from '@/api/client'
 
 interface Props {
@@ -10,10 +11,6 @@ interface Props {
 
 function FieldError({ msg }: { msg: string }) {
   return <p className="mt-1 font-mono text-[11px] text-sunset-red dark:text-rose-400/80">{msg}</p>
-}
-
-function isAbsolutePath(p: string): boolean {
-  return /^([a-zA-Z]:[\\/]|\/|\\\\)/.test(p)
 }
 
 const inputClass = (hasError: boolean) =>

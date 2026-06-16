@@ -47,6 +47,7 @@ export interface WorkerOutput {
   fftX: number[]      // frequency offset in MHz from center (same length as fftY)
   timeY: number[]     // I-channel amplitude values (length = input length)
   sampleRate: number
+  rawSamples: Float32Array  // decoded IQ (interleaved I/Q), transferred from worker
 }
 
 /** Raw IQ snapshot passed from RX page to File Player via router state */

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useScanDefaults } from './useScanDefaults'
+import { isAbsolutePath } from '@/utils/path'
 
 const KEY = 'scan_output_dir'
 
@@ -8,8 +9,12 @@ export function useOutputDir(): [string, (value: string) => void] {
   const [dir, setDir] = useState(() => localStorage.getItem(KEY) ?? '')
 
   useEffect(() => {
-    if (defaults?.output_dir && localStorage.getItem(KEY) === null) {
-      setDir(defaults.output_dir)
+    if (defaults?.output_dir) {
+      const stored = localStorage.getItem(KEY)
+      if (!stored || !isAbsolutePath(stored)) {
+        localStorage.setItem(KEY, defaults.output_dir)
+        setDir(defaults.output_dir)
+      }
     }
   }, [defaults?.output_dir])
 

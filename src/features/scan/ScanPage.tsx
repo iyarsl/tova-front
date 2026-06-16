@@ -1,5 +1,6 @@
-﻿import { useState } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useOutputDir } from '@/hooks/useOutputDir'
+import { isAbsolutePath } from '@/utils/path'
 import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
@@ -19,10 +20,6 @@ import { parseExcelToScanRows } from '@/utils/parseExcel'
 import { downloadScanTemplate } from '@/utils/downloadTemplate'
 import { config } from '@/config'
 
-function isAbsolutePath(p: string): boolean {
-  return /^([a-zA-Z]:[\\/]|\/|\\\\)/.test(p)
-}
-
 function RunModal({
   onClose,
   onRun,
@@ -33,7 +30,10 @@ function RunModal({
   loading: boolean
 }) {
   const [savedDir, saveDir] = useOutputDir()
-  const [dir, setDir] = useState(() => isAbsolutePath(savedDir) ? savedDir : '')
+  const [dir, setDir] = useState('')
+  useEffect(() => {
+    if (!dir && isAbsolutePath(savedDir)) setDir(savedDir)
+  }, [savedDir])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[rgba(45,42,62,0.45)] backdrop-blur-sm">
