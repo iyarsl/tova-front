@@ -37,3 +37,8 @@ skills-lock.json
 .vite/
 .claude/
 
+# Playwright/verification screenshots dropped at repo root (keep public/ & src/assets/ images)
+/*.png
+/*.jpg
+/*.jpeg
+
