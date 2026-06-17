@@ -38,6 +38,7 @@ export function SwitchPanel() {
                     <PortSwitch
                       key={p.name}
                       name={p.name}
+                      pin={p.pin}
                       on={p.on}
                       disabled={isRestarting || pendingPortName === p.name}
                       onToggle={() => toggleMut.mutate({ name: p.name, on: !p.on })}

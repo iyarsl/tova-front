@@ -1,11 +1,12 @@
 type PortSwitchProps = {
   name: string
+  pin: number
   on: boolean
   disabled?: boolean
   onToggle: () => void
 }
 
-export function PortSwitch({ name, on, disabled, onToggle }: PortSwitchProps) {
+export function PortSwitch({ name, pin, on, disabled, onToggle }: PortSwitchProps) {
   return (
     <div className="flex flex-col items-center gap-3 px-4">
       {/* LED indicator */}
@@ -59,6 +60,9 @@ export function PortSwitch({ name, on, disabled, onToggle }: PortSwitchProps) {
         }`}
       >
         {on ? 'ON' : 'OFF'}
+      </span>
+      <span className="font-mono text-[9px] text-whisper-gray dark:text-[#4b5563]">
+        pin {pin}
       </span>
     </div>
   )
