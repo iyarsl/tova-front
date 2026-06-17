@@ -47,8 +47,7 @@ export function useArduinoPorts() {
       void qc.invalidateQueries({ queryKey: QK })
       toast(err.message, 'error')
     },
-    onSuccess: (_d, { name, on }) => {
-      toast(`${name} turned ${on ? 'ON' : 'OFF'}`, 'success')
+    onSuccess: () => {
       setTimeout(() => void qc.invalidateQueries({ queryKey: QK }), 800)
     },
   })

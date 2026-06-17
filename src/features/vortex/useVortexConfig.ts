@@ -29,8 +29,8 @@ export function useVortexConfig() {
   ) {
     return {
       mutationFn: fn,
-      onMutate: async (v: TVar) => {
-        if (!optimistic) return
+      onMutate: async (v: TVar): Promise<{ prev?: VortexConfig }> => {
+        if (!optimistic) return {}
         await qc.cancelQueries({ queryKey: QK })
         const prev = qc.getQueryData<VortexConfig>(QK)
         if (prev) qc.setQueryData(QK, optimistic(v, prev))
