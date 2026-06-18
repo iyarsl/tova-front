@@ -164,7 +164,7 @@ export function ScanPage() {
         <Topbar title="Signal Capture" />
 
         <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-6xl mx-auto space-y-5">
+          <div className="max-w-[1350px] mx-auto space-y-5">
             <input
               id="excel-file-import"
               type="file"

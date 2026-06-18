@@ -34,7 +34,15 @@ export function ScanHistoryTable() {
   return (
     <div className="rounded-[10px] border border-t-2 dark:border-white/[0.12] border-black/[0.10] dark:border-t-violet-400/30 border-t-violet-500/30 overflow-hidden dark:bg-base-900/40 bg-white transition-colors">
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-max">
+        <table className="w-full border-collapse table-fixed">
+          <colgroup>
+            <col className="w-10" />
+            <col className="w-[14%]" />
+            <col className="w-[38%]" />
+            <col className="w-[18%]" />
+            <col className="w-[12%]" />
+            <col className="w-28" />
+          </colgroup>
           <thead>
             <tr className="dark:bg-base-950 bg-[#f0f1f3] border-b dark:border-white/[0.12] border-black/[0.10]">
               {HEADERS.map(h => (
