@@ -117,32 +117,50 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 py-2 flex flex-col gap-0.5 px-2">
-        {navItems.map(item => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `relative flex items-center gap-3 px-3 py-[9px] rounded-[12px] text-[14px] font-display font-semibold transition-colors duration-150 ${
-                isActive
-                  ? 'bg-pastel-orange text-dora-orange border-l-[3px] border-dora-orange dark:bg-cyan-400/10 dark:text-cyan-400 dark:border dark:border-cyan-400/20'
-                  : 'text-map-brown dark:text-[#9ca3af] hover:bg-[rgba(255,140,66,0.08)] dark:hover:bg-white/5'
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <span className={`text-base flex-shrink-0 w-5 text-center ${
-                  isActive ? 'text-dora-orange dark:text-cyan-400' : ''
-                }`}>
-                  {item.icon}
-                </span>
+        {navItems.map(item => {
+          const itemDisabled = item.to === '/vortex' && vortexDisabled
+          if (itemDisabled) {
+            return (
+              <div
+                key={item.to}
+                aria-disabled="true"
+                title="VORTEX is disabled in device config"
+                className="relative flex items-center gap-3 px-3 py-[9px] rounded-[12px] text-[14px] font-display font-semibold text-map-brown/35 dark:text-[#9ca3af]/35 cursor-not-allowed select-none"
+              >
+                <span className="text-base flex-shrink-0 w-5 text-center">{item.icon}</span>
                 {!collapsed && (
                   <span className="whitespace-nowrap overflow-hidden">{item.label}</span>
                 )}
-              </>
-            )}
-          </NavLink>
-        ))}
+              </div>
+            )
+          }
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `relative flex items-center gap-3 px-3 py-[9px] rounded-[12px] text-[14px] font-display font-semibold transition-colors duration-150 ${
+                  isActive
+                    ? 'bg-pastel-orange text-dora-orange border-l-[3px] border-dora-orange dark:bg-cyan-400/10 dark:text-cyan-400 dark:border dark:border-cyan-400/20'
+                    : 'text-map-brown dark:text-[#9ca3af] hover:bg-[rgba(255,140,66,0.08)] dark:hover:bg-white/5'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span className={`text-base flex-shrink-0 w-5 text-center ${
+                    isActive ? 'text-dora-orange dark:text-cyan-400' : ''
+                  }`}>
+                    {item.icon}
+                  </span>
+                  {!collapsed && (
+                    <span className="whitespace-nowrap overflow-hidden">{item.label}</span>
+                  )}
+                </>
+              )}
+            </NavLink>
+          )
+        })}
       </nav>
 
       {/* User / logout */}
@@ -164,23 +182,20 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Status pill */}
+      {/* Status pill — VORTEX connection status, hidden when VORTEX is disabled */}
+      {!vortexDisabled && (
       <div className="px-3 pb-4 border-[#FFE4C4] dark:border-white/[0.07]">
         <div
           className={`flex items-center gap-2 px-3 py-2 rounded-[14px] text-xs font-body font-bold ${
             checking
               ? 'bg-[#EEF1F4] border border-tale-gray/25 text-tale-gray dark:bg-white/[0.04] dark:border-white/10 dark:text-[#9ca3af]'
-              : vortexDisabled
-                ? 'bg-[#FFF6CC] border border-sunshine/50 text-[#7A5C3A] dark:bg-amber-500/10 dark:border dark:border-amber-500/20 dark:text-amber-400'
-                : connected
-                  ? 'bg-pastel-green border border-meadow-green/40 text-meadow-green-dk dark:bg-emerald-500/10 dark:border dark:border-emerald-500/20 dark:text-emerald-400'
-                  : 'bg-[#FFE0E0] border border-sunset-red/40 text-[#B03030] dark:bg-rose-500/10 dark:border dark:border-rose-500/20 dark:text-rose-400'
+              : connected
+                ? 'bg-pastel-green border border-meadow-green/40 text-meadow-green-dk dark:bg-emerald-500/10 dark:border dark:border-emerald-500/20 dark:text-emerald-400'
+                : 'bg-[#FFE0E0] border border-sunset-red/40 text-[#B03030] dark:bg-rose-500/10 dark:border dark:border-rose-500/20 dark:text-rose-400'
           }`}
         >
           {checking ? (
             <SearchIcon className="w-4 h-4 flex-shrink-0 animate-searching text-tale-gray dark:text-[#9ca3af]" />
-          ) : vortexDisabled ? (
-            <span className="text-[11px] flex-shrink-0">⊘</span>
           ) : connected ? (
             <SunIcon className="w-4 h-4 flex-shrink-0 animate-sun-pulse text-sunshine dark:text-emerald-400" />
           ) : (
@@ -188,11 +203,12 @@ export function Sidebar() {
           )}
           {!collapsed && (
             <span className="whitespace-nowrap">
-              {checking ? 'Checking…' : vortexDisabled ? 'VORTEX off' : connected ? `v${data?.version}` : 'Disconnected'}
+              {checking ? 'Checking…' : connected ? `v${data?.version}` : 'Disconnected'}
             </span>
           )}
         </div>
       </div>
+      )}
     </m.aside>
   )
 }

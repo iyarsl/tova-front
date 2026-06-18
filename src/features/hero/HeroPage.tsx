@@ -91,18 +91,14 @@ export function HeroPage() {
         {/* Text column */}
         <div className="max-w-xl text-center xl:text-left">
 
-          {/* Eyebrow status */}
+          {/* Eyebrow status — hidden entirely when VORTEX is disabled */}
+          {useVortex !== false && (
           <m.div {...reveal(0.15)}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/55 backdrop-blur-sm border border-white/70 mb-6">
             {settingsPending ? (
               <>
                 <SearchIcon className="w-3.5 h-3.5 text-tale-gray animate-searching" />
                 <span className="font-mono text-[11px] tracking-[0.16em] text-tale-gray uppercase">Checking…</span>
-              </>
-            ) : useVortex === false ? (
-              <>
-                <span className="font-mono text-[11px] tracking-[0.16em] text-[#7A5C3A] uppercase">⊘</span>
-                <span className="font-mono text-[11px] tracking-[0.16em] text-[#7A5C3A] uppercase">VORTEX disabled</span>
               </>
             ) : online ? (
               <>
@@ -120,6 +116,7 @@ export function HeroPage() {
               </>
             )}
           </m.div>
+          )}
 
           {/* Huge display headline */}
           <m.h1 {...reveal(0.28)}
