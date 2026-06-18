@@ -52,7 +52,7 @@ export function App() {
             <Route path="/player" element={<PlayerPage />} />
             <Route path="/arduino" element={<SwitchPanel />} />
           </Route>
-          <Route path="*" element={<Navigate to="/vortex" replace />} />
+          <Route path="*" element={<Navigate to="/config" replace />} />
         </Route>
       </Routes>
     </AnimatePresence>

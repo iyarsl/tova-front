@@ -160,7 +160,7 @@ export function PlayerPage() {
   return (
     <PageTransition>
       <div className="h-full flex flex-col overflow-hidden dark:bg-base-950 bg-transparent transition-colors">
-        <Topbar title="Signal Player" />
+        <Topbar title="Signal Analyzer" />
 
         {/* ── Top panel: file + controls ─────────────────────────────────── */}
         <div className="flex-shrink-0 px-5 pt-4 pb-3 space-y-3 dark:bg-base-900 bg-cream-page/85 backdrop-blur-sm border-b dark:border-white/[0.06] border-[#F0EBD8]">

@@ -17,7 +17,7 @@ export function SwitchPanel() {
   return (
     <PageTransition>
       <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
-        <Topbar title="Switch Panel" />
+        <Topbar title="Power Control" />
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto h-full flex flex-col gap-6">

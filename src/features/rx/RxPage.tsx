@@ -130,7 +130,7 @@ export function RxPage() {
   return (
     <PageTransition>
       <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
-        <Topbar title="RX Graphs" />
+        <Topbar title="Live Signal View" />
 
         {/* Tab bar */}
         <div className="flex items-center gap-1 px-5 pt-3 pb-0 border-b border-[#F0EBD8] dark:border-white/[0.07] bg-cream-page dark:bg-base-900 transition-colors">

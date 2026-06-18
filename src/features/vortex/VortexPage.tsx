@@ -290,7 +290,7 @@ export function VortexPage() {
   if (useVortex === false) return (
     <PageTransition>
       <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
-        <Topbar title="Vortex Config" />
+        <Topbar title="Vortex Control" />
         <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-xs flex items-center gap-2">
           <span>⊘</span>
           <span>VORTEX <strong>disabled</strong> (VITE_USE_VORTEX=false) — scans receive directly on the USRP</span>
@@ -338,7 +338,7 @@ export function VortexPage() {
   return (
     <PageTransition>
       <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
-        <Topbar title="Vortex Config" />
+        <Topbar title="Vortex Control" />
 
         {/* VORTEX flag status banner */}
         {useVortex === true ? (

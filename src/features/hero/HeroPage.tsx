@@ -61,13 +61,13 @@ export function HeroPage() {
     await new Promise(r => setTimeout(r, 900))
 
     if (!user) {
-      navigate('/login', { state: { from: { pathname: '/vortex' } } })
+      navigate('/login', { state: { from: { pathname: '/config' } } })
       return
     }
 
     setConnectState('success')
     await new Promise(r => setTimeout(r, 550))
-    navigate('/vortex')
+    navigate('/config')
   }
 
   return (

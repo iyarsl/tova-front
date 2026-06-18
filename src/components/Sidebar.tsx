@@ -6,14 +6,87 @@ import { fetchConfig } from '@/api/vortex'
 import { useAppSettings } from '@/hooks/useAppSettings'
 import { useAuth } from '@/hooks/useAuth'
 
-type NavItem = { to: string; label: string; icon: string }
+type IconProps = { className?: string }
+type NavItem = { to: string; label: string; icon: (props: IconProps) => JSX.Element }
+
+const iconBase = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 2,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+}
+
+// Vortex Control — signal attenuator (mixer sliders)
+function SlidersIcon({ className }: IconProps) {
+  return (
+    <svg className={className} {...iconBase}>
+      <line x1="5" y1="21" x2="5" y2="14" />
+      <line x1="5" y1="10" x2="5" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12" y2="3" />
+      <line x1="19" y1="21" x2="19" y2="16" />
+      <line x1="19" y1="12" x2="19" y2="3" />
+      <line x1="2.5" y1="14" x2="7.5" y2="14" />
+      <line x1="9.5" y1="8" x2="14.5" y2="8" />
+      <line x1="16.5" y1="16" x2="21.5" y2="16" />
+    </svg>
+  )
+}
+
+// SDR Receiver — radio reception
+function RadioIcon({ className }: IconProps) {
+  return (
+    <svg className={className} {...iconBase}>
+      <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9" />
+      <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5" />
+      <circle cx="12" cy="12" r="2" />
+      <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5" />
+      <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19.1" />
+    </svg>
+  )
+}
+
+// RX Graphs — live signal activity
+function ActivityIcon({ className }: IconProps) {
+  return (
+    <svg className={className} {...iconBase}>
+      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+    </svg>
+  )
+}
+
+// Signal Analyzer — waveform / spectrum
+function WaveformIcon({ className }: IconProps) {
+  return (
+    <svg className={className} {...iconBase}>
+      <line x1="2" y1="10" x2="2" y2="14" />
+      <line x1="6.5" y1="6" x2="6.5" y2="18" />
+      <line x1="11" y1="3" x2="11" y2="21" />
+      <line x1="15.5" y1="8" x2="15.5" y2="16" />
+      <line x1="20" y1="5" x2="20" y2="19" />
+      <line x1="22.5" y1="10" x2="22.5" y2="14" />
+    </svg>
+  )
+}
+
+// Power Control — toggle on/off (relay switch, not app power)
+function ToggleIcon({ className }: IconProps) {
+  return (
+    <svg className={className} {...iconBase}>
+      <rect x="1.5" y="6" width="21" height="12" rx="6" />
+      <circle cx="16.5" cy="12" r="3" />
+    </svg>
+  )
+}
 
 const navItems: NavItem[] = [
-  { to: '/vortex', label: 'Vortex Config', icon: '⚡' },
-  { to: '/config', label: 'Scan Table',    icon: '⊞' },
-  { to: '/rx',     label: 'RX Graphs',     icon: '◈' },
-  { to: '/player', label: 'File Player',   icon: '▶' },
-  { to: '/arduino', label: 'Switch Panel', icon: '⏻' },
+  { to: '/vortex',  label: 'Vortex Control',  icon: SlidersIcon },
+  { to: '/config',  label: 'Signal Capture',  icon: RadioIcon },
+  { to: '/rx',      label: 'Live Signal View', icon: ActivityIcon },
+  { to: '/player',  label: 'Signal Analyzer',  icon: WaveformIcon },
+  { to: '/arduino', label: 'Power Control',    icon: ToggleIcon },
 ]
 
 function SearchIcon({ className }: { className?: string }) {
@@ -127,7 +200,7 @@ export function Sidebar() {
                 title="VORTEX is disabled in device config"
                 className="relative flex items-center gap-3 px-3 py-[9px] rounded-[12px] text-[14px] font-display font-semibold text-map-brown/35 dark:text-[#9ca3af]/35 cursor-not-allowed select-none"
               >
-                <span className="text-base flex-shrink-0 w-5 text-center">{item.icon}</span>
+                <item.icon className="w-5 h-5 flex-shrink-0" />
                 {!collapsed && (
                   <span className="whitespace-nowrap overflow-hidden">{item.label}</span>
                 )}
@@ -148,11 +221,10 @@ export function Sidebar() {
             >
               {({ isActive }) => (
                 <>
-                  <span className={`text-base flex-shrink-0 w-5 text-center ${
+                  <item.icon className={`w-5 h-5 flex-shrink-0 ${
                     isActive ? 'text-dora-orange dark:text-cyan-400' : ''
-                  }`}>
-                    {item.icon}
-                  </span>
+                  }`} />
+
                   {!collapsed && (
                     <span className="whitespace-nowrap overflow-hidden">{item.label}</span>
                   )}
