@@ -141,7 +141,7 @@ export function HeroPage() {
             <div className="relative">
               {/* glow ring */}
               {connectState === 'idle' && (
-                <span aria-hidden className="absolute -inset-1.5 rounded-full motion-reduce:hidden animate-glow-pulse bg-[radial-gradient(circle,rgba(255,140,66,0.45),transparent_70%)]" />
+                <span aria-hidden className="absolute -inset-1.5 rounded-full will-change-transform motion-reduce:hidden animate-glow-pulse bg-[radial-gradient(circle,rgba(255,140,66,0.45),transparent_70%)]" />
               )}
               <button type="button"
                 onClick={handleConnect}
@@ -191,7 +191,7 @@ export function HeroPage() {
 
           <div className="relative w-[460px] h-[460px] flex items-end justify-center">
 
-            <div className="relative z-10 animate-float">
+            <div className="relative z-10 will-change-transform animate-float">
               <img src={doraHero} alt="Dora the explorer"
                 className="w-[clamp(300px,32vw,420px)] drop-shadow-[0_24px_40px_rgba(45,42,62,0.28)]" />
             </div>
@@ -199,7 +199,7 @@ export function HeroPage() {
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-56 h-7 rounded-full bg-[radial-gradient(ellipse,rgba(255,140,66,0.28),transparent_70%)]" />
             {/* Boots */}
             <img src={bootsBuddy} alt="" aria-hidden
-              className="absolute bottom-3 left-2 w-28 z-20 animate-float-slow drop-shadow-[0_12px_22px_rgba(45,42,62,0.22)]" />
+              className="absolute bottom-3 left-2 w-28 z-20 will-change-transform animate-float-slow drop-shadow-[0_12px_22px_rgba(45,42,62,0.22)]" />
           </div>
         </m.div>
       </div>
