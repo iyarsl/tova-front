@@ -7,7 +7,7 @@ import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { DateTimePicker } from '@/components/DateTimePicker'
 import type { ScanRow } from '@/types/scan'
 import type { Recurrence } from '@/types/schedule'
-import { config } from '@/config'
+import { useAppSettings } from '@/hooks/useAppSettings'
 
 interface Props {
   rows: ScanRow[]
@@ -29,6 +29,7 @@ export function ScheduleModal({ rows, onClose }: Props) {
 
   const createMut = useCreateSchedule()
   const { defaults } = useScanDefaults()
+  const { useVortex } = useAppSettings()
 
   const [minDateTime] = useState(() => {
     const d  = new Date(Date.now() + 60_000)
@@ -47,7 +48,7 @@ export function ScheduleModal({ rows, onClose }: Props) {
         }) as import('@/types/scan').ApiScanRow),
         output_dir: dir,
         mock: false,
-        use_vortex: config.useVortex,
+        use_vortex: useVortex ?? true,
         scheduled_at: new Date(scheduledAt).toISOString(),
         recurrence,
         ...(recurrence === 'custom'

@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
-import { config as appConfig } from '@/config'
+import { useAppSettings } from '@/hooks/useAppSettings'
 import { useAuth } from '@/hooks/useAuth'
 
 type NavItem = { to: string; label: string; icon: string }
@@ -62,17 +62,19 @@ function LogoutIcon({ className }: { className?: string }) {
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const { user, logout } = useAuth()
+  const { useVortex, isPending: settingsPending } = useAppSettings()
   const { data, isError } = useQuery({
     queryKey: ['vortex-config'],
     queryFn: fetchConfig,
-    enabled: appConfig.useVortex,
+    enabled: useVortex === true,
     refetchInterval: 5000,
     retry: false,
   })
 
-  // Three-way status: vortex disabled (flag off) / connected / disconnected
-  const vortexDisabled = !appConfig.useVortex
-  const connected      = !vortexDisabled && !isError && !!data
+  // Four-way status: checking settings / vortex disabled (flag off) / connected / disconnected
+  const checking       = settingsPending
+  const vortexDisabled = useVortex === false
+  const connected      = useVortex === true && !isError && !!data
 
   return (
     <m.aside
@@ -166,14 +168,18 @@ export function Sidebar() {
       <div className="px-3 pb-4 border-[#FFE4C4] dark:border-white/[0.07]">
         <div
           className={`flex items-center gap-2 px-3 py-2 rounded-[14px] text-xs font-body font-bold ${
-            vortexDisabled
-              ? 'bg-[#FFF6CC] border border-sunshine/50 text-[#7A5C3A] dark:bg-amber-500/10 dark:border dark:border-amber-500/20 dark:text-amber-400'
-              : connected
-                ? 'bg-pastel-green border border-meadow-green/40 text-meadow-green-dk dark:bg-emerald-500/10 dark:border dark:border-emerald-500/20 dark:text-emerald-400'
-                : 'bg-[#FFE0E0] border border-sunset-red/40 text-[#B03030] dark:bg-rose-500/10 dark:border dark:border-rose-500/20 dark:text-rose-400'
+            checking
+              ? 'bg-[#EEF1F4] border border-tale-gray/25 text-tale-gray dark:bg-white/[0.04] dark:border-white/10 dark:text-[#9ca3af]'
+              : vortexDisabled
+                ? 'bg-[#FFF6CC] border border-sunshine/50 text-[#7A5C3A] dark:bg-amber-500/10 dark:border dark:border-amber-500/20 dark:text-amber-400'
+                : connected
+                  ? 'bg-pastel-green border border-meadow-green/40 text-meadow-green-dk dark:bg-emerald-500/10 dark:border dark:border-emerald-500/20 dark:text-emerald-400'
+                  : 'bg-[#FFE0E0] border border-sunset-red/40 text-[#B03030] dark:bg-rose-500/10 dark:border dark:border-rose-500/20 dark:text-rose-400'
           }`}
         >
-          {vortexDisabled ? (
+          {checking ? (
+            <SearchIcon className="w-4 h-4 flex-shrink-0 animate-searching text-tale-gray dark:text-[#9ca3af]" />
+          ) : vortexDisabled ? (
             <span className="text-[11px] flex-shrink-0">⊘</span>
           ) : connected ? (
             <SunIcon className="w-4 h-4 flex-shrink-0 animate-sun-pulse text-sunshine dark:text-emerald-400" />
@@ -182,7 +188,7 @@ export function Sidebar() {
           )}
           {!collapsed && (
             <span className="whitespace-nowrap">
-              {vortexDisabled ? 'VORTEX off' : connected ? `v${data?.version}` : 'Disconnected'}
+              {checking ? 'Checking…' : vortexDisabled ? 'VORTEX off' : connected ? `v${data?.version}` : 'Disconnected'}
             </span>
           )}
         </div>

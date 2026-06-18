@@ -6,7 +6,7 @@ import { fetchConfig } from '@/api/vortex'
 import { useQuery } from '@tanstack/react-query'
 import doraHero from '@/assets/dora/dora-d.png'
 import bootsBuddy from '@/assets/dora/boots2.png'
-import { config as appConfig } from '@/config'
+import { useAppSettings } from '@/hooks/useAppSettings'
 import { useAuth } from '@/hooks/useAuth'
 
 type ConnectState = 'idle' | 'connecting' | 'success'
@@ -45,15 +45,16 @@ export function HeroPage() {
   const { user } = useAuth()
   const [connectState, setConnectState] = useState<ConnectState>('idle')
 
+  const { useVortex, isPending: settingsPending } = useAppSettings()
   const { data, isError } = useQuery({
     queryKey: ['vortex-config'],
     queryFn: fetchConfig,
-    enabled: appConfig.useVortex,
+    enabled: useVortex === true,
     retry: 1,
     refetchInterval: false,
   })
 
-  const online = appConfig.useVortex && !isError && !!data
+  const online = useVortex === true && !isError && !!data
 
   async function handleConnect() {
     setConnectState('connecting')
@@ -93,7 +94,12 @@ export function HeroPage() {
           {/* Eyebrow status */}
           <m.div {...reveal(0.15)}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/55 backdrop-blur-sm border border-white/70 mb-6">
-            {!appConfig.useVortex ? (
+            {settingsPending ? (
+              <>
+                <SearchIcon className="w-3.5 h-3.5 text-tale-gray animate-searching" />
+                <span className="font-mono text-[11px] tracking-[0.16em] text-tale-gray uppercase">Checking…</span>
+              </>
+            ) : useVortex === false ? (
               <>
                 <span className="font-mono text-[11px] tracking-[0.16em] text-[#7A5C3A] uppercase">⊘</span>
                 <span className="font-mono text-[11px] tracking-[0.16em] text-[#7A5C3A] uppercase">VORTEX disabled</span>

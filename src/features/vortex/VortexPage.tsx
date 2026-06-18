@@ -6,7 +6,7 @@ import {
   availableBandwidths, isOutputLocked, isIfbwDisabled,
   IFBW_320_OUTPUT_MHZ,
 } from './constraints'
-import { config as appConfig } from '@/config'
+import { useAppSettings } from '@/hooks/useAppSettings'
 
 function ConfigCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -253,6 +253,7 @@ export function VortexPage() {
     rfinMut, outputMut, gainMut, ifbwMut, invertMut, saveMut, resumeMut,
   } = useVortexConfig()
 
+  const { useVortex, isPending: settingsPending } = useAppSettings()
   const [resumed, setResumed] = useState(false)
   const [localBw, setLocalBw] = useState<number | null>(null)
   const [localInvert, setLocalInvert] = useState<boolean | null>(null)
@@ -260,7 +261,7 @@ export function VortexPage() {
   useEffect(() => { setLocalBw(null) },     [config?.ifbw_mhz])
   useEffect(() => { setLocalInvert(null) }, [config?.gain_mode])
 
-  if (isLoading && appConfig.useVortex) return (
+  if (settingsPending || (isLoading && useVortex === true)) return (
     <PageTransition>
       <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-transparent dark:bg-base-950 transition-colors">
         <div className="relative flex items-center justify-center w-44 h-44">
@@ -286,7 +287,7 @@ export function VortexPage() {
     </PageTransition>
   )
 
-  if (!appConfig.useVortex) return (
+  if (useVortex === false) return (
     <PageTransition>
       <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
         <Topbar title="Vortex Config" />
@@ -340,7 +341,7 @@ export function VortexPage() {
         <Topbar title="Vortex Config" />
 
         {/* VORTEX flag status banner */}
-        {appConfig.useVortex ? (
+        {useVortex === true ? (
           <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-meadow-green/40 bg-pastel-green dark:bg-emerald-500/5 dark:border-emerald-500/20 text-meadow-green-dk dark:text-emerald-400 font-body text-xs flex items-center gap-2">
             <span className="text-sm">⚡</span>
             <span>VORTEX <strong>enabled</strong> — hardware used in scans</span>

@@ -18,7 +18,7 @@ import { ScanDefaultsModal } from './ScanDefaultsModal'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { parseExcelToScanRows } from '@/utils/parseExcel'
 import { downloadScanTemplate } from '@/utils/downloadTemplate'
-import { config } from '@/config'
+import { useAppSettings } from '@/hooks/useAppSettings'
 
 function RunModal({
   onClose,
@@ -106,6 +106,7 @@ export function ScanPage() {
   const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows,
           importedFileName, setImportedFileName, results, setResults } = useScan()
   const { defaults } = useScanDefaults()
+  const { useVortex } = useAppSettings()
   const [showModal, setShowModal]                   = useState(false)
   const [showScheduleModal, setShowScheduleModal]   = useState(false)
   const [showDefaultsModal, setShowDefaultsModal]   = useState(false)
@@ -141,7 +142,7 @@ export function ScanPage() {
         gain_db:           gain_db!,
         sample_rate:       sample_rate!,
       }))
-      return runScan(apiRows, dir, mock, config.useVortex)
+      return runScan(apiRows, dir, mock, useVortex ?? true)
     },
     onSuccess: (files) => {
       setResults(files)
