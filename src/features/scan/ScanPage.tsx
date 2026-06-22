@@ -191,12 +191,6 @@ export function ScanPage() {
                   </svg>
                 </button>
                 <button type="button"
-                  onClick={() => { clearErrors(); handleValidate() }}
-                  className="px-4 py-2 rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 font-display font-bold text-xs tracking-wide uppercase hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors"
-                >
-                  Validate
-                </button>
-                <button type="button"
                   onClick={downloadScanTemplate}
                   title="Download Excel template"
                   className="px-4 py-2 rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 font-display font-bold text-xs tracking-wide uppercase hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors flex items-center gap-1.5"
@@ -282,7 +276,14 @@ export function ScanPage() {
               )}
             </AnimatePresence>
 
-            <ScanTable rows={rows} errors={errors} onUpdate={updateCell} onAdd={addRow} onRemove={removeRow} />
+            <ScanTable
+              rows={rows}
+              errors={errors}
+              onUpdate={updateCell}
+              onAdd={addRow}
+              onRemove={removeRow}
+              onValidate={() => { clearErrors(); handleValidate() }}
+            />
 
             <AnimatePresence>
               {results && (

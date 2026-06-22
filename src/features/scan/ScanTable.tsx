@@ -7,6 +7,7 @@ type Props = {
   onUpdate: <K extends keyof Omit<ScanRow, 'id'>>(id: string, field: K, value: ScanRow[K]) => void
   onAdd: () => void
   onRemove: (id: string) => void
+  onValidate: () => void
 }
 
 type ColDef = {
@@ -128,11 +129,21 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
   )
 }
 
-export function ScanTable({ rows, errors, onUpdate, onAdd, onRemove }: Props) {
+export function ScanTable({ rows, errors, onUpdate, onAdd, onRemove, onValidate }: Props) {
   const [hovered, setHovered] = useState<string | null>(null)
 
   return (
-    <div className="rounded-[20px] border-2 border-[#FFD4A6] dark:border-white/[0.12] overflow-hidden bg-cream-page dark:bg-base-900/40 transition-colors shadow-dora-card">
+    <div className="relative rounded-[20px] border-2 border-[#FFD4A6] dark:border-white/[0.12] overflow-hidden bg-cream-page dark:bg-base-900/40 transition-colors shadow-dora-card">
+      <button type="button"
+        onClick={onValidate}
+        aria-label="Validate rows"
+        title="Validate rows"
+        className="absolute top-2 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      </button>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse min-w-max">
           <thead>
