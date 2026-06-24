@@ -1,0 +1,25 @@
+name: Notify shrinker (build validation)
+
+# tova-front has no installer/release of its own - its built dist/ is bundled into
+# the shrinker (BE) app and served single-origin from src/server.py. Every push to
+# main just pings shrinker's assembly workflow so the combined bundle gets
+# re-validated (assembled + tested) against this repo's latest main. See
+# shrinker/.github/workflows/assemble.yml and shrinker/build/assemble_bundle.ps1
+# for what that validation actually does. (This is separate from react-doctor.yml,
+# which is this repo's own lint/check workflow.)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fire repository_dispatch to shrinker
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.CROSS_REPO_PAT }}
+          repository: iyarsl/shrinker
+          event-type: validate
+          client-payload: '{"source_repo": "tova-front", "sha": "${{ github.sha }}"}'

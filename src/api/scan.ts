@@ -10,7 +10,11 @@ export async function runScan(
   mock: boolean,
   use_vortex: boolean,
 ): Promise<string[]> {
-  const res = await client.post('/scan/run', { rows, output_dir, mock, use_vortex })
+  const res = await client.post(
+    '/scan/run',
+    { rows, output_dir, mock, use_vortex },
+    { timeout: 5 * 60_000 },
+  )
   return z.array(z.string()).parse(res.data)
 }
 
