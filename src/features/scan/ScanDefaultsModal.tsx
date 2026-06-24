@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect } from 'react'
 import { m } from 'framer-motion'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
+import { useRabbitMq } from '@/hooks/useRabbitMq'
 import { useToast } from '@/components/Toast'
 import { isAbsolutePath } from '@/utils/path'
 import type { AppError } from '@/api/client'
@@ -22,7 +23,13 @@ const inputClass = (hasError: boolean) =>
 
 export function ScanDefaultsModal({ onClose }: Props) {
   const { defaults, mutation } = useScanDefaults()
+  const { enabled: rabbitEnabled, mutation: rabbitMutation } = useRabbitMq()
   const { toast } = useToast()
+
+  const [localRabbit, setLocalRabbit] = useState(false)
+  useEffect(() => {
+    if (rabbitEnabled !== undefined) setLocalRabbit(rabbitEnabled)
+  }, [rabbitEnabled])
 
   type FormState = { gainStr: string; outFreqStr: string; outputDir: string }
   const [form, setForm] = useState<FormState>({ gainStr: '', outFreqStr: '', outputDir: '' })
@@ -133,6 +140,42 @@ export function ScanDefaultsModal({ onClose }: Props) {
                 className={inputClass(!!errors.outputDir)}
               />
               {errors.outputDir && <FieldError msg={errors.outputDir} />}
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <div>
+                <span className="font-body text-[13px] font-semibold text-story-ink dark:text-[#e5e7eb] block">
+                  Save captures to RabbitMQ
+                </span>
+                <span className="font-body text-[11px] text-whisper-gray dark:text-[#6b7280]">
+                  When on, scan rows publish to the queue instead of writing local files
+                </span>
+              </div>
+              <button type="button"
+                role="switch"
+                aria-checked={localRabbit}
+                aria-label="Save captures to RabbitMQ"
+                onClick={() => {
+                  const next = !localRabbit
+                  setLocalRabbit(next)
+                  rabbitMutation.mutate(next, {
+                    onSuccess: () => toast(next ? 'Captures will publish to RabbitMQ' : 'Captures will save locally', 'success'),
+                    onError: (err: AppError) => {
+                      setLocalRabbit(!next)
+                      toast(err.message ?? 'Failed to update RabbitMQ setting', 'error')
+                    },
+                  })
+                }}
+                className={`relative w-14 h-7 shrink-0 rounded-full border-2 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-adv-purple/40 dark:focus:ring-cyan-400/50 ${
+                  localRabbit
+                    ? 'bg-gradient-to-r from-meadow-green to-meadow-green-dk border-meadow-green/40 dark:from-cyan-400/20 dark:to-cyan-400/20 dark:border-cyan-400/40'
+                    : 'bg-[#E8E4F7] border-[#D8D4EC] dark:bg-white/5 dark:border-white/10'
+                }`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                  localRabbit ? 'translate-x-7' : 'translate-x-0'
+                }`} />
+              </button>
             </div>
           </div>
 

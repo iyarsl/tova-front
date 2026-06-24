@@ -43,3 +43,15 @@ export async function updateScanDefaults(body: ScanDefaults): Promise<ScanDefaul
   const res = await client.put('/scan/defaults', body)
   return ScanDefaultsSchema.parse(res.data)
 }
+
+const RabbitStatusSchema = z.object({ enabled: z.boolean() })
+
+export async function fetchRabbitStatus(): Promise<boolean> {
+  const res = await client.get('/scan/rabbitmq/status')
+  return RabbitStatusSchema.parse(res.data).enabled
+}
+
+export async function toggleRabbit(enabled: boolean): Promise<boolean> {
+  const res = await client.post('/scan/rabbitmq/toggle', { enabled })
+  return RabbitStatusSchema.parse(res.data).enabled
+}
