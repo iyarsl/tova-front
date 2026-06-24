@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { parseFC32 } from '@/utils/parseFC32'
-import type { WorkerOutput, SignalData, ZoomLayout, ChartTab } from '@/types/rx'
-import type { PlayerWorkerInput } from './playerWorker'
+import type { SignalData, ZoomLayout } from '@/types/rx'
+import type { PlayerWorkerInput, PlayerWorkerOutput } from './playerWorker'
 
-/** Alias of the shared ChartTab — exported so PlayerPage can import it */
-export type PlayerTab = ChartTab
+/** File Player has separate time/fft tabs, unlike the RX page's combined view */
+export type PlayerTab = 'time' | 'fft' | 'spectrogram'
 
 /** Serialisable zoom state, one entry per tab */
 export type PlayerZoomLayouts = Record<PlayerTab, ZoomLayout>
@@ -77,7 +77,7 @@ export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLay
       { type: 'module' },
     )
 
-    worker.onmessage = (e: MessageEvent<WorkerOutput>) => {
+    worker.onmessage = (e: MessageEvent<PlayerWorkerOutput>) => {
       processingRef.current = false
       const { fftY, fftX, timeY, sampleRate: sr } = e.data
 

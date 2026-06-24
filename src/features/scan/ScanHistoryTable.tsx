@@ -210,7 +210,7 @@ export function ScanHistoryTable() {
                               </thead>
                               <tbody>
                                 {entry.rows.map((row, i) => (
-                                  <tr key={row.id} className="dark:text-[#d1d5db] text-[#374151]">
+                                  <tr key={i} className="dark:text-[#d1d5db] text-[#374151]">
                                     <td className="px-3 py-1 border-r dark:border-white/[0.06] border-black/[0.04] dark:text-[#6b7280] text-[#9ca3af]">{i + 1}</td>
                                     <td className="px-3 py-1 border-r dark:border-white/[0.06] border-black/[0.04]">{row.duration}</td>
                                     <td className="px-3 py-1 border-r dark:border-white/[0.06] border-black/[0.04]">{row.entrance_freq_ghz}</td>

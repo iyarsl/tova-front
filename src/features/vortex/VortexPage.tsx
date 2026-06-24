@@ -4,7 +4,7 @@ import { Topbar } from '@/components/Topbar'
 import { useVortexConfig } from './useVortexConfig'
 import {
   availableBandwidths, isOutputLocked, isIfbwDisabled,
-  IFBW_320_OUTPUT_MHZ,
+  effectiveOutput,
 } from './constraints'
 import { useAppSettings } from '@/hooks/useAppSettings'
 
@@ -293,7 +293,7 @@ export function VortexPage() {
         <Topbar title="Vortex Control" />
         <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-xs flex items-center gap-2">
           <span>⊘</span>
-          <span>VORTEX <strong>disabled</strong> (VITE_USE_VORTEX=false) — scans receive directly on the USRP</span>
+          <span>VORTEX <strong>disabled</strong> (config.yaml) — scans receive directly on the USRP</span>
         </div>
         <div className="flex-1 flex items-center justify-center text-whisper-gray dark:text-[#4b5563] font-body text-sm">
           Device not connected — VORTEX control unavailable
@@ -349,7 +349,7 @@ export function VortexPage() {
         ) : (
           <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-xs flex items-center gap-2">
             <span>⊘</span>
-            <span>VORTEX <strong>disabled</strong> (VITE_USE_VORTEX=false) — scans receive directly on the USRP</span>
+            <span>VORTEX <strong>disabled</strong> (config.yaml) — scans receive directly on the USRP</span>
           </div>
         )}
 
@@ -378,7 +378,7 @@ export function VortexPage() {
             <ConfigCard title="IF Output">
               <NumericField
                 label="Frequency"
-                value={outLocked ? IFBW_320_OUTPUT_MHZ : config.output_mhz}
+                value={effectiveOutput(config)}
                 min={0} max={3500} step={0.1}
                 unit="MHz"
                 disabled={resumed}

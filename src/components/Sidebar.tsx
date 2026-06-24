@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react'
+import type { JSX } from 'react'
 import { NavLink } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'

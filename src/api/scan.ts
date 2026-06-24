@@ -4,20 +4,6 @@ import type { ApiScanRow, ScanDefaults } from '@/types/scan'
 
 export type { ApiScanRow }
 
-const ScanRowSchema = z.object({
-  duration:          z.number(),
-  entrance_freq_ghz: z.number(),
-  out_freq_mhz:      z.number(),
-  bandwidth:         z.union([z.literal(80), z.literal(160), z.literal(320)]),
-  gain_db:           z.number(),
-  sample_rate:       z.number(),
-})
-
-async function validateScan(path: string): Promise<ApiScanRow[]> {
-  const res = await client.post('/scan/validate', { path })
-  return z.array(ScanRowSchema).parse(res.data)
-}
-
 export async function runScan(
   rows: ApiScanRow[],
   output_dir: string,

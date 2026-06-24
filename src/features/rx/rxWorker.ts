@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 import type { WorkerInput, WorkerOutput } from '@/types/rx'
 
 // Max IQ samples fed into the FFT.  Limits chart output to ≤ this many bins.
