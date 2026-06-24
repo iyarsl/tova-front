@@ -94,7 +94,7 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   const latestOutput = useRef<WorkerOutput | null>(null)
   const rafPending   = useRef<number | null>(null)
 
-  const wsUrl = `${config.rxWsUrl}?chunk_duration=${config.rxChunkDuration}`
+  const wsUrl = `${config.rxWsUrl}?silence_duration=${config.rxSilenceDuration}`
 
   // -- rendering pipeline -----------------------------------------------------
 
