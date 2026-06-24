@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { parseFC32 } from '@/utils/parseFC32'
-import type { WorkerOutput, SignalData, ZoomLayout, ChartTab } from '@/types/rx'
-import type { PlayerWorkerInput } from './playerWorker'
+import type { SignalData, ZoomLayout } from '@/types/rx'
+import type { PlayerWorkerInput, PlayerWorkerOutput } from './playerWorker'
 
-/** Alias of the shared ChartTab — exported so PlayerPage can import it */
-export type PlayerTab = ChartTab
+/** File Player has separate time/fft tabs, unlike the RX page's combined view */
+export type PlayerTab = 'time' | 'fft' | 'spectrogram'
 
 /** Serialisable zoom state, one entry per tab */
 export type PlayerZoomLayouts = Record<PlayerTab, ZoomLayout>
@@ -29,13 +29,14 @@ export type FilePlayerState = {
 }
 
 export type FilePlayerActions = {
-  loadFile:    (file: File, sampleRate: number) => Promise<void>
-  clearFile:   () => void
-  play:        () => void
-  pause:       () => void
-  seek:        (chunk: number) => void
-  stepBack:    () => void
-  stepForward: () => void
+  loadFile:       (file: File, sampleRate: number) => Promise<void>
+  loadFromBuffer: (samples: Float32Array, sampleRate: number, fileName: string) => void
+  clearFile:      () => void
+  play:           () => void
+  pause:          () => void
+  seek:           (chunk: number) => void
+  stepBack:       () => void
+  stepForward:    () => void
   /** Call from Plotly onRelayout to persist zoom ranges */
   handleRelayout: (tab: PlayerTab, event: Plotly.PlotRelayoutEvent) => void
 }
@@ -76,7 +77,7 @@ export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLay
       { type: 'module' },
     )
 
-    worker.onmessage = (e: MessageEvent<WorkerOutput>) => {
+    worker.onmessage = (e: MessageEvent<PlayerWorkerOutput>) => {
       processingRef.current = false
       const { fftY, fftX, timeY, sampleRate: sr } = e.data
 
@@ -195,6 +196,32 @@ export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLay
     }
   }, [processCurrentChunk])
 
+  const loadFromBuffer = useCallback((samples: Float32Array, sr: number, fileName: string): void => {
+    if (tickRef.current) clearTimeout(tickRef.current)
+    isPlayingRef.current  = false
+    processingRef.current = false
+    setIsPlaying(false)
+    setError(null)
+
+    const chunks = Math.ceil(samples.length / 2 / CHUNK_SIZE)
+
+    bufferRef.current       = samples
+    sampleRateRef.current   = sr
+    currentChunkRef.current = 0
+    totalChunksRef.current  = chunks
+    spectroRef.current      = []
+
+    setSampleRate(sr)
+    setTotalChunks(chunks)
+    setCurrentChunk(0)
+    setFileName(fileName)
+    setFileSizeBytes(samples.byteLength)
+    setSignalData(null)
+    setIsLoaded(true)
+
+    processCurrentChunk()
+  }, [processCurrentChunk])
+
   const play = useCallback(() => {
     if (!bufferRef.current || isPlayingRef.current) return
     if (currentChunkRef.current >= totalChunksRef.current - 1) {
@@ -293,6 +320,7 @@ export function useFilePlayer(): FilePlayerState & FilePlayerActions & { zoomLay
     zoomLayouts,
     // actions
     loadFile,
+    loadFromBuffer,
     clearFile,
     play,
     pause,

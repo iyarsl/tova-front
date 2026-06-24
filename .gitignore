@@ -29,9 +29,16 @@ dist-ssr
 !.env.example
 
 
- .playwright-mcp
- .playwright-mcp/
+.playwright-mcp/
+.agents/
+skills-lock.json
+*.stackdump
 
 .vite/
 .claude/
+
+# Playwright/verification screenshots dropped at repo root (keep public/ & src/assets/ images)
+/*.png
+/*.jpg
+/*.jpeg
 

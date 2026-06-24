@@ -6,7 +6,7 @@ export function isOutputLocked(ifbw_mhz: number): boolean {
   return ifbw_mhz === 320
 }
 
-export function is320Hidden(version: string): boolean {
+function is320Hidden(version: string): boolean {
   return version === '1.0.1A'
 }
 

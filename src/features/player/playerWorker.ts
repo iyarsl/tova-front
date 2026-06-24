@@ -5,6 +5,9 @@
  */
 import type { WorkerOutput } from '@/types/rx'
 
+/** Player worker has no raw IQ to transfer back — main thread already holds the full buffer */
+export type PlayerWorkerOutput = Omit<WorkerOutput, 'rawSamples'>
+
 export interface PlayerWorkerInput {
   /** Transferable: Float32Array(iqChunk) = interleaved I/Q samples */
   iqChunk: ArrayBuffer
@@ -95,6 +98,6 @@ self.onmessage = (e: MessageEvent<PlayerWorkerInput>) => {
     fftX[dst] = ((k < half ? k : k - n) * binHz) / 1e6
   }
 
-  const output: WorkerOutput = { fftY, fftX, timeY, sampleRate }
+  const output: PlayerWorkerOutput = { fftY, fftX, timeY, sampleRate }
   self.postMessage(output)
 }

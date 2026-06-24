@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 import type { WorkerInput, WorkerOutput } from '@/types/rx'
 
 // Max IQ samples fed into the FFT.  Limits chart output to ≤ this many bins.
@@ -99,6 +100,6 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
     fftX[dst] = ((k < half ? k : k - n) * binHz) / 1e6
   }
 
-  const output: WorkerOutput = { fftY, fftX, timeY, sampleRate }
-  self.postMessage(output)
+  const output: WorkerOutput = { fftY, fftX, timeY, sampleRate, rawSamples: iq }
+  self.postMessage(output, [iq.buffer])
 }

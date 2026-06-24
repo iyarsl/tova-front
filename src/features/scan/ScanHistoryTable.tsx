@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+﻿import React, { useState } from 'react'
+import { m, AnimatePresence } from 'framer-motion'
 import { useScanHistory, useDeleteHistory } from './useScanHistory'
 import type { ScanHistoryEntry } from '@/types/schedule'
 
@@ -34,7 +34,15 @@ export function ScanHistoryTable() {
   return (
     <div className="rounded-[10px] border border-t-2 dark:border-white/[0.12] border-black/[0.10] dark:border-t-violet-400/30 border-t-violet-500/30 overflow-hidden dark:bg-base-900/40 bg-white transition-colors">
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-max">
+        <table className="w-full border-collapse table-fixed">
+          <colgroup>
+            <col className="w-10" />
+            <col className="w-[14%]" />
+            <col className="w-[38%]" />
+            <col className="w-[18%]" />
+            <col className="w-[12%]" />
+            <col className="w-28" />
+          </colgroup>
           <thead>
             <tr className="dark:bg-base-950 bg-[#f0f1f3] border-b dark:border-white/[0.12] border-black/[0.10]">
               {HEADERS.map(h => (
@@ -128,7 +136,7 @@ export function ScanHistoryTable() {
                   </td>
                   <td className="px-3 py-2.5 w-28">
                     <div className="flex items-center gap-1">
-                      <button
+                      <button type="button"
                         onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
                         className="text-[11px] font-mono dark:text-[#6b7280] text-[#9ca3af] dark:hover:text-cyan-400 hover:text-[#0891b2] px-1.5 py-0.5 rounded dark:hover:bg-cyan-400/10 hover:bg-[#ecfeff] transition-colors"
                       >
@@ -137,14 +145,14 @@ export function ScanHistoryTable() {
                       <span className="dark:text-white/[0.10] text-black/[0.08] text-[10px]">|</span>
                       <AnimatePresence mode="wait">
                         {confirmDelete === entry.id ? (
-                          <motion.div
+                          <m.div
                             key="confirm"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             className="flex items-center gap-1"
                           >
-                            <button
+                            <button type="button"
                               onClick={() => {
                                 deleteMut.mutate(entry.id)
                                 setConfirmDelete(null)
@@ -153,15 +161,15 @@ export function ScanHistoryTable() {
                             >
                               Confirm
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => setConfirmDelete(null)}
                               className="text-[11px] font-mono dark:text-[#6b7280] text-[#9ca3af] px-1.5 py-0.5 rounded transition-colors"
                             >
                               Keep
                             </button>
-                          </motion.div>
+                          </m.div>
                         ) : (
-                          <motion.button
+                          <m.button
                             key="delete-btn"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -170,7 +178,7 @@ export function ScanHistoryTable() {
                             className="text-[11px] font-mono dark:text-[#6b7280] text-[#9ca3af] dark:hover:text-rose-400 hover:text-rose-500 px-1.5 py-0.5 rounded dark:hover:bg-rose-500/10 hover:bg-rose-50 transition-colors"
                           >
                             Delete
-                          </motion.button>
+                          </m.button>
                         )}
                       </AnimatePresence>
                     </div>
@@ -180,7 +188,7 @@ export function ScanHistoryTable() {
                 {expanded === entry.id && (
                   <tr className="border-b dark:border-white/[0.08] border-black/[0.06] last:border-b-0">
                     <td colSpan={HEADERS.length} className="p-0">
-                      <motion.div
+                      <m.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         className="overflow-hidden"
@@ -216,7 +224,7 @@ export function ScanHistoryTable() {
                             </table>
                           </div>
                         </div>
-                      </motion.div>
+                      </m.div>
                     </td>
                   </tr>
                 )}
@@ -228,3 +236,4 @@ export function ScanHistoryTable() {
     </div>
   )
 }
+

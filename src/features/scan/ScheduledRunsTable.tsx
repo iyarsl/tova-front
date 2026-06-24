@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+﻿import { useState } from 'react'
+import { m, AnimatePresence } from 'framer-motion'
 import { useScheduledScans, useCancelSchedule } from './useScheduledScans'
 import type { Recurrence, ScheduledScan } from '@/types/schedule'
 
@@ -10,15 +10,15 @@ function formatDateTime(iso: string) {
   })
 }
 
-function RecurrenceLabel({ recurrence, customIntervalMinutes }: { recurrence: Recurrence; customIntervalMinutes?: number }) {
-  function formatCustom(mins: number) {
-    if (mins < 1)           return `Every ${Math.round(mins * 60)}s`
-    if (mins % 10080 === 0) return `Every ${mins / 10080}w`
-    if (mins % 1440  === 0) return `Every ${mins / 1440}d`
-    if (mins % 60    === 0) return `Every ${mins / 60}h`
-    return `Every ${mins}m`
-  }
+function formatCustom(mins: number) {
+  if (mins < 1)           return `Every ${Math.round(mins * 60)}s`
+  if (mins % 10080 === 0) return `Every ${mins / 10080}w`
+  if (mins % 1440  === 0) return `Every ${mins / 1440}d`
+  if (mins % 60    === 0) return `Every ${mins / 60}h`
+  return `Every ${mins}m`
+}
 
+function RecurrenceLabel({ recurrence, customIntervalMinutes }: { recurrence: Recurrence; customIntervalMinutes?: number }) {
   const labels: Record<Recurrence, string> = {
     none: 'One-time', hourly: 'Hourly', daily: 'Daily', weekly: 'Weekly',
     custom: customIntervalMinutes ? formatCustom(customIntervalMinutes) : 'Custom',
@@ -129,28 +129,28 @@ export function ScheduledRunsTable() {
                 <td className="px-3 py-2.5 w-24">
                   <AnimatePresence mode="wait">
                     {confirmCancel === s.id ? (
-                      <motion.div
+                      <m.div
                         key="confirm"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="flex items-center gap-1"
                       >
-                        <button
+                        <button type="button"
                           onClick={() => { cancelMut.mutate(s.id); setConfirmCancel(null) }}
                           className="text-[11px] font-mono dark:text-rose-400 text-rose-500 dark:hover:text-rose-300 hover:text-rose-600 px-1.5 py-0.5 rounded dark:hover:bg-rose-500/10 hover:bg-rose-50 transition-colors"
                         >
                           Confirm
                         </button>
-                        <button
+                        <button type="button"
                           onClick={() => setConfirmCancel(null)}
                           className="text-[11px] font-mono dark:text-[#6b7280] text-[#9ca3af] px-1.5 py-0.5 rounded transition-colors"
                         >
                           Keep
                         </button>
-                      </motion.div>
+                      </m.div>
                     ) : (
-                      <motion.button
+                      <m.button
                         key="cancel-btn"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -160,7 +160,7 @@ export function ScheduledRunsTable() {
                         className="text-[11px] font-mono dark:text-[#6b7280] text-[#9ca3af] dark:hover:text-rose-400 hover:text-rose-500 disabled:opacity-30 disabled:cursor-not-allowed px-1.5 py-0.5 rounded dark:hover:bg-rose-500/10 hover:bg-rose-50 transition-colors"
                       >
                         Cancel
-                      </motion.button>
+                      </m.button>
                     )}
                   </AnimatePresence>
                 </td>
@@ -172,3 +172,4 @@ export function ScheduledRunsTable() {
     </div>
   )
 }
+

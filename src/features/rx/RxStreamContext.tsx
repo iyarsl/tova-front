@@ -3,15 +3,17 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
-import { config } from '@/config'
-import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout, ChartTab } from '@/types/rx'
+import { config, MAX_CAPTURE_SEC } from '@/config'
+import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout, ChartTab, ChartKey, CapturePayload } from '@/types/rx'
 
 // ---- types ------------------------------------------------------------------
 
 export type Tab = ChartTab
+export type { ChartKey }
 
 /** Persisted x/y axis range for a single Plotly chart — re-exported from @/types/rx */
 export type TabZoom = ZoomLayout
@@ -32,10 +34,12 @@ type RxStreamContextType = {
   handleToggle: () => void
   /** The data the chart should actually render (respects freeze) */
   displayData: SignalData | null
-  /** Persisted zoom/pan ranges per tab */
-  zoomLayouts: Record<Tab, TabZoom>
+  /** Persisted zoom/pan ranges per chart (independent of tab layout) */
+  zoomLayouts: Record<ChartKey, TabZoom>
   /** Call from Plot onRelayout to capture zoom state */
-  handleRelayout: (tab: Tab, event: Plotly.PlotRelayoutEvent) => void
+  handleRelayout: (chart: ChartKey, event: Plotly.PlotRelayoutEvent) => void
+  /** Slice the last durationSec of buffered raw IQ into a CapturePayload, or null if no data */
+  buildCapture: (durationSec: number) => CapturePayload | null
 }
 
 // ---- context ----------------------------------------------------------------
@@ -46,6 +50,14 @@ const RxStreamContext = createContext<RxStreamContextType | null>(null)
 
 const SPEC_ROWS    = 80
 const RECONNECT_MS = 3_000
+
+// ---- helpers ----------------------------------------------------------------
+
+function buildFileName(sampleRate: number): string {
+  const now = new Date()
+  const p = (n: number, d = 2) => String(n).padStart(d, '0')
+  return `capture_${now.getFullYear()}-${p(now.getMonth() + 1)}-${p(now.getDate())}_${p(now.getHours())}-${p(now.getMinutes())}-${p(now.getSeconds())}_${sampleRate}sps.fc32`
+}
 
 // ---- provider ---------------------------------------------------------------
 
@@ -61,7 +73,7 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { dataRef.current = data }, [data])
 
   // UI state — persists across page navigation because provider never unmounts
-  const [tab, setTab]               = useState<Tab>('time')
+  const [tab, setTab]               = useState<Tab>('combined')
   const [frozen, setFrozen]         = useState(false)
   const [frozenData, setFrozenData] = useState<SignalData | null>(null)
 
@@ -71,6 +83,11 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   const spectroRef  = useRef<number[][]>([])
   const reconnTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const unmounted   = useRef(false)
+
+  // Rolling raw IQ buffer for capture feature
+  const rawIqChunksRef      = useRef<{ samples: Float32Array; sampleRate: number }[]>([])
+  const rawIqTotalFloatsRef = useRef(0)
+  const latestSrRef         = useRef(0)
 
   // render-rate control refs (see useRxStream.ts for rationale)
   const isStreaming  = useRef(false)
@@ -109,6 +126,18 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
 
   const onWorkerMessage = useCallback((e: MessageEvent<WorkerOutput>) => {
     if (!isStreaming.current) return
+
+    // Accumulate raw IQ for the capture buffer on every frame (not RAF-throttled)
+    const { rawSamples, sampleRate: sr } = e.data
+    latestSrRef.current = sr
+    rawIqChunksRef.current.push({ samples: rawSamples, sampleRate: sr })
+    rawIqTotalFloatsRef.current += rawSamples.length
+    const maxFloats = MAX_CAPTURE_SEC * sr * 2
+    while (rawIqTotalFloatsRef.current > maxFloats && rawIqChunksRef.current.length > 0) {
+      const dropped = rawIqChunksRef.current.shift()!
+      rawIqTotalFloatsRef.current -= dropped.samples.length
+    }
+
     latestOutput.current = e.data
     if (rafPending.current !== null) return
     rafPending.current = requestAnimationFrame(flushOutput)
@@ -196,6 +225,31 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
     }
   }, [connect, onWorkerMessage, stopRendering])
 
+  // -- capture ----------------------------------------------------------------
+
+  const buildCapture = useCallback((durationSec: number): CapturePayload | null => {
+    const chunks = rawIqChunksRef.current
+    if (chunks.length === 0) return null
+    const sr = latestSrRef.current
+    if (sr <= 0) return null
+
+    const totalLen = rawIqTotalFloatsRef.current
+    const combined = new Float32Array(totalLen)
+    let offset = 0
+    for (const chunk of chunks) {
+      combined.set(chunk.samples, offset)
+      offset += chunk.samples.length
+    }
+
+    const cappedSec = Math.min(durationSec, MAX_CAPTURE_SEC)
+    // Floor to whole complex samples (each = 2 floats) so slice is always a multiple of 8 bytes
+    const maxFloats = Math.floor(cappedSec * sr) * 2
+    const sliceStart = Math.max(0, combined.length - maxFloats)
+    const samples = combined.slice(sliceStart)
+
+    return { samples, sampleRate: sr, fileName: buildFileName(sr) }
+  }, [])
+
   // -- freeze toggle ----------------------------------------------------------
 
   const handleToggle = useCallback(() => {
@@ -210,13 +264,13 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
 
   // -- zoom persistence -------------------------------------------------------
 
-  const [zoomLayouts, setZoomLayouts] = useState<Record<Tab, TabZoom>>({
+  const [zoomLayouts, setZoomLayouts] = useState<Record<ChartKey, TabZoom>>({
     time: {},
     fft: {},
     spectrogram: {},
   })
 
-  const handleRelayout = useCallback((t: Tab, event: Plotly.PlotRelayoutEvent) => {
+  const handleRelayout = useCallback((t: ChartKey, event: Plotly.PlotRelayoutEvent) => {
     // Plotly fires events with dotted-key notation at runtime, despite the type saying Partial<Layout>
     const raw = event as unknown as Record<string, unknown>
 
@@ -248,21 +302,24 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
 
   // -- context value ----------------------------------------------------------
 
+  const ctxValue = useMemo(() => ({
+    data,
+    status,
+    sampleRate,
+    tab,
+    setTab,
+    frozen,
+    frozenData,
+    handleToggle,
+    displayData,
+    zoomLayouts,
+    handleRelayout,
+    buildCapture,
+  }), [data, status, sampleRate, tab, frozen, frozenData, handleToggle, displayData, zoomLayouts, handleRelayout, buildCapture])
+
   return (
     <RxStreamContext.Provider
-      value={{
-        data,
-        status,
-        sampleRate,
-        tab,
-        setTab,
-        frozen,
-        frozenData,
-        handleToggle,
-        displayData,
-        zoomLayouts,
-        handleRelayout,
-      }}
+      value={ctxValue}
     >
       {children}
     </RxStreamContext.Provider>

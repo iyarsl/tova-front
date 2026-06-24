@@ -15,7 +15,7 @@ export type ParseFC32Result = {
 export type FC32ValidationResult = { valid: true } | { valid: false; error: string }
 
 /** Validate raw ArrayBuffer from a .fc32 file without parsing it */
-export function validateFC32(buffer: ArrayBuffer): FC32ValidationResult {
+function validateFC32(buffer: ArrayBuffer): FC32ValidationResult {
   if (buffer.byteLength === 0) {
     return { valid: false, error: 'File is empty' }
   }

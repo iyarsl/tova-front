@@ -1,180 +1,93 @@
-// Pure CSS illustrated landscape — replaces WaveCanvas on HeroPage.
-// No canvas API — just CSS animations and inline SVG shapes.
+// Luminous radar "command-center" backdrop for the hero landing.
+// Stays on the light Dora theme (bright sky lineage) but cranks production
+// value: a large scanning radar dial with a rotating conic sweep, a faint
+// perspective grid with a travelling scan line, and soft colour blooms that
+// "light" the scene. All CSS/SVG, no images. Motion eases off under
+// prefers-reduced-motion.
 export function DoraSkyCanvas() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
 
-      {/* Sky gradient background */}
+      {/* Bright sky base — same lineage as the calm shell */}
       <div
-        className="absolute inset-0"
-        style={{
-          background: 'radial-gradient(ellipse at 50% 0%, #B8E4FF 0%, #E3F4FF 55%, #D8F7E4 100%)',
-        }}
+        className="absolute inset-0 bg-[linear-gradient(160deg,#E3F4FF_0%,#E9F1FF_44%,#F2F6FF_100%)]"
       />
 
-      {/* Sparkle stars */}
-      {([
-        { top: '8%',  left: '12%', delay: '0s',    size: '14px', color: '#FFCA3A' },
-        { top: '14%', left: '72%', delay: '0.8s',  size: '10px', color: '#FFCA3A' },
-        { top: '22%', left: '88%', delay: '1.6s',  size: '12px', color: '#FFCA3A' },
-        { top: '6%',  left: '45%', delay: '2.4s',  size: '8px',  color: '#FFFFFF' },
-        { top: '30%', left: '28%', delay: '1.2s',  size: '10px', color: '#FFCA3A' },
-        { top: '18%', left: '58%', delay: '3.2s',  size: '8px',  color: '#FFFFFF' },
-      ] as const).map((s, i) => (
-        <span
-          key={i}
-          className="absolute animate-twinkle"
-          style={{
-            top: s.top, left: s.left,
-            animationDelay: s.delay,
-            fontSize: s.size,
-            color: s.color,
-            lineHeight: 1,
-          }}
-        >
-          ✦
-        </span>
-      ))}
+      {/* Colour blooms — blue-dominant, warm bloom low-right where Dora stands */}
+      <div className="absolute -top-24 right-[-6%] w-[560px] h-[560px] rounded-full bg-[radial-gradient(circle,rgba(91,200,245,0.30),transparent_68%)]" />
+      <div className="absolute -top-28 -left-24 w-[520px] h-[520px] rounded-full bg-[radial-gradient(circle,rgba(99,156,255,0.22),transparent_68%)]" />
+      <div className="absolute bottom-[-22%] right-[10%] w-[620px] h-[620px] rounded-full bg-[radial-gradient(circle,rgba(255,140,66,0.18),transparent_70%)]" />
+      <div className="absolute bottom-[-16%] left-[6%] w-[460px] h-[460px] rounded-full bg-[radial-gradient(circle,rgba(155,93,229,0.13),transparent_70%)]" />
 
-      {/* Cloud 1 — large, left */}
-      <div
-        className="absolute animate-float"
-        style={{ top: '8%', left: '6%', animationDelay: '0s' }}
-      >
-        <CloudShape width={180} />
+      {/* Perspective scan grid + travelling scan line */}
+      <div className="absolute inset-x-0 bottom-0 h-[55%] overflow-hidden opacity-70">
+        <svg className="absolute inset-0 h-full w-full text-sky-blue-d/25"
+          viewBox="0 0 1440 500" preserveAspectRatio="none" fill="none"
+          stroke="currentColor" strokeWidth={1}>
+          {[0, 1, 2, 3, 4, 5, 6].map(i => (
+            <line key={`h${i}`} x1="0" y1={60 + i * (440 / 6)} x2="1440" y2={60 + i * (440 / 6)} />
+          ))}
+          {Array.from({ length: 17 }).map((_, i) => (
+            <line key={`v${i}`}
+              x1={720 + (i - 8) * 40} y1="60"
+              x2={720 + (i - 8) * 300} y2="500" />
+          ))}
+        </svg>
+        <div className="absolute inset-x-0 top-0 h-24 will-change-transform motion-reduce:hidden animate-scan-grid bg-[linear-gradient(180deg,transparent,rgba(91,200,245,0.35),transparent)]" />
       </div>
 
-      {/* Cloud 2 — medium, center-right */}
-      <div
-        className="absolute animate-float-slow"
-        style={{ top: '5%', left: '58%', animationDelay: '2s' }}
-      >
-        <CloudShape width={130} />
-      </div>
+      {/* The radar dial — showpiece, low-centre-right */}
+      <div className="absolute left-1/2 top-[52%] -translate-x-[42%] -translate-y-1/2
+        w-[min(78vw,760px)] aspect-square">
 
-      {/* Cloud 3 — small, far right */}
-      <div
-        className="absolute animate-float"
-        style={{ top: '12%', right: '4%', animationDelay: '4s' }}
-      >
-        <CloudShape width={90} />
-      </div>
+        {/* Rotating conic sweep, masked to a disc. Stays visible (static) under
+            reduced-motion so the radar never looks dead. */}
+        <div className="absolute inset-0 rounded-full will-change-transform animate-sweep-slow motion-reduce:animate-none
+          bg-[conic-gradient(from_0deg,rgba(255,140,66,0.55)_0deg,rgba(255,140,66,0.18)_26deg,rgba(255,140,66,0.04)_60deg,transparent_92deg,transparent_360deg)]
+          [mask-image:radial-gradient(circle,#000_70%,transparent_71%)]
+          [-webkit-mask-image:radial-gradient(circle,#000_70%,transparent_71%)]" />
 
-      {/* Ground strip */}
-      <div
-        className="absolute bottom-0 left-0 right-0"
-        style={{
-          height: '22%',
-          background: 'linear-gradient(180deg, #D8F7E4 0%, #B0ECC5 100%)',
-          borderRadius: '60% 60% 0 0 / 30px 30px 0 0',
-        }}
-      />
-
-      {/* Trees left */}
-      <div className="absolute bottom-[18%] left-[4%]">
-        <TreeShape height={130} />
-      </div>
-      <div className="absolute bottom-[18%] left-[9%]">
-        <TreeShape height={100} />
-      </div>
-
-      {/* Tree right */}
-      <div className="absolute bottom-[18%] right-[5%]">
-        <TreeShape height={140} />
-      </div>
-
-      {/* Flowers in ground strip */}
-      {([
-        { left: '18%', color: '#FF8C42', delay: '0s'   },
-        { left: '32%', color: '#FFCA3A', delay: '0.4s' },
-        { left: '48%', color: '#FF5E5B', delay: '0.8s' },
-        { left: '62%', color: '#9B5DE5', delay: '0.2s' },
-        { left: '76%', color: '#FF8C42', delay: '0.6s' },
-      ] as const).map((f, i) => (
-        <div
-          key={i}
-          className="absolute animate-sway"
-          style={{
-            bottom: '19%',
-            left: f.left,
-            animationDelay: f.delay,
-            transformOrigin: 'bottom center',
-          }}
-        >
-          <FlowerShape color={f.color} />
+        {/* Bright leading edge of the sweep — rotates with the wedge */}
+        <div className="absolute inset-0 will-change-transform animate-sweep-slow motion-reduce:animate-none">
+          <span className="absolute left-1/2 top-1/2 h-[2px] w-1/2 origin-left -translate-y-1/2 bg-[linear-gradient(90deg,rgba(255,140,66,0.9),rgba(255,140,66,0.15),transparent)]" />
         </div>
-      ))}
+
+        {/* Rings, range ticks, crosshair, bearings */}
+        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 400 400" fill="none">
+          {[60, 110, 160, 196].map((r, i) => (
+            <circle key={r} cx="200" cy="200" r={r}
+              stroke={i === 3 ? 'rgba(155,93,229,0.30)' : 'rgba(255,140,66,0.22)'}
+              strokeWidth={i === 3 ? 1.4 : 1} />
+          ))}
+          {/* crosshair axes */}
+          <line x1="200" y1="4" x2="200" y2="396" stroke="rgba(91,200,245,0.28)" strokeWidth="1" strokeDasharray="2 8" />
+          <line x1="4" y1="200" x2="396" y2="200" stroke="rgba(91,200,245,0.28)" strokeWidth="1" strokeDasharray="2 8" />
+          {/* range ticks around outer ring */}
+          {Array.from({ length: 36 }).map((_, i) => {
+            const a = (i * 10 * Math.PI) / 180
+            const r1 = i % 3 === 0 ? 184 : 190
+            return (
+              <line key={i}
+                x1={200 + r1 * Math.cos(a)} y1={200 + r1 * Math.sin(a)}
+                x2={200 + 196 * Math.cos(a)} y2={200 + 196 * Math.sin(a)}
+                stroke="rgba(45,42,62,0.18)" strokeWidth={i % 3 === 0 ? 1.4 : 0.7} />
+            )
+          })}
+          <circle cx="200" cy="200" r="3" fill="rgba(255,140,66,0.8)" />
+        </svg>
+
+        {/* Detected-signal blips */}
+        {[
+          { x: '68%', y: '32%', d: '0s',   c: 'bg-dora-orange' },
+          { x: '30%', y: '60%', d: '1.1s', c: 'bg-sky-blue-d' },
+          { x: '58%', y: '70%', d: '2.2s', c: 'bg-adv-purple' },
+          { x: '40%', y: '26%', d: '1.7s', c: 'bg-meadow-green' },
+        ].map((b, i) => (
+          <span key={i}
+            className={`absolute w-2.5 h-2.5 rounded-full will-change-transform motion-reduce:hidden animate-blip shadow-[0_0_10px_currentColor] ${b.c}`}
+            style={{ left: b.x, top: b.y, animationDelay: b.d }} />
+        ))}
+      </div>
     </div>
-  )
-}
-
-function CloudShape({ width }: { width: number }) {
-  const h = Math.round(width * 0.42)
-  return (
-    <div
-      style={{
-        width,
-        height: h,
-        background: '#FFFFFF',
-        borderRadius: '50%',
-        boxShadow: `
-          ${Math.round(width * 0.22)}px ${Math.round(h * 0.15)}px 0 ${Math.round(width * -0.05)}px #FFFFFF,
-          ${Math.round(width * 0.55)}px ${Math.round(h * 0.1)}px 0 ${Math.round(width * -0.08)}px #FFFFFF,
-          0 ${Math.round(h * 0.3)}px ${Math.round(width * 0.12)}px rgba(200,230,255,0.5)
-        `,
-        opacity: 0.92,
-      }}
-    />
-  )
-}
-
-function TreeShape({ height }: { height: number }) {
-  const trunkW = Math.round(height * 0.14)
-  const crownR = Math.round(height * 0.38)
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div
-        style={{
-          width: crownR * 2,
-          height: crownR * 2,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 35% 35%, #6ED882, #3DAD5A)',
-          boxShadow: '0 4px 12px rgba(61,173,90,0.35)',
-          marginBottom: -Math.round(crownR * 0.4),
-        }}
-      />
-      <div
-        style={{
-          width: trunkW,
-          height: Math.round(height * 0.32),
-          background: 'linear-gradient(180deg, #8B6340, #6B4A28)',
-          borderRadius: `0 0 ${Math.round(trunkW * 0.4)}px ${Math.round(trunkW * 0.4)}px`,
-        }}
-      />
-    </div>
-  )
-}
-
-function FlowerShape({ color }: { color: string }) {
-  return (
-    <svg width="20" height="24" viewBox="0 0 20 24" fill="none">
-      {/* Stem */}
-      <line x1="10" y1="12" x2="10" y2="24" stroke="#56C271" strokeWidth="2.5" strokeLinecap="round" />
-      {/* Petals */}
-      {([0, 72, 144, 216, 288] as const).map((deg, i) => (
-        <ellipse
-          key={i}
-          cx={10 + 5 * Math.cos((deg - 90) * Math.PI / 180)}
-          cy={6  + 5 * Math.sin((deg - 90) * Math.PI / 180)}
-          rx="3.5"
-          ry="2"
-          fill={color}
-          opacity="0.9"
-          transform={`rotate(${deg}, ${10 + 5 * Math.cos((deg - 90) * Math.PI / 180)}, ${6 + 5 * Math.sin((deg - 90) * Math.PI / 180)})`}
-        />
-      ))}
-      {/* Center */}
-      <circle cx="10" cy="6" r="3" fill="#FFCA3A" />
-    </svg>
   )
 }

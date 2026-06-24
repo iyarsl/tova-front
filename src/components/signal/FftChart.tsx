@@ -1,6 +1,8 @@
 import type { ZoomLayout } from '@/types/rx'
 import { getChartColors, Plot } from '@/utils/chartTheme'
 
+const DEFAULT_ZOOM: ZoomLayout = {}
+
 type Props = {
   x: number[]
   y: number[]
@@ -9,7 +11,7 @@ type Props = {
   onRelayout?: (event: Plotly.PlotRelayoutEvent) => void
 }
 
-export function FftChart({ x, y, theme, zoomLayout = {}, onRelayout }: Props) {
+export function FftChart({ x, y, theme, zoomLayout = DEFAULT_ZOOM, onRelayout }: Props) {
   const { bgColor, paperColor, gridColor, textColor } = getChartColors(theme)
   const lineColor = '#22d3ee'
 

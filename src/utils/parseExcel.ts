@@ -14,14 +14,16 @@ const COLUMN_ALIASES: Record<keyof Omit<ScanRow, 'id'>, string[]> = {
 type ScanField = keyof Omit<ScanRow, 'id'>
 const ALL_FIELDS = Object.keys(COLUMN_ALIASES) as ScanField[]
 
+const ALIAS_MAP = new Map<string, ScanField>(
+  ALL_FIELDS.flatMap(field => COLUMN_ALIASES[field].map(alias => [alias, field]))
+)
+
 function matchField(header: string): ScanField | null {
   const normalized = header.toLowerCase().trim()
-  for (const field of ALL_FIELDS) {
-    for (const alias of COLUMN_ALIASES[field]) {
-      if (normalized === alias || normalized.includes(alias)) {
-        return field
-      }
-    }
+  const exact = ALIAS_MAP.get(normalized)
+  if (exact) return exact
+  for (const [alias, field] of ALIAS_MAP) {
+    if (normalized.includes(alias)) return field
   }
   return null
 }

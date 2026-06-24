@@ -1,11 +1,11 @@
-import { useTheme } from '@/hooks/useTheme'
+﻿import { useTheme } from '@/hooks/useTheme'
 
 export function ThemeToggle() {
   const { theme, toggle } = useTheme()
   const isDark = theme === 'dark'
 
   return (
-    <button
+    <button type="button"
       onClick={toggle}
       aria-label="Toggle theme"
       className="flex items-center gap-1.5 rounded-full px-1.5 py-1.5 text-xs font-body font-semibold border transition-all duration-200 hover:opacity-80 focus:outline-none bg-[#E3F4FF] dark:bg-base-800 border-[#C5DFF0] dark:border-white/[0.10] relative w-[80px] h-[32px]"
@@ -27,3 +27,4 @@ export function ThemeToggle() {
     </button>
   )
 }
+

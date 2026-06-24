@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+﻿import { useState, useEffect } from 'react'
+import { useOutputDir } from '@/hooks/useOutputDir'
+import { isAbsolutePath } from '@/utils/path'
+import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { ScanTable } from './ScanTable'
 import { useScan } from './ScanContext'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { fetchConfig } from '@/api/vortex'
+import { useMutation } from '@tanstack/react-query'
 import { runScan } from '@/api/scan'
 import type { ApiScanRow } from '@/types/scan'
 import { useToast } from '@/components/Toast'
@@ -13,44 +14,11 @@ import type { AppError } from '@/api/client'
 import { ScheduleModal } from './ScheduleModal'
 import { ScheduledRunsTable } from './ScheduledRunsTable'
 import { ScanHistoryTable } from './ScanHistoryTable'
+import { ScanDefaultsModal } from './ScanDefaultsModal'
+import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { parseExcelToScanRows } from '@/utils/parseExcel'
 import { downloadScanTemplate } from '@/utils/downloadTemplate'
-
-function DeviceStatePanel() {
-  const { data } = useQuery({
-    queryKey: ['vortex-config'],
-    queryFn: fetchConfig,
-    refetchInterval: 5000,
-  })
-
-  if (!data) return null
-
-  const items = [
-    { label: 'RF In',   value: `${data.rfin_ghz.toFixed(4)} GHz` },
-    { label: 'Output',  value: `${data.output_mhz.toFixed(1)} MHz` },
-    { label: 'Gain',    value: `${data.gain_db} dB` },
-    { label: 'IF BW',   value: `${data.ifbw_mhz} MHz` },
-    { label: 'Version', value: data.version },
-  ]
-
-  return (
-    <div className="mb-5 rounded-[16px] border border-[#C5A3F5] dark:border-white/[0.12] bg-pastel-purple dark:bg-base-900 overflow-hidden transition-colors">
-      <div className="px-4 py-2 border-b border-[#C5A3F5]/50 dark:border-white/[0.12] bg-[#E6D8FF]/60 dark:bg-base-950/70">
-        <span className="text-[10px] font-body font-bold tracking-[0.12em] uppercase text-adv-purple dark:text-[#6b7280]">
-          Live Device State
-        </span>
-      </div>
-      <div className="flex divide-x divide-[#C5A3F5]/40 dark:divide-white/[0.08]">
-        {items.map(({ label, value }) => (
-          <div key={label} className="flex-1 px-4 py-3">
-            <div className="font-body text-[10px] font-bold text-whisper-gray dark:text-[#9ca3af] uppercase tracking-wider mb-1">{label}</div>
-            <div className="font-mono text-[14px] text-dora-orange dark:text-cyan-400">{value}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
+import { useAppSettings } from '@/hooks/useAppSettings'
 
 function RunModal({
   onClose,
@@ -61,11 +29,15 @@ function RunModal({
   onRun: (dir: string) => void
   loading: boolean
 }) {
-  const [dir, setDir] = useState('./output')
+  const [savedDir, saveDir] = useOutputDir()
+  const [dir, setDir] = useState('')
+  useEffect(() => {
+    if (!dir && isAbsolutePath(savedDir)) setDir(savedDir)
+  }, [savedDir])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[rgba(45,42,62,0.45)] backdrop-blur-sm">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1,    y: 0  }}
         exit={{    opacity: 0, scale: 0.92, y: 20  }}
@@ -83,28 +55,38 @@ function RunModal({
 
           <div className="space-y-4 mb-6">
             <div>
-              <label className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
+              <label htmlFor="run-output-dir" className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
                 Output Directory
               </label>
               <input
+                id="run-output-dir"
                 value={dir}
                 onChange={e => setDir(e.target.value)}
-                className="w-full bg-white dark:bg-base-950/60 border-2 border-[#D8D4EC] dark:border-white/10 rounded-[12px] px-3 py-2.5 font-mono text-[13px] text-story-ink dark:text-[#e5e7eb] focus:outline-none focus:border-adv-purple dark:focus:border-cyan-400/40 focus:ring-2 focus:ring-adv-purple/20 dark:focus:ring-cyan-400/20 transition-colors"
-                placeholder="./output"
+                placeholder="C:\scans\output"
+                className={`w-full bg-white dark:bg-base-950/60 border-2 rounded-[12px] px-3 py-2.5 font-mono text-[13px] text-story-ink dark:text-[#e5e7eb] focus:outline-none focus:ring-2 transition-colors ${
+                  dir && !isAbsolutePath(dir)
+                    ? 'border-sunset-red/50 dark:border-rose-500/40 focus:border-sunset-red dark:focus:border-rose-500/60 focus:ring-sunset-red/20 dark:focus:ring-rose-500/20'
+                    : 'border-[#D8D4EC] dark:border-white/10 focus:border-adv-purple dark:focus:border-cyan-400/40 focus:ring-adv-purple/20 dark:focus:ring-cyan-400/20'
+                }`}
               />
+              {dir && !isAbsolutePath(dir) && (
+                <p className="mt-1 font-mono text-[11px] text-sunset-red dark:text-rose-400/80">
+                  Must be absolute (e.g. C:\scans\output or /data/scans)
+                </p>
+              )}
             </div>
           </div>
 
           <div className="flex gap-3">
-            <button
+            <button type="button"
               onClick={onClose}
               className="flex-1 py-2.5 rounded-full border-2 border-[#D8D4EC] dark:border-white/10 text-tale-gray dark:text-[#9ca3af] font-body text-[13px] font-semibold hover:bg-pastel-purple/30 dark:hover:bg-white/5 transition-colors"
             >
               Cancel
             </button>
-            <button
-              disabled={loading || !dir}
-              onClick={() => onRun(dir)}
+            <button type="button"
+              disabled={loading || !dir || !isAbsolutePath(dir)}
+              onClick={() => { saveDir(dir); onRun(dir) }}
               className="flex-1 py-2.5 rounded-full font-display font-bold text-[14px] text-white disabled:opacity-50 hover:-translate-y-0.5 transition-transform"
               style={{
                 background: 'linear-gradient(135deg, #FF8C42, #E06A1A)',
@@ -115,7 +97,7 @@ function RunModal({
             </button>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   )
 }
@@ -123,8 +105,11 @@ function RunModal({
 export function ScanPage() {
   const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows,
           importedFileName, setImportedFileName, results, setResults } = useScan()
+  const { defaults } = useScanDefaults()
+  const { useVortex } = useAppSettings()
   const [showModal, setShowModal]                   = useState(false)
   const [showScheduleModal, setShowScheduleModal]   = useState(false)
+  const [showDefaultsModal, setShowDefaultsModal]   = useState(false)
   const { toast } = useToast()
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -148,15 +133,16 @@ export function ScanPage() {
 
   const runMut = useMutation({
     mutationFn: ({ dir, mock }: { dir: string; mock: boolean }) => {
-      const apiRows: ApiScanRow[] = rows.map(({ id: _id, duration, entrance_freq_ghz, out_freq_mhz, bandwidth, gain_db, sample_rate }) => ({
+      const outFreq = defaults?.out_freq_mhz ?? 1250
+      const apiRows: ApiScanRow[] = rows.map(({ id: _id, duration, entrance_freq_ghz, bandwidth, gain_db, sample_rate }) => ({
         duration:          duration!,
         entrance_freq_ghz: entrance_freq_ghz!,
-        out_freq_mhz:      out_freq_mhz!,
+        out_freq_mhz:      outFreq,
         bandwidth:         bandwidth!,
         gain_db:           gain_db!,
         sample_rate:       sample_rate!,
       }))
-      return runScan(apiRows, dir, mock)
+      return runScan(apiRows, dir, mock, useVortex ?? true)
     },
     onSuccess: (files) => {
       setResults(files)
@@ -174,13 +160,11 @@ export function ScanPage() {
 
   return (
     <PageTransition>
-      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
-        <Topbar title="Scan Table" />
+      <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
+        <Topbar title="Signal Capture" />
 
         <div className="flex-1 overflow-y-auto p-5">
-          <div className="max-w-6xl mx-auto space-y-5">
-            <DeviceStatePanel />
-
+          <div className="max-w-[1350px] mx-auto space-y-5">
             <input
               id="excel-file-import"
               type="file"
@@ -194,14 +178,19 @@ export function ScanPage() {
               <span className="text-xs tracking-[0.08em] text-whisper-gray dark:text-[#4b5563] uppercase font-body font-bold">
                 {rows.length} row{rows.length !== 1 ? 's' : ''}
               </span>
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => { clearErrors(); handleValidate() }}
-                  className="px-4 py-2 rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 font-display font-bold text-xs tracking-wide uppercase hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors"
+              <div className="flex gap-2 flex-wrap items-center">
+                <button type="button"
+                  onClick={() => setShowDefaultsModal(true)}
+                  aria-label="Scan defaults"
+                  title="Scan defaults"
+                  className="p-2 rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors"
                 >
-                  Validate
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
                 </button>
-                <button
+                <button type="button"
                   onClick={downloadScanTemplate}
                   title="Download Excel template"
                   className="px-4 py-2 rounded-full border-2 border-[#C5A3F5] text-adv-purple dark:border-cyan-400/30 dark:text-cyan-400 font-display font-bold text-xs tracking-wide uppercase hover:bg-pastel-purple dark:hover:bg-cyan-400/10 transition-colors flex items-center gap-1.5"
@@ -226,7 +215,7 @@ export function ScanPage() {
                   title={rows.length === 0 ? 'Add scan rows to enable scheduling' : undefined}
                   className="inline-flex"
                 >
-                  <button
+                  <button type="button"
                     onClick={() => {
                       const ok = validateAll()
                       if (!ok) { toast('Fix validation errors before scheduling', 'error'); return }
@@ -244,7 +233,7 @@ export function ScanPage() {
                     Schedule
                   </button>
                 </span>
-                <button
+                <button type="button"
                   onClick={() => {
                     const ok = validateAll()
                     if (!ok) { toast('Fix validation errors before running', 'error'); return }
@@ -264,7 +253,7 @@ export function ScanPage() {
             {/* Import success badge */}
             <AnimatePresence>
               {importedFileName && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
@@ -276,22 +265,29 @@ export function ScanPage() {
                   <span className="font-mono text-[11px] text-[#1A6A8A] dark:text-cyan-400 flex-1">
                     Loaded from <span className="font-semibold">"{importedFileName}"</span>
                   </span>
-                  <button
+                  <button type="button"
                     onClick={() => setImportedFileName(null)}
                     className="text-sky-blue-d/50 dark:text-cyan-400/50 hover:text-sky-blue-d dark:hover:text-cyan-400 transition-colors leading-none"
                     aria-label="Dismiss"
                   >
                     ×
                   </button>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
 
-            <ScanTable rows={rows} errors={errors} onUpdate={updateCell} onAdd={addRow} onRemove={removeRow} />
+            <ScanTable
+              rows={rows}
+              errors={errors}
+              onUpdate={updateCell}
+              onAdd={addRow}
+              onRemove={removeRow}
+              onValidate={() => { clearErrors(); handleValidate() }}
+            />
 
             <AnimatePresence>
               {results && (
-                <motion.div
+                <m.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
@@ -301,7 +297,7 @@ export function ScanPage() {
                     <div className="text-xs tracking-[0.08em] font-body font-bold text-meadow-green-dk dark:text-emerald-400 uppercase">
                       Output Files
                     </div>
-                    <button
+                    <button type="button"
                       onClick={() => setResults(null)}
                       aria-label="Close output files"
                       className="text-meadow-green-dk/50 dark:text-emerald-400/50 hover:text-meadow-green-dk dark:hover:text-emerald-400 transition-colors leading-none text-lg"
@@ -314,7 +310,7 @@ export function ScanPage() {
                       <div key={f} className="font-mono text-xs text-tale-gray dark:text-[#9ca3af]">{f}</div>
                     ))}
                   </div>
-                </motion.div>
+                </m.div>
               )}
             </AnimatePresence>
 
@@ -361,6 +357,16 @@ export function ScanPage() {
           />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {showDefaultsModal && (
+          <ScanDefaultsModal
+            key={String(showDefaultsModal)}
+            onClose={() => setShowDefaultsModal(false)}
+          />
+        )}
+      </AnimatePresence>
     </PageTransition>
   )
 }
+

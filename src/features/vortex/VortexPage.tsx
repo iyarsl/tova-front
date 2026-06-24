@@ -1,11 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+﻿import { useState, useRef, useEffect, useCallback } from 'react'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { useVortexConfig } from './useVortexConfig'
 import {
   availableBandwidths, isOutputLocked, isIfbwDisabled,
-  IFBW_320_OUTPUT_MHZ,
+  effectiveOutput,
 } from './constraints'
+import { useAppSettings } from '@/hooks/useAppSettings'
 
 function ConfigCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -39,6 +40,7 @@ type NumericFieldProps = {
 }
 
 function NumericField({ label, value, min, max, step, unit, disabled, locked, onCommit }: NumericFieldProps) {
+  const fieldId = `vortex-${label.toLowerCase().replace(/\s+/g, '-')}`
   const [draft, setDraft] = useState<number | null>(null)
   const [text, setText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -62,11 +64,13 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
   // Ref tracks latest draft so commit-on-release always has the freshest value
   const pendingRef = useRef<number | null>(null)
 
-  // When the server value lands (after optimistic update or refetch), clear our draft
-  useEffect(() => {
+  // Inline reset: when server value changes, clear draft without an extra render cycle
+  const [prevValue, setPrevValue] = useState(value)
+  if (value !== prevValue) {
+    setPrevValue(value)
     setDraft(null)
     pendingRef.current = null
-  }, [value])
+  }
 
   const scheduleCommit = useCallback((v: number) => {
     if (commitTimerRef.current) clearTimeout(commitTimerRef.current)
@@ -100,7 +104,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
     if (holdIntervalRef.current) { clearInterval(holdIntervalRef.current); holdIntervalRef.current = null }
     if (pendingRef.current !== null) {
       onCommit(pendingRef.current)
-      // intentionally do NOT reset draft here — value useEffect handles it
+      // intentionally do NOT reset draft here — inline prev-value check handles it during render
     }
   }, [onCommit])
 
@@ -150,7 +154,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
 
       {/* Label + lock */}
       <div className="flex items-center justify-between mb-3">
-        <label className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">{label}</label>
+        <label htmlFor={fieldId} className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">{label}</label>
         {locked && <span className="text-[#7A5C3A] dark:text-amber-400/80 text-xs">🔒</span>}
       </div>
 
@@ -164,6 +168,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
         {/* Top: value input */}
         <div className="flex items-center px-4 pt-3 pb-2 gap-3">
           <input
+            id={fieldId}
             type="text"
             inputMode="decimal"
             value={text ?? fmt(current)}
@@ -188,7 +193,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
 
         {/* Bottom: − bar + */}
         <div className="flex items-stretch h-9">
-          <button
+          <button type="button"
             onMouseDown={() => { stepBy(-1); startHold(-1) }}
             onMouseUp={commitOnRelease}
             onMouseLeave={commitOnRelease}
@@ -217,7 +222,7 @@ function NumericField({ label, value, min, max, step, unit, disabled, locked, on
             </div>
           </div>
 
-          <button
+          <button type="button"
             onMouseDown={() => { stepBy(1); startHold(1) }}
             onMouseUp={commitOnRelease}
             onMouseLeave={commitOnRelease}
@@ -248,6 +253,7 @@ export function VortexPage() {
     rfinMut, outputMut, gainMut, ifbwMut, invertMut, saveMut, resumeMut,
   } = useVortexConfig()
 
+  const { useVortex, isPending: settingsPending } = useAppSettings()
   const [resumed, setResumed] = useState(false)
   const [localBw, setLocalBw] = useState<number | null>(null)
   const [localInvert, setLocalInvert] = useState<boolean | null>(null)
@@ -255,18 +261,69 @@ export function VortexPage() {
   useEffect(() => { setLocalBw(null) },     [config?.ifbw_mhz])
   useEffect(() => { setLocalInvert(null) }, [config?.gain_mode])
 
-  if (isLoading) return (
+  if (settingsPending || (isLoading && useVortex === true)) return (
     <PageTransition>
-      <div className="flex-1 flex items-center justify-center text-tale-gray dark:text-[#6b7280] font-body text-sm">
-        Loading device config…
+      <div className="flex-1 flex flex-col items-center justify-center gap-6 bg-transparent dark:bg-base-950 transition-colors">
+        <div className="relative flex items-center justify-center w-44 h-44">
+          {[0, 1, 2].map(i => (
+            <span
+              key={i}
+              className="absolute rounded-full border-2 border-dora-orange/40 dark:border-cyan-400/30 animate-radar"
+              style={{ width: 150, height: 150, animationDelay: `${i}s` }}
+            />
+          ))}
+          {/* Pulsing core at the centre of the radar */}
+          <span className="relative z-10 w-3.5 h-3.5 rounded-full bg-dora-orange animate-pulse-slow shadow-[0_0_12px_rgba(255,140,66,0.5)]" />
+        </div>
+        <div className="flex items-center gap-1.5 font-display font-bold text-[15px] text-tale-gray dark:text-[#9ca3af]">
+          Searching for device
+          <span className="flex gap-1">
+            {[0, 1, 2].map(i => (
+              <span key={i} className="w-1.5 h-1.5 rounded-full bg-dora-orange animate-pulse-slow" style={{ animationDelay: `${i * 0.2}s` }} />
+            ))}
+          </span>
+        </div>
+      </div>
+    </PageTransition>
+  )
+
+  if (useVortex === false) return (
+    <PageTransition>
+      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
+        <Topbar title="Vortex Control" />
+        <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-xs flex items-center gap-2">
+          <span>⊘</span>
+          <span>VORTEX <strong>disabled</strong> (config.yaml) — scans receive directly on the USRP</span>
+        </div>
+        <div className="flex-1 flex items-center justify-center text-whisper-gray dark:text-[#4b5563] font-body text-sm">
+          Device not connected — VORTEX control unavailable
+        </div>
       </div>
     </PageTransition>
   )
 
   if (isError || !config) return (
     <PageTransition>
-      <div className="flex-1 flex items-center justify-center text-sunset-red dark:text-rose-500 font-body text-sm">
-        ✕ Cannot reach device at {import.meta.env.VITE_API_BASE_URL}
+      <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center bg-transparent dark:bg-base-950 transition-colors">
+        <div
+          className="w-16 h-16 rounded-2xl flex items-center justify-center bg-[#FFE0E0]/70 dark:bg-rose-500/10 border-2 border-sunset-red/30"
+        >
+          <svg className="w-8 h-8 text-sunset-red dark:text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="7" />
+            <line x1="16.5" y1="16.5" x2="22" y2="22" />
+            <line x1="11" y1="8" x2="11" y2="12" />
+            <line x1="11" y1="14.5" x2="11" y2="14.5" />
+          </svg>
+        </div>
+        <h2 className="font-display font-extrabold text-[22px] text-story-ink dark:text-[#f9fafb]">
+          Device not found
+        </h2>
+        <p className="font-body text-sm text-tale-gray dark:text-[#9ca3af] max-w-sm">
+          Couldn&apos;t reach the backend. Start it and we&apos;ll keep looking.
+        </p>
+        <code className="font-mono text-xs text-sunset-red dark:text-rose-400 bg-[#FFE0E0]/70 dark:bg-rose-500/10 px-3 py-1.5 rounded-full border border-sunset-red/30">
+          {import.meta.env.VITE_API_BASE_URL}
+        </code>
       </div>
     </PageTransition>
   )
@@ -280,11 +337,24 @@ export function VortexPage() {
 
   return (
     <PageTransition>
-      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
-        <Topbar title="Vortex Config" />
+      <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
+        <Topbar title="Vortex Control" />
+
+        {/* VORTEX flag status banner */}
+        {useVortex === true ? (
+          <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-meadow-green/40 bg-pastel-green dark:bg-emerald-500/5 dark:border-emerald-500/20 text-meadow-green-dk dark:text-emerald-400 font-body text-xs flex items-center gap-2">
+            <span className="text-sm">⚡</span>
+            <span>VORTEX <strong>enabled</strong> — hardware used in scans</span>
+          </div>
+        ) : (
+          <div className="mx-5 mt-4 px-4 py-2.5 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-xs flex items-center gap-2">
+            <span>⊘</span>
+            <span>VORTEX <strong>disabled</strong> (config.yaml) — scans receive directly on the USRP</span>
+          </div>
+        )}
 
         {resumed && (
-          <div className="mx-5 mt-4 px-4 py-3 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-sm flex items-center gap-2">
+          <div className="mx-5 mt-3 px-4 py-3 rounded-[16px] border border-sunshine/50 bg-[#FFF6CC] dark:bg-amber-500/10 dark:border-amber-500/30 text-[#7A5C3A] dark:text-amber-500 font-body text-sm flex items-center gap-2">
             <span>⚠</span> Control released — reload to regain access
           </div>
         )}
@@ -308,7 +378,7 @@ export function VortexPage() {
             <ConfigCard title="IF Output">
               <NumericField
                 label="Frequency"
-                value={outLocked ? IFBW_320_OUTPUT_MHZ : config.output_mhz}
+                value={effectiveOutput(config)}
                 min={0} max={3500} step={0.1}
                 unit="MHz"
                 disabled={resumed}
@@ -337,7 +407,7 @@ export function VortexPage() {
                     const available = bws.includes(bw)
                     const active    = displayBw === bw
                     return (
-                      <button
+                      <button type="button"
                         key={bw}
                         disabled={!available || bwDisabled || resumed}
                         onClick={() => {
@@ -368,7 +438,10 @@ export function VortexPage() {
             <ConfigCard title="Spectrum">
               <div className="flex items-center justify-between">
                 <span className="font-body text-[13px] font-semibold text-tale-gray dark:text-[#9ca3af]">Invert Spectrum</span>
-                <button
+                <button type="button"
+                  role="switch"
+                  aria-checked={displayInvert}
+                  aria-label="Invert spectrum"
                   disabled={resumed}
                   onClick={() => {
                     const next = !displayInvert
@@ -408,7 +481,7 @@ export function VortexPage() {
 
           {/* Action buttons */}
           <div className="max-w-3xl mx-auto flex gap-3 mt-5">
-            <button
+            <button type="button"
               disabled={resumed || saveMut.isPending}
               onClick={() => saveMut.mutate()}
               className="flex-1 py-3 rounded-full font-display font-bold tracking-wide text-[14px] text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5"
@@ -419,7 +492,7 @@ export function VortexPage() {
             >
               {saveMut.isPending ? 'Saving…' : 'Save to Flash'}
             </button>
-            <button
+            <button type="button"
               disabled={resumed || resumeMut.isPending}
               onClick={() => { resumeMut.mutate(); setResumed(true) }}
               className="flex-1 py-3 rounded-full font-display font-bold tracking-wide text-[14px] text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:-translate-y-0.5"
@@ -436,3 +509,4 @@ export function VortexPage() {
     </PageTransition>
   )
 }
+

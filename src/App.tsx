@@ -1,48 +1,60 @@
-import { useLocation, Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
-import { Sidebar }     from '@/components/Sidebar'
-import { HeroPage }    from '@/features/hero/HeroPage'
-import { VortexPage }  from '@/features/vortex/VortexPage'
-import { ScanPage }    from '@/features/scan/ScanPage'
-import { RxPage }      from '@/features/rx/RxPage'
-import { PlayerPage }  from '@/features/player/PlayerPage'
+import { Sidebar }       from '@/components/Sidebar'
+import { AdventureBackdrop } from '@/components/AdventureBackdrop'
+import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { HeroPage }      from '@/features/hero/HeroPage'
+import { VortexPage }    from '@/features/vortex/VortexPage'
+import { ScanPage }      from '@/features/scan/ScanPage'
+import { RxPage }        from '@/features/rx/RxPage'
+import { PlayerPage }    from '@/features/player/PlayerPage'
+import { LoginPage }     from '@/features/auth/LoginPage'
+import { SwitchPanel }   from '@/features/arduino/SwitchPanel'
 
 function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen w-screen overflow-hidden dark:bg-base-950 bg-sky-canvas">
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {children}
+      <main className="relative flex-1 flex flex-col overflow-hidden">
+        <AdventureBackdrop />
+        <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+          {children}
+        </div>
       </main>
     </div>
   )
 }
 
-export function App() {
-  const location = useLocation()
-  const isHero   = location.pathname === '/'
-
-  if (isHero) {
-    return (
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<HeroPage />} />
-        </Routes>
-      </AnimatePresence>
-    )
-  }
-
+function AppShellLayout() {
   return (
     <AppShell>
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/vortex" element={<VortexPage />}  />
-          <Route path="/config" element={<ScanPage />}    />
-          <Route path="/rx"     element={<RxPage />}      />
-          <Route path="/player" element={<PlayerPage />}  />
-          <Route path="*"       element={<Navigate to="/vortex" replace />} />
-        </Routes>
-      </AnimatePresence>
+      <Outlet />
     </AppShell>
+  )
+}
+
+export function App() {
+  const location = useLocation()
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<HeroPage />} />
+
+        {/* Protected — device pages require auth */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppShellLayout />}>
+            <Route path="/vortex" element={<VortexPage />} />
+            <Route path="/config" element={<ScanPage />}   />
+            <Route path="/rx"     element={<RxPage />}     />
+            <Route path="/player" element={<PlayerPage />} />
+            <Route path="/arduino" element={<SwitchPanel />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/config" replace />} />
+        </Route>
+      </Routes>
+    </AnimatePresence>
   )
 }

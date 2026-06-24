@@ -1,14 +1,14 @@
 import { useCallback, useState } from 'react'
 import type { ScanRow, ScanRowErrors } from '@/types/scan'
 
-function makeRow(): ScanRow {
+function makeRow(defaults?: Pick<ScanRow, 'gain_db' | 'out_freq_mhz'>): ScanRow {
   return {
     id: crypto.randomUUID(),
     duration:          null,
     entrance_freq_ghz: null,
-    out_freq_mhz:      null,
+    out_freq_mhz:      defaults?.out_freq_mhz ?? null,
     bandwidth:         null,
-    gain_db:           null,
+    gain_db:           defaults?.gain_db ?? null,
     sample_rate:       null,
   }
 }
@@ -21,9 +21,6 @@ function validate(row: ScanRow): ScanRowErrors {
 
   if (row.entrance_freq_ghz === null)                               e.entrance_freq_ghz = 'Required'
   else if (row.entrance_freq_ghz < 0.01 || row.entrance_freq_ghz > 26) e.entrance_freq_ghz = '0.01–26 GHz'
-
-  if (row.out_freq_mhz === null)                                    e.out_freq_mhz = 'Required'
-  else if (row.out_freq_mhz < 0 || row.out_freq_mhz > 3500)        e.out_freq_mhz = '0–3500 MHz'
 
   if (row.bandwidth === null)                                       e.bandwidth = 'Required'
   else if (![80, 160, 320].includes(row.bandwidth))                 e.bandwidth = '80/160/320'
@@ -41,8 +38,8 @@ export function useScanRows() {
   const [rows, setRows] = useState<ScanRow[]>([])
   const [errors, setErrors] = useState<Record<string, ScanRowErrors>>({})
 
-  const addRow = useCallback(() =>
-    setRows(prev => [...prev, makeRow()]), [])
+  const addRow = useCallback((defaults?: Pick<ScanRow, 'gain_db' | 'out_freq_mhz'>) =>
+    setRows(prev => [...prev, makeRow(defaults)]), [])
 
   const removeRow = useCallback((id: string) =>
     setRows(prev => prev.filter(r => r.id !== id)), [])

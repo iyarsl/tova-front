@@ -1,8 +1,11 @@
-import { motion, AnimatePresence } from 'framer-motion'
+﻿import { useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
+import { useToast } from '@/components/Toast'
 import { useRxStreamContext } from './RxStreamContext'
-import type { Tab } from './RxStreamContext'
+import type { Tab, ChartKey } from './RxStreamContext'
 import { useVortexConfig } from '@/features/vortex/useVortexConfig'
 import { useTheme } from '@/hooks/useTheme'
 import type { RxStatus } from '@/types/rx'
@@ -11,9 +14,8 @@ import { FftChart } from '@/components/signal/FftChart'
 import { SpectrogramChart } from '@/components/signal/SpectrogramChart'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'time',        label: 'Time Domain',  icon: '∿' },
-  { id: 'fft',         label: 'FFT',          icon: '⌇' },
-  { id: 'spectrogram', label: 'Spectrogram',  icon: '▦' },
+  { id: 'combined',    label: 'FFT + Time',   icon: '⌇∿' },
+  { id: 'spectrogram', label: 'Spectrogram',  icon: '▦'  },
 ]
 
 const STATUS_CHIP: Record<RxStatus, { dot: string; label: string }> = {
@@ -34,7 +36,7 @@ const NO_DATA_MSG: Record<RxStatus, string> = {
   error:      'Connection lost — reconnecting…',
 }
 
-function GraphPlaceholder({ type }: { type: 'time' | 'fft' | 'spectrogram' }) {
+function GraphPlaceholder({ type }: { type: ChartKey }) {
   return (
     <svg
       viewBox="0 0 200 80"
@@ -88,10 +90,37 @@ export function RxPage() {
     displayData,
     zoomLayouts,
     handleRelayout,
+    buildCapture,
   } = useRxStreamContext()
 
   const { config: vortexConfig } = useVortexConfig()
   const { theme } = useTheme()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const handleSaveToPlayer = useCallback(() => {
+    const capture = buildCapture(3)
+    if (!capture) {
+      toast('Not enough data — stream a signal first', 'error')
+      return
+    }
+    navigate('/player', { state: { capture } })
+  }, [buildCapture, navigate, toast])
+
+  const handleDownload = useCallback(() => {
+    const capture = buildCapture(3)
+    if (!capture) {
+      toast('Not enough data — stream a signal first', 'error')
+      return
+    }
+    const blob = new Blob([capture.samples.buffer as ArrayBuffer], { type: 'application/octet-stream' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = capture.fileName
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [buildCapture, toast])
 
   const centerFreq = vortexConfig ? (vortexConfig.rfin_hz / 1e6).toFixed(0) : '—'
   const data = displayData
@@ -100,13 +129,13 @@ export function RxPage() {
 
   return (
     <PageTransition>
-      <div className="h-full flex flex-col overflow-hidden bg-sky-canvas dark:bg-base-950 transition-colors">
-        <Topbar title="RX Graphs" />
+      <div className="h-full flex flex-col overflow-hidden bg-transparent dark:bg-base-950 transition-colors">
+        <Topbar title="Live Signal View" />
 
         {/* Tab bar */}
         <div className="flex items-center gap-1 px-5 pt-3 pb-0 border-b border-[#F0EBD8] dark:border-white/[0.07] bg-cream-page dark:bg-base-900 transition-colors">
           {TABS.map(t => (
-            <button
+            <button type="button"
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`relative flex items-center gap-2 px-5 py-2.5 text-[13px] font-display font-bold tracking-wide uppercase transition-colors rounded-t-[12px] ${
@@ -137,7 +166,7 @@ export function RxPage() {
             </span>
 
             {/* Freeze / Resume button */}
-            <button
+            <button type="button"
               onClick={handleToggle}
               className="px-4 py-1.5 rounded-full font-display font-bold text-xs border-2 transition-all hover:-translate-y-0.5"
               style={
@@ -157,14 +186,39 @@ export function RxPage() {
             >
               {!frozen ? '⏹ Freeze' : '▶ Resume'}
             </button>
+
+            {/* Capture controls — visible only when frozen */}
+            {frozen && (
+                <div
+                  className="flex items-center gap-2 pl-3 border-l border-tale-gray/20 dark:border-white/10"
+                >
+                  {/* Save to Player */}
+                  <button type="button"
+                    onClick={handleSaveToPlayer}
+                    title="Load last 3 seconds into Signal Player"
+                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs text-white border-2 border-transparent bg-[linear-gradient(135deg,#5BC8F5,#3BA8D5)] shadow-[0_3px_10px_rgba(91,200,245,0.40)] transition-all hover:-translate-y-0.5 active:scale-95"
+                  >
+                    → Player
+                  </button>
+
+                  {/* Download */}
+                  <button type="button"
+                    onClick={handleDownload}
+                    title="Download as .fc32 file"
+                    className="px-3 py-1.5 rounded-full font-display font-bold text-xs text-sky-blue-d border-2 border-sky-blue-d/45 bg-transparent transition-all hover:-translate-y-0.5 active:scale-95"
+                  >
+                    ↓ .fc32
+                  </button>
+                </div>
+            )}
           </div>
         </div>
 
         {/* Chart area */}
-        <div className="flex-1 relative overflow-hidden p-4 bg-sky-canvas dark:bg-base-950">
+        <div className="flex-1 relative overflow-hidden p-4 bg-transparent dark:bg-base-950">
           <div className="absolute inset-4 rounded-[20px] border border-sky-blue-d/40 dark:border-white/[0.07] bg-pastel-blue dark:bg-base-900/40 p-3 overflow-hidden">
             <AnimatePresence mode="wait">
-              <motion.div
+              <m.div
                 key={tab}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -172,24 +226,34 @@ export function RxPage() {
                 transition={{ duration: 0.2 }}
                 className="absolute inset-3 rounded-[12px] overflow-hidden"
               >
-                {tab === 'time' && data && (
-                  <TimeDomainChart
-                    x={data.time.x}
-                    y={data.time.y}
-                    theme={theme}
-                    zoomLayout={zoomLayouts.time}
-                    onRelayout={(e) => handleRelayout('time', e)}
-                  />
-                )}
-
-                {tab === 'fft' && data && (
-                  <FftChart
-                    x={data.fft.x}
-                    y={data.fft.y}
-                    theme={theme}
-                    zoomLayout={zoomLayouts.fft}
-                    onRelayout={(e) => handleRelayout('fft', e)}
-                  />
+                {tab === 'combined' && data && (
+                  <div className="flex flex-col h-full">
+                    <div className="flex-1 overflow-hidden">
+                      <FftChart
+                        x={data.fft.x}
+                        y={data.fft.y}
+                        theme={theme}
+                        zoomLayout={zoomLayouts.fft}
+                        onRelayout={(e) => handleRelayout('fft', e)}
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-1 shrink-0">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5BC8F5]/40 to-transparent" />
+                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase select-none text-[#5BC8F5]/50 dark:text-[#5BC8F5]/35 px-1">
+                        ⌇ fft · time ∿
+                      </span>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5BC8F5]/40 to-transparent" />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <TimeDomainChart
+                        x={data.time.x}
+                        y={data.time.y}
+                        theme={theme}
+                        zoomLayout={zoomLayouts.time}
+                        onRelayout={(e) => handleRelayout('time', e)}
+                      />
+                    </div>
+                  </div>
                 )}
 
                 {tab === 'spectrogram' && data && (
@@ -201,15 +265,42 @@ export function RxPage() {
                   />
                 )}
 
-                {!data && (
-                  <div className="flex flex-col items-center justify-center h-full gap-4">
-                    <GraphPlaceholder type={tab} />
+                {!data && tab === 'combined' && (
+                  <div className="flex flex-col h-full">
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                      <div className="text-sky-blue-d dark:text-white">
+                        <GraphPlaceholder type="fft" />
+                      </div>
+                      <span className="font-body text-sm text-whisper-gray dark:text-white/30">
+                        {NO_DATA_MSG[status]}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 px-3 py-1 shrink-0">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5BC8F5]/40 to-transparent" />
+                      <span className="font-mono text-[10px] tracking-[0.18em] uppercase select-none text-[#5BC8F5]/50 dark:text-[#5BC8F5]/35 px-1">
+                        ⌇ fft · time ∿
+                      </span>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5BC8F5]/40 to-transparent" />
+                    </div>
+                    <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                      <div className="text-sky-blue-d dark:text-white">
+                        <GraphPlaceholder type="time" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {!data && tab === 'spectrogram' && (
+                  <div className="flex flex-col items-center justify-center h-full gap-3">
+                    <div className="text-sky-blue-d dark:text-white">
+                      <GraphPlaceholder type="spectrogram" />
+                    </div>
                     <span className="font-body text-sm text-whisper-gray dark:text-white/30">
                       {NO_DATA_MSG[status]}
                     </span>
                   </div>
                 )}
-              </motion.div>
+              </m.div>
             </AnimatePresence>
           </div>
         </div>
@@ -217,3 +308,4 @@ export function RxPage() {
     </PageTransition>
   )
 }
+

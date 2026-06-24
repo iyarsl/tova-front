@@ -1,0 +1,24 @@
+Wire up the `use_vortex` flag end-to-end on the backend so it actually takes effect during scans. Context: the frontend (tova-front repo) already sends `use_vortex: boolean` on every scan request — both `POST /scan/run` and `POST /scan/schedule` — driven by the `VITE_USE_VORTEX` env var (defaults true). Right now the backend silently ignores it.
+
+Repo: C:\Users\TESLA\PycharmProjects\brain-fuck
+
+Problems to fix (verified by reading the current code):
+
+1. `src/api.py` — `ScanRunRequest` (line ~175) and `ScanScheduleRequest` (line ~181) Pydantic models have no `use_vortex` field. Since Pydantic drops unknown fields by default, the value the frontend sends is discarded before it ever reaches scan logic. Add `use_vortex: bool = True` to both models.
+
+2. `src/scan.py` — `run_scan_rows(rows, output_dir, mock=False)` (line ~141) is the function actually called by `api.py`'s `/scan/run` handler (line ~273-274) and by `schedule.py`'s scheduled-run executor (line ~303). It has no `use_vortex` parameter and unconditionally calls `set_rfin`, `set_output`, `set_gain`, `set_ifbw` (the real VORTEX hardware setters imported from `src.vortex`) for every row. Add a `use_vortex: bool = True` parameter; when False, skip all four VORTEX `set_*` calls and let USRP receive directly at `row.out_freq_mhz` unchanged. Reference: there's a separate, older, already-implemented version of this exact skip logic in the `run_scan` function (Excel-file path, not the one frontend uses) in the git worktree at `C:\Users\TESLA\PycharmProjects\brain-fuck\.claude\worktrees\no-vortex\src\scan.py` (commit `2d3fcc0`) — read it for the pattern (it also adjusts the output filename to drop the `_rfin_{ghz}GHz` segment when vortex is skipped), but note that worktree is stale (pre-dates `run_scan_rows`) so don't merge it directly — port the logic into the current `run_scan_rows`.
+
+3. `src/api.py` — the `/scan/run` handler (~line 273-274) currently calls `run_scan_rows(body.rows, _safe_path(body.output_dir), mock)`. Update it to pass `body.use_vortex` through.
+
+4. `src/schedule.py` — `ScheduledScan` dataclass/model (line ~47) and its DB schema (line ~75, `mock INTEGER NOT NULL`) need a matching `use_vortex` column, persisted and restored the same way `mock` is (see lines ~128, ~231). The scheduled-run executor (line ~303) calling `run_scan_rows(scan.rows, Path(scan.output_dir), scan.mock)` needs to also pass `scan.use_vortex`.
+
+5. Update/add tests:
+   - `src/tests/test_scan.py` — add a test for `run_scan_rows` with `use_vortex=False` asserting `set_rfin`/`set_output`/`set_gain`/`set_ifbw` are NOT called (mock-patch them) and that `mock=True` samples still get written.
+   - `src/tests/test_api.py` — add a test asserting `use_vortex` from the request body is passed through to `run_scan_rows`.
+   - `src/tests/test_schedule.py` — cover persistence/restoration of `use_vortex` on a scheduled scan row.
+
+Constraints:
+- Don't touch frontend code — it's already correct and out of scope.
+- Don't change the VORTEX-disabled config-skip logic that already exists in `get_config()`/`/vortex/config` — that's a separate, already-working concern (frontend's `VITE_USE_VORTEX` flag controls whether the frontend even calls `/vortex/config`).
+- Default `use_vortex=True` everywhere so existing behavior is unchanged for callers that don't pass the field.
+- Run the backend test suite after the change and confirm it passes.

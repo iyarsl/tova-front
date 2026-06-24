@@ -4,6 +4,7 @@ import {
   setIfbw, invertSpectrum, saveConfig, resumeControl,
 } from '@/api/vortex'
 import { useToast } from '@/components/Toast'
+import { useAppSettings } from '@/hooks/useAppSettings'
 import type { AppError } from '@/api/client'
 import type { VortexConfig } from '@/types/vortex'
 
@@ -12,29 +13,31 @@ const QK = ['vortex-config']
 export function useVortexConfig() {
   const qc = useQueryClient()
   const { toast } = useToast()
+  const { useVortex } = useAppSettings()
 
-  const query = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: QK,
     queryFn: fetchConfig,
+    enabled: useVortex === true,
     refetchInterval: 5000,
     refetchIntervalInBackground: false,
   })
 
-  function mutation<TVar>(
+  function mutOpts<TVar>(
     fn: (v: TVar) => Promise<void>,
     successMsg: string,
     optimistic?: (v: TVar, old: VortexConfig) => VortexConfig,
   ) {
-    return useMutation({
+    return {
       mutationFn: fn,
-      onMutate: async (v: TVar) => {
-        if (!optimistic) return
+      onMutate: async (v: TVar): Promise<{ prev?: VortexConfig }> => {
+        if (!optimistic) return {}
         await qc.cancelQueries({ queryKey: QK })
         const prev = qc.getQueryData<VortexConfig>(QK)
         if (prev) qc.setQueryData(QK, optimistic(v, prev))
         return { prev }
       },
-      onError: (err: AppError, _v, ctx) => {
+      onError: (err: AppError, _v: TVar, ctx: { prev?: VortexConfig } | undefined) => {
         if (ctx?.prev) qc.setQueryData(QK, ctx.prev)
         void qc.invalidateQueries({ queryKey: QK })
         toast(err.message, 'error')
@@ -49,31 +52,38 @@ export function useVortexConfig() {
           void qc.invalidateQueries({ queryKey: QK })
         }
       },
-    })
+    }
   }
 
-  return {
-    config:   query.data,
-    isLoading: query.isLoading,
-    isError:  query.isError,
+  const rfinMut   = useMutation(mutOpts((ghz: number) => setRfin(ghz),   'RF In updated',
+                      (ghz, old) => ({ ...old, rfin_ghz: ghz, rfin_hz: Math.round(ghz * 1e9) })))
+  const outputMut = useMutation(mutOpts((mhz: number) => setOutput(mhz), 'Output updated',
+                      (mhz, old) => ({ ...old, output_mhz: mhz, output_hz: Math.round(mhz * 1e6) })))
+  const gainMut   = useMutation(mutOpts((db: number)  => setGain(db),    'Gain updated',
+                      (db,  old) => ({ ...old, gain_db: db })))
+  const ifbwMut   = useMutation(mutOpts(
+    (bw: number) => setIfbw(bw),
+    'IF BW updated',
+    (bw, old) => ({ ...old, ifbw_mhz: bw }),
+  ))
+  const invertMut = useMutation(mutOpts(
+    (on: boolean) => invertSpectrum(on),
+    'Inversion updated',
+    (on, old) => ({ ...old, gain_mode: on ? 1 : 0 }),
+  ))
+  const saveMut   = useMutation(mutOpts((_: void) => saveConfig(),    'Config saved to flash'))
+  const resumeMut = useMutation(mutOpts((_: void) => resumeControl(), 'Control released'))
 
-    rfinMut:   mutation((ghz: number) => setRfin(ghz),   'RF In updated',
-                 (ghz, old) => ({ ...old, rfin_ghz: ghz, rfin_hz: Math.round(ghz * 1e9) })),
-    outputMut: mutation((mhz: number) => setOutput(mhz), 'Output updated',
-                 (mhz, old) => ({ ...old, output_mhz: mhz, output_hz: Math.round(mhz * 1e6) })),
-    gainMut:   mutation((db: number)  => setGain(db),    'Gain updated',
-                 (db,  old) => ({ ...old, gain_db: db })),
-    ifbwMut:   mutation(
-      (bw: number) => setIfbw(bw),
-      'IF BW updated',
-      (bw, old) => ({ ...old, ifbw_mhz: bw }),
-    ),
-    invertMut: mutation(
-      (on: boolean) => invertSpectrum(on),
-      'Inversion updated',
-      (on, old) => ({ ...old, gain_mode: on ? 1 : 0 }),
-    ),
-    saveMut:   mutation((_: void) => saveConfig(),   'Config saved to flash'),
-    resumeMut: mutation((_: void) => resumeControl(), 'Control released'),
+  return {
+    config:    data,
+    isLoading,
+    isError,
+    rfinMut,
+    outputMut,
+    gainMut,
+    ifbwMut,
+    invertMut,
+    saveMut,
+    resumeMut,
   }
 }
