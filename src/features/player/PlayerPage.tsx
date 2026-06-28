@@ -29,6 +29,11 @@ function formatTime(seconds: number): string {
   return `${s}.${ms.toString().padStart(3, '0')}s`
 }
 
+/** The sample-rate input is shown in MHz; the player works in Hz. */
+const HZ_PER_MHZ = 1e6
+const mhzInputToHz = (mhz: string): number => Math.round(parseFloat(mhz) * HZ_PER_MHZ)
+const hzToMhzInput = (hz: number): string => String(hz / HZ_PER_MHZ)
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -43,7 +48,7 @@ export function PlayerPage() {
   // --- local sample-rate input state ----------------------------------------
   // Initialise from the persisted player state so the value survives navigation
   const [srInput, setSrInput]   = useState(() =>
-    player.sampleRate > 0 ? String(player.sampleRate) : '2000000'
+    player.sampleRate > 0 ? hzToMhzInput(player.sampleRate) : '2'
   )
   const [srError, setSrError]   = useState('')
   const srInputRef = useRef<HTMLInputElement>(null)
@@ -53,7 +58,7 @@ export function PlayerPage() {
   useEffect(() => {
     if (!locationState?.capture) return
     const { samples, sampleRate: sr, fileName } = locationState.capture
-    setSrInput(String(sr))
+    setSrInput(hzToMhzInput(sr))
     player.loadFromBuffer(samples, sr, fileName)
     navigate(locationPathname, { replace: true, state: null })
     toast(`Loaded ${fileName}`, 'success')
@@ -84,10 +89,10 @@ export function PlayerPage() {
     const spsMatch = file.name.match(/_(\d+)sps/)
     if (spsMatch) {
       const embedded = parseInt(spsMatch[1], 10)
-      if (embedded > 0) setSrInput(String(embedded))
+      if (embedded > 0) setSrInput(hzToMhzInput(embedded))
     }
 
-    const sr = spsMatch ? parseInt(spsMatch[1], 10) : parseInt(srInput, 10)
+    const sr = spsMatch ? parseInt(spsMatch[1], 10) : mhzInputToHz(srInput)
     if (!sr || sr <= 0) {
       // Store file and show inline error — user can fix SR then click play
       pendingFileRef.current = file
@@ -153,14 +158,12 @@ export function PlayerPage() {
   }
 
   const handleSrBlur = () => {
-    const sr = parseInt(srInput, 10)
-    void handleSrCommit(sr)
+    void handleSrCommit(mhzInputToHz(srInput))
   }
 
   const handleSrKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      const sr = parseInt(srInput, 10)
-      void handleSrCommit(sr)
+      void handleSrCommit(mhzInputToHz(srInput))
     }
   }
 
@@ -202,8 +205,8 @@ export function PlayerPage() {
                   onChange={(e) => handleSrChange(e.target.value)}
                   onBlur={handleSrBlur}
                   onKeyDown={handleSrKeyDown}
-                  min={1}
-                  step={1000000}
+                  min={0.001}
+                  step={0.1}
                   className={`
                     w-36 px-3 py-2 rounded-[12px] font-mono text-sm border-2 bg-white dark:bg-transparent
                     dark:text-amber-300 text-dora-orange-dark
@@ -215,16 +218,16 @@ export function PlayerPage() {
                       : 'dark:border-white/10 border-[#FFD4A6]'
                     }
                   `}
-                  placeholder="2000000"
+                  placeholder="2"
                 />
-                <span className="font-mono text-xs dark:text-[#4b5563] text-[#9ca3af]">Hz</span>
+                <span className="font-mono text-xs dark:text-[#4b5563] text-[#9ca3af]">MHz</span>
               </div>
               {srError && (
                 <span className="font-mono text-[11px] text-rose-400">{srError}</span>
               )}
               {!srError && sr > 0 && (
                 <span className="font-mono text-[10px] dark:text-[#4b5563] text-[#9ca3af]">
-                  {(sr / 1e6).toFixed(2)} Msps
+                  {sr.toLocaleString()} Hz
                 </span>
               )}
             </div>
