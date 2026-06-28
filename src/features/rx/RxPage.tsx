@@ -125,6 +125,9 @@ export function RxPage() {
     URL.revokeObjectURL(url)
   }, [buildCapture, toast])
 
+  const [freqGhz, setFreqGhz]   = useState<number | ''>(vortexConfig ? vortexConfig.rfin_hz / 1e9 : '')
+  const [srMsps, setSrMsps]     = useState<number | ''>(1)
+  const [gainDb, setGainDb]     = useState<number | ''>(20)
   const [duration, setDuration] = useState<number | ''>('')
   const [countdown, setCountdown] = useState<number | null>(null)
   const [streamPending, setStreamPending] = useState(false)
@@ -139,10 +142,17 @@ export function RxPage() {
     if (!isStreamStarted) clearCountdown()
   }, [isStreamStarted, clearCountdown])
 
+  useEffect(() => {
+    if (vortexConfig && freqGhz === '') setFreqGhz(vortexConfig.rfin_hz / 1e9)
+  }, [vortexConfig]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleStart = useCallback(async () => {
+    const freq = typeof freqGhz === 'number' ? freqGhz * 1e9 : 100e6
+    const sr   = typeof srMsps  === 'number' ? srMsps  * 1e6 : 1e6
+    const gain = typeof gainDb  === 'number' ? gainDb        : 20
     setStreamPending(true)
     const dur = typeof duration === 'number' && duration > 0 ? duration : undefined
-    await startStream(dur)
+    await startStream({ frequency: freq, sample_rate: sr, gain, bandwidth: sr }, dur)
     setStreamPending(false)
     if (dur) {
       setCountdown(dur)
@@ -197,19 +207,49 @@ export function RxPage() {
 
             {/* Stream controls */}
             <div className="flex items-center gap-2 pr-3 border-r border-tale-gray/20 dark:border-white/10">
-              <input
-                type="number"
-                min={1}
-                step={1}
-                value={duration}
-                onChange={e => setDuration(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10)))}
-                placeholder="∞"
-                disabled={isStreamStarted || streamPending}
-                className="w-16 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
-                title="Duration in seconds (leave blank for continuous)"
-              />
-              <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">s</span>
-              {countdown !== null && (
+              {/* RX config inputs — hidden while streaming */}
+              {!isStreamStarted && (
+                <>
+                  <input
+                    type="number" min={0.001} step={0.001} value={freqGhz}
+                    onChange={e => setFreqGhz(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    placeholder="freq"
+                    disabled={streamPending}
+                    title="Center frequency (GHz)"
+                    className="w-16 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
+                  />
+                  <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">GHz</span>
+                  <input
+                    type="number" min={0.1} step={0.1} value={srMsps}
+                    onChange={e => setSrMsps(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    placeholder="SR"
+                    disabled={streamPending}
+                    title="Sample rate (MSps)"
+                    className="w-12 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
+                  />
+                  <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">MSps</span>
+                  <input
+                    type="number" min={0} max={90} step={1} value={gainDb}
+                    onChange={e => setGainDb(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    placeholder="gain"
+                    disabled={streamPending}
+                    title="Gain (dB)"
+                    className="w-12 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
+                  />
+                  <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">dB</span>
+                  <div className="w-px h-4 bg-tale-gray/20 dark:bg-white/10 mx-1" />
+                  <input
+                    type="number" min={1} step={1} value={duration}
+                    onChange={e => setDuration(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10)))}
+                    placeholder="∞"
+                    disabled={streamPending}
+                    title="Duration in seconds (leave blank for continuous)"
+                    className="w-12 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
+                  />
+                  <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">s</span>
+                </>
+              )}
+              {countdown !== null && isStreamStarted && (
                 <span className="font-mono text-[11px] font-bold text-sky-blue-d dark:text-cyan-400 tabular-nums min-w-[28px] text-center">
                   {countdown}s
                 </span>

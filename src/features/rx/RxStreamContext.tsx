@@ -9,7 +9,8 @@ import {
 } from 'react'
 import { config, MAX_CAPTURE_SEC } from '@/config'
 import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout, ChartTab, ChartKey, CapturePayload } from '@/types/rx'
-import { startStream as apiStartStream, stopStream as apiStopStream, fetchStreamStatus } from '@/api/rx'
+import { connectRx, disconnectRx, startStream as apiStartStream, stopStream as apiStopStream, fetchStreamStatus } from '@/api/rx'
+import type { RxConnectConfig } from '@/api/rx'
 import { useToast } from '@/components/Toast'
 import type { AppError } from '@/api/client'
 
@@ -45,9 +46,9 @@ type RxStreamContextType = {
   buildCapture: (durationSec: number) => CapturePayload | null
   /** Whether a stream was started from this session */
   isStreamStarted: boolean
-  /** Start USRP stream; auto-stops after durationSec if provided */
-  startStream: (durationSec?: number) => Promise<void>
-  /** Stop USRP stream */
+  /** Connect USRP, start stream; auto-stops+disconnects after durationSec if provided */
+  startStream: (config: RxConnectConfig, durationSec?: number) => Promise<void>
+  /** Stop stream and disconnect USRP */
   stopStream: () => Promise<void>
 }
 
@@ -245,16 +246,16 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(durationTimerRef.current)
       durationTimerRef.current = null
     }
-    try {
-      await apiStopStream()
-    } catch (err) {
-      toast((err as AppError).message ?? 'Failed to stop stream', 'error')
+    try { await apiStopStream() } catch { /* already stopped */ }
+    try { await disconnectRx() } catch (err) {
+      toast((err as AppError).message ?? 'Failed to disconnect RX', 'error')
     }
     setIsStreamStarted(false)
   }, [toast])
 
-  const startStreamFn = useCallback(async (durationSec?: number) => {
+  const startStreamFn = useCallback(async (config: RxConnectConfig, durationSec?: number) => {
     try {
+      await connectRx(config)
       await apiStartStream()
       setIsStreamStarted(true)
       if (durationSec && durationSec > 0) {
@@ -262,6 +263,7 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       toast((err as AppError).message ?? 'Failed to start stream', 'error')
+      try { await disconnectRx() } catch { /* ignore */ }
       setIsStreamStarted(false)
     }
   }, [toast, stopStreamFn])
