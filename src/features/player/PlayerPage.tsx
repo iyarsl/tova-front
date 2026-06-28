@@ -79,7 +79,15 @@ export function PlayerPage() {
       toast(`Large file (${(file.size / 1e6).toFixed(0)} MB) — loading…`, 'warning')
     }
 
-    const sr = parseInt(srInput, 10)
+    // Sample rate is embedded in capture filenames as `_<rate>sps` — trust it
+    // over the input field so duration/time axes match how the file was recorded.
+    const spsMatch = file.name.match(/_(\d+)sps/)
+    if (spsMatch) {
+      const embedded = parseInt(spsMatch[1], 10)
+      if (embedded > 0) setSrInput(String(embedded))
+    }
+
+    const sr = spsMatch ? parseInt(spsMatch[1], 10) : parseInt(srInput, 10)
     if (!sr || sr <= 0) {
       // Store file and show inline error — user can fix SR then click play
       pendingFileRef.current = file
