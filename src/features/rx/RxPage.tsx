@@ -133,6 +133,14 @@ export function RxPage() {
   const [streamPending, setStreamPending] = useState(false)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const fieldErrors = {
+    freq:     freqGhz === '' || (typeof freqGhz === 'number' && freqGhz <= 0),
+    sr:       srMsps  === '' || (typeof srMsps  === 'number' && srMsps  <= 0),
+    gain:     gainDb  === '' || (typeof gainDb  === 'number' && (gainDb < 0 || gainDb > 90)),
+    duration: typeof duration === 'number' && duration <= 0,
+  }
+  const hasErrors = Object.values(fieldErrors).some(Boolean)
+
   const clearCountdown = useCallback(() => {
     if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
     setCountdown(null)
@@ -175,6 +183,13 @@ export function RxPage() {
   const centerFreq = vortexConfig ? (vortexConfig.rfin_hz / 1e6).toFixed(0) : '—'
   const data = displayData
 
+  const inputCls = (err: boolean) =>
+    `px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border focus:outline-none disabled:opacity-50 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] transition-colors ${
+      err
+        ? 'border-rose-400 dark:border-rose-500 focus:border-rose-500'
+        : 'border-tale-gray/25 dark:border-white/10 focus:border-sky-blue-d/60'
+    }`
+
   const chip = STATUS_CHIP[status]
 
   return (
@@ -214,8 +229,8 @@ export function RxPage() {
                   onChange={e => setFreqGhz(e.target.value === '' ? '' : parseFloat(e.target.value))}
                   placeholder="freq"
                   disabled={streamPending || isStreamStarted}
-                  title="Center frequency (GHz)"
-                  className="w-20 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-50"
+                  title="Center frequency in GHz (must be > 0)"
+                  className={`w-20 ${inputCls(fieldErrors.freq)}`}
                 />
                 <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">GHz</span>
                 <input
@@ -223,8 +238,8 @@ export function RxPage() {
                   onChange={e => setSrMsps(e.target.value === '' ? '' : parseFloat(e.target.value))}
                   placeholder="SR"
                   disabled={streamPending || isStreamStarted}
-                  title="Sample rate (MSps)"
-                  className="w-16 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-50"
+                  title="Sample rate in MSps (must be > 0)"
+                  className={`w-16 ${inputCls(fieldErrors.sr)}`}
                 />
                 <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">MSps</span>
                 <input
@@ -232,8 +247,8 @@ export function RxPage() {
                   onChange={e => setGainDb(e.target.value === '' ? '' : parseFloat(e.target.value))}
                   placeholder="gain"
                   disabled={streamPending || isStreamStarted}
-                  title="Gain (dB)"
-                  className="w-14 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-50"
+                  title="Gain in dB (0–90)"
+                  className={`w-14 ${inputCls(fieldErrors.gain)}`}
                 />
                 <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">dB</span>
                 <div className="w-px h-4 bg-tale-gray/20 dark:bg-white/10 mx-1" />
@@ -242,8 +257,8 @@ export function RxPage() {
                   onChange={e => setDuration(e.target.value === '' ? '' : parseFloat(e.target.value))}
                   placeholder="∞"
                   disabled={streamPending || isStreamStarted}
-                  title="Duration in seconds (leave blank for continuous)"
-                  className="w-16 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-50"
+                  title="Duration in seconds — leave blank for continuous"
+                  className={`w-16 ${inputCls(fieldErrors.duration)}`}
                 />
                 <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">s</span>
               </>
@@ -254,7 +269,7 @@ export function RxPage() {
               )}
               <button
                 type="button"
-                disabled={streamPending}
+                disabled={streamPending || (!isStreamStarted && hasErrors)}
                 onClick={isStreamStarted ? handleStop : handleStart}
                 className="px-3 py-1.5 rounded-full font-display font-bold text-xs border-2 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
                 style={isStreamStarted
