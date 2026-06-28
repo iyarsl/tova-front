@@ -13,6 +13,7 @@ export function useArduinoPorts() {
   const { toast } = useToast()
 
   const [isRestarting, setIsRestarting] = useState(false)
+  const [isExclusivePending, setIsExclusivePending] = useState(false)
   const restartedAtRef = useRef(0)
   const restartSafetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -70,10 +71,41 @@ export function useArduinoPorts() {
     },
   })
 
+  async function exclusiveToggle(name: string) {
+    const current = qc.getQueryData<PortState[]>(QK) ?? []
+    const target = current.find(p => p.name === name)
+    if (!target) return
+
+    if (target.on) {
+      toggleMut.mutate({ name, on: false })
+      return
+    }
+
+    await qc.cancelQueries({ queryKey: QK })
+    const prev = qc.getQueryData<PortState[]>(QK)
+    qc.setQueryData<PortState[]>(QK, current.map(p => ({ ...p, on: p.name === name })))
+    setIsExclusivePending(true)
+
+    try {
+      const toTurnOff = current.filter(p => p.on)
+      await Promise.all(toTurnOff.map(p => setPort(p.name, false)))
+      await setPort(name, true)
+      setTimeout(() => void qc.invalidateQueries({ queryKey: QK }), 800)
+    } catch (err) {
+      if (prev) qc.setQueryData(QK, prev)
+      void qc.invalidateQueries({ queryKey: QK })
+      toast((err as AppError).message, 'error')
+    } finally {
+      setIsExclusivePending(false)
+    }
+  }
+
   return {
     ports: query.data ?? [],
     isLoading: query.isLoading,
     isRestarting,
+    isExclusivePending,
+    exclusiveToggle,
     pendingPortName: toggleMut.isPending ? toggleMut.variables?.name : undefined,
     toggleMut,
     restartMut,
