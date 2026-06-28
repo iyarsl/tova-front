@@ -42,6 +42,8 @@ export function SwitchPanel() {
                       on={p.on}
                       disabled={isRestarting || isExclusivePending || pendingPortName === p.name}
                       onToggle={() => void exclusiveToggle(p.name)}
+                      freqMin={p.freq_min_ghz}
+                      freqMax={p.freq_max_ghz}
                     />
                   ))}
                 </div>

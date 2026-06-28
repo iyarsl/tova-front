@@ -4,9 +4,11 @@ type PortSwitchProps = {
   on: boolean
   disabled?: boolean
   onToggle: () => void
+  freqMin?: number
+  freqMax?: number
 }
 
-export function PortSwitch({ name, pin, on, disabled, onToggle }: PortSwitchProps) {
+export function PortSwitch({ name, pin, on, disabled, onToggle, freqMin, freqMax }: PortSwitchProps) {
   return (
     <div
       className={`flex flex-col items-center gap-4 p-6 rounded-2xl border transition-all duration-300 h-full ${
@@ -77,6 +79,11 @@ export function PortSwitch({ name, pin, on, disabled, onToggle }: PortSwitchProp
         <span className="font-mono text-[12px] font-semibold text-map-brown/60 dark:text-[#6b7280]">
           pin {pin}
         </span>
+        {freqMin != null && freqMax != null && (
+          <span className="font-mono text-[10px] text-map-brown/40 dark:text-[#4b5563]">
+            {freqMin}–{freqMax} GHz
+          </span>
+        )}
       </div>
     </div>
   )

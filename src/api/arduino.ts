@@ -6,6 +6,8 @@ const PortStateSchema = z.object({
   name: z.string(),
   pin:  z.number(),
   on:   z.boolean(),
+  freq_min_ghz: z.number().optional(),
+  freq_max_ghz: z.number().optional(),
 })
 
 const PortStateListSchema = z.array(PortStateSchema)
