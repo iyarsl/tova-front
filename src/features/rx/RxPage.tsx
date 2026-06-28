@@ -151,7 +151,7 @@ export function RxPage() {
     const sr   = typeof srMsps  === 'number' ? srMsps  * 1e6 : 1e6
     const gain = typeof gainDb  === 'number' ? gainDb        : 20
     setStreamPending(true)
-    const dur = typeof duration === 'number' && duration > 0 ? duration : undefined
+    const dur = typeof duration === 'number' && duration > 0 && isFinite(duration) ? duration : undefined
     await startStream({ frequency: freq, sample_rate: sr, gain, bandwidth: sr }, dur)
     setStreamPending(false)
     if (dur) {
@@ -207,48 +207,46 @@ export function RxPage() {
 
             {/* Stream controls */}
             <div className="flex items-center gap-2 pr-3 border-r border-tale-gray/20 dark:border-white/10">
-              {/* RX config inputs — hidden while streaming */}
-              {!isStreamStarted && (
-                <>
-                  <input
-                    type="number" min={0.001} step={0.001} value={freqGhz}
-                    onChange={e => setFreqGhz(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                    placeholder="freq"
-                    disabled={streamPending}
-                    title="Center frequency (GHz)"
-                    className="w-16 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
-                  />
-                  <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">GHz</span>
-                  <input
-                    type="number" min={0.1} step={0.1} value={srMsps}
-                    onChange={e => setSrMsps(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                    placeholder="SR"
-                    disabled={streamPending}
-                    title="Sample rate (MSps)"
-                    className="w-12 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
-                  />
-                  <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">MSps</span>
-                  <input
-                    type="number" min={0} max={90} step={1} value={gainDb}
-                    onChange={e => setGainDb(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                    placeholder="gain"
-                    disabled={streamPending}
-                    title="Gain (dB)"
-                    className="w-12 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
-                  />
-                  <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">dB</span>
-                  <div className="w-px h-4 bg-tale-gray/20 dark:bg-white/10 mx-1" />
-                  <input
-                    type="number" min={1} step={1} value={duration}
-                    onChange={e => setDuration(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10)))}
-                    placeholder="∞"
-                    disabled={streamPending}
-                    title="Duration in seconds (leave blank for continuous)"
-                    className="w-12 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
-                  />
-                  <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">s</span>
-                </>
-              )}
+              {/* RX config inputs — always visible, disabled while streaming */}
+              <>
+                <input
+                  type="number" min={0.001} step={0.001} value={freqGhz}
+                  onChange={e => setFreqGhz(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  placeholder="freq"
+                  disabled={streamPending || isStreamStarted}
+                  title="Center frequency (GHz)"
+                  className="w-20 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-50"
+                />
+                <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">GHz</span>
+                <input
+                  type="number" min={0.1} step={0.1} value={srMsps}
+                  onChange={e => setSrMsps(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  placeholder="SR"
+                  disabled={streamPending || isStreamStarted}
+                  title="Sample rate (MSps)"
+                  className="w-16 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-50"
+                />
+                <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">MSps</span>
+                <input
+                  type="number" min={0} max={90} step={1} value={gainDb}
+                  onChange={e => setGainDb(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  placeholder="gain"
+                  disabled={streamPending || isStreamStarted}
+                  title="Gain (dB)"
+                  className="w-14 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-50"
+                />
+                <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">dB</span>
+                <div className="w-px h-4 bg-tale-gray/20 dark:bg-white/10 mx-1" />
+                <input
+                  type="number" min={0.1} step={0.1} value={duration}
+                  onChange={e => setDuration(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  placeholder="∞"
+                  disabled={streamPending || isStreamStarted}
+                  title="Duration in seconds (leave blank for continuous)"
+                  className="w-16 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-50"
+                />
+                <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">s</span>
+              </>
               {countdown !== null && isStreamStarted && (
                 <span className="font-mono text-[11px] font-bold text-sky-blue-d dark:text-cyan-400 tabular-nums min-w-[28px] text-center">
                   {countdown}s

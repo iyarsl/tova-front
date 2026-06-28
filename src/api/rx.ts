@@ -15,7 +15,7 @@ export async function connectRx(config: RxConnectConfig): Promise<void> {
 }
 
 export async function disconnectRx(): Promise<void> {
-  await client.delete('/rx/disconnect')
+  await client.delete('/rx/disconnect', { timeout: 30_000 })
 }
 
 export async function startStream(chunkDuration = 0.5): Promise<void> {
