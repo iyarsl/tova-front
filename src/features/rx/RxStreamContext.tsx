@@ -9,6 +9,9 @@ import {
 } from 'react'
 import { config, MAX_CAPTURE_SEC } from '@/config'
 import type { RxStatus, RxWsMessage, WorkerInput, WorkerOutput, SignalData, ZoomLayout, ChartTab, ChartKey, CapturePayload } from '@/types/rx'
+import { startStream as apiStartStream, stopStream as apiStopStream, fetchStreamStatus } from '@/api/rx'
+import { useToast } from '@/components/Toast'
+import type { AppError } from '@/api/client'
 
 // ---- types ------------------------------------------------------------------
 
@@ -40,6 +43,12 @@ type RxStreamContextType = {
   handleRelayout: (chart: ChartKey, event: Plotly.PlotRelayoutEvent) => void
   /** Slice the last durationSec of buffered raw IQ into a CapturePayload, or null if no data */
   buildCapture: (durationSec: number) => CapturePayload | null
+  /** Whether a stream was started from this session */
+  isStreamStarted: boolean
+  /** Start USRP stream; auto-stops after durationSec if provided */
+  startStream: (durationSec?: number) => Promise<void>
+  /** Stop USRP stream */
+  stopStream: () => Promise<void>
 }
 
 // ---- context ----------------------------------------------------------------
@@ -66,6 +75,10 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   const [data, setData]             = useState<SignalData | null>(null)
   const [status, setStatus]         = useState<RxStatus>('connecting')
   const [sampleRate, setSampleRate] = useState(0)
+  const [isStreamStarted, setIsStreamStarted] = useState(false)
+
+  const { toast } = useToast()
+  const durationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Mirror data in a ref so handleToggle always captures the latest frame,
   // even when called from inside setFrozen's functional updater.
@@ -225,6 +238,46 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
     }
   }, [connect, onWorkerMessage, stopRendering])
 
+  // -- stream control ---------------------------------------------------------
+
+  const stopStreamFn = useCallback(async () => {
+    if (durationTimerRef.current) {
+      clearTimeout(durationTimerRef.current)
+      durationTimerRef.current = null
+    }
+    try {
+      await apiStopStream()
+    } catch (err) {
+      toast((err as AppError).message ?? 'Failed to stop stream', 'error')
+    }
+    setIsStreamStarted(false)
+  }, [toast])
+
+  const startStreamFn = useCallback(async (durationSec?: number) => {
+    try {
+      await apiStartStream()
+      setIsStreamStarted(true)
+      if (durationSec && durationSec > 0) {
+        durationTimerRef.current = setTimeout(() => void stopStreamFn(), durationSec * 1000)
+      }
+    } catch (err) {
+      toast((err as AppError).message ?? 'Failed to start stream', 'error')
+      setIsStreamStarted(false)
+    }
+  }, [toast, stopStreamFn])
+
+  // Initialize isStreamStarted from backend on mount
+  useEffect(() => {
+    fetchStreamStatus().then(setIsStreamStarted).catch(() => {})
+  }, [])
+
+  // Stop stream on unmount if we started it
+  useEffect(() => {
+    return () => {
+      if (durationTimerRef.current) clearTimeout(durationTimerRef.current)
+    }
+  }, [])
+
   // -- capture ----------------------------------------------------------------
 
   const buildCapture = useCallback((durationSec: number): CapturePayload | null => {
@@ -315,7 +368,10 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
     zoomLayouts,
     handleRelayout,
     buildCapture,
-  }), [data, status, sampleRate, tab, frozen, frozenData, handleToggle, displayData, zoomLayouts, handleRelayout, buildCapture])
+    isStreamStarted,
+    startStream: startStreamFn,
+    stopStream: stopStreamFn,
+  }), [data, status, sampleRate, tab, frozen, frozenData, handleToggle, displayData, zoomLayouts, handleRelayout, buildCapture, isStreamStarted, startStreamFn, stopStreamFn])
 
   return (
     <RxStreamContext.Provider

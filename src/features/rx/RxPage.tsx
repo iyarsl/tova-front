@@ -1,4 +1,4 @@
-﻿import { useCallback } from 'react'
+﻿import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
@@ -91,6 +91,9 @@ export function RxPage() {
     zoomLayouts,
     handleRelayout,
     buildCapture,
+    isStreamStarted,
+    startStream,
+    stopStream,
   } = useRxStreamContext()
 
   const { config: vortexConfig } = useVortexConfig()
@@ -121,6 +124,43 @@ export function RxPage() {
     a.click()
     URL.revokeObjectURL(url)
   }, [buildCapture, toast])
+
+  const [duration, setDuration] = useState<number | ''>('')
+  const [countdown, setCountdown] = useState<number | null>(null)
+  const [streamPending, setStreamPending] = useState(false)
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const clearCountdown = useCallback(() => {
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
+    setCountdown(null)
+  }, [])
+
+  useEffect(() => {
+    if (!isStreamStarted) clearCountdown()
+  }, [isStreamStarted, clearCountdown])
+
+  const handleStart = useCallback(async () => {
+    setStreamPending(true)
+    const dur = typeof duration === 'number' && duration > 0 ? duration : undefined
+    await startStream(dur)
+    setStreamPending(false)
+    if (dur) {
+      setCountdown(dur)
+      countdownRef.current = setInterval(() => {
+        setCountdown(c => {
+          if (c === null || c <= 1) { clearCountdown(); return null }
+          return c - 1
+        })
+      }, 1000)
+    }
+  }, [duration, startStream, clearCountdown])
+
+  const handleStop = useCallback(async () => {
+    setStreamPending(true)
+    clearCountdown()
+    await stopStream()
+    setStreamPending(false)
+  }, [stopStream, clearCountdown])
 
   const centerFreq = vortexConfig ? (vortexConfig.rfin_hz / 1e6).toFixed(0) : '—'
   const data = displayData
@@ -154,6 +194,40 @@ export function RxPage() {
           ))}
 
           <div className="ml-auto flex items-center gap-3 pb-2">
+
+            {/* Stream controls */}
+            <div className="flex items-center gap-2 pr-3 border-r border-tale-gray/20 dark:border-white/10">
+              <input
+                type="number"
+                min={1}
+                step={1}
+                value={duration}
+                onChange={e => setDuration(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value, 10)))}
+                placeholder="∞"
+                disabled={isStreamStarted || streamPending}
+                className="w-16 px-2 py-1 rounded-[8px] font-mono text-xs text-center bg-white dark:bg-base-800 border border-tale-gray/25 dark:border-white/10 text-map-brown dark:text-[#d1d5db] placeholder:text-whisper-gray dark:placeholder:text-[#4b5563] focus:outline-none focus:border-sky-blue-d/60 disabled:opacity-40"
+                title="Duration in seconds (leave blank for continuous)"
+              />
+              <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">s</span>
+              {countdown !== null && (
+                <span className="font-mono text-[11px] font-bold text-sky-blue-d dark:text-cyan-400 tabular-nums min-w-[28px] text-center">
+                  {countdown}s
+                </span>
+              )}
+              <button
+                type="button"
+                disabled={streamPending}
+                onClick={isStreamStarted ? handleStop : handleStart}
+                className="px-3 py-1.5 rounded-full font-display font-bold text-xs border-2 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+                style={isStreamStarted
+                  ? { border: '2px solid #f43f5e', color: '#f43f5e', background: 'transparent' }
+                  : { background: 'linear-gradient(135deg, #34d399, #059669)', border: '2px solid transparent', color: '#fff', boxShadow: '0 3px 10px rgba(52,211,153,0.35)' }
+                }
+              >
+                {streamPending ? '…' : isStreamStarted ? '■ Stop' : '▶ Stream'}
+              </button>
+            </div>
+
             {/* Status chip */}
             <div className="flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${chip.dot} ${status === 'streaming' ? 'animate-pulse' : ''}`} />
