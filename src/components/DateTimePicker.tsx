@@ -97,8 +97,11 @@ interface TimeSpinnerProps {
 }
 
 function TimeSpinner({ label, value, min, max, onChange }: TimeSpinnerProps) {
-  function inc() { onChange(value < max ? value + 1 : min) }
-  function dec() { onChange(value > min ? value - 1 : max) }
+  function inc() { onChange(value < max ? value + 1 : 0) }
+  function dec() {
+    if (value > min) onChange(value - 1)
+    else if (min === 0) onChange(max)
+  }
 
   return (
     <div className="flex flex-col items-center gap-0.5">
