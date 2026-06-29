@@ -26,7 +26,7 @@ type ColDef = {
 const COLS: ColDef[] = [
   { key: 'duration',           header: 'Duration',       subHeader: 's',    width: 'w-24',  type: 'number', min: 0.01, step: 0.1 },
   { key: 'entrance_freq_ghz',  header: 'Entrance Freq',  subHeader: 'GHz',  width: 'w-36',  type: 'number', min: 0.01, max: 26, step: 0.001 },
-  { key: 'bandwidth',          header: 'Bandwidth',      subHeader: 'MHz',  width: 'w-32',  type: 'select', options: [80, 160, 320] },
+  { key: 'bandwidth',          header: 'Bandwidth',      subHeader: 'MHz',  width: 'w-32',  type: 'number', min: 0.001, max: 320, step: 1 },
   { key: 'gain_db',            header: 'Gain',           subHeader: 'dB',   width: 'w-24',  type: 'number', min: 0, max: 90, step: 0.5 },
   { key: 'sample_rate',        header: 'Sample Rate',    subHeader: 'MHz',  width: 'w-36',  type: 'number', min: 0.001, step: 0.1, displayScale: 1_000_000 },
 ]

@@ -4,7 +4,7 @@ export type ScanRow = {
   duration:          number | null
   entrance_freq_ghz: number | null
   out_freq_mhz:      number | null
-  bandwidth:         80 | 160 | 320 | null
+  bandwidth:         number | null
   gain_db:           number | null
   sample_rate:       number | null
 }
@@ -14,7 +14,7 @@ export type ApiScanRow = {
   duration:          number
   entrance_freq_ghz: number
   out_freq_mhz:      number
-  bandwidth:         80 | 160 | 320
+  bandwidth:         number
   gain_db:           number
   sample_rate:       number
 }
