@@ -4,15 +4,31 @@ import { useArduinoPorts } from './useArduinoPorts'
 import { PortSwitch } from './PortSwitch'
 
 export function SwitchPanel() {
-  const { ports, isLoading, isRestarting, isExclusivePending, exclusiveToggle, pendingPortName, restartMut } = useArduinoPorts()
+  const {
+    ports,
+    isLoading,
+    isRestarting,
+    isExclusivePending,
+    exclusiveToggle,
+    pendingPortName,
+    restartMut,
+  } = useArduinoPorts()
 
-  if (isLoading) return (
-    <PageTransition>
-      <div className="flex-1 flex items-center justify-center text-tale-gray dark:text-[#6b7280] font-body text-sm">
-        Loading port state…
-      </div>
-    </PageTransition>
-  )
+  const sortedPorts = [...ports].sort((a, b) => {
+    const aNum = Number(a.name.replace('port', ''))
+    const bNum = Number(b.name.replace('port', ''))
+    return aNum - bNum
+  })
+
+  if (isLoading) {
+    return (
+      <PageTransition>
+        <div className="flex-1 flex items-center justify-center text-tale-gray dark:text-[#6b7280] font-body text-sm">
+          Loading port state…
+        </div>
+      </PageTransition>
+    )
+  }
 
   return (
     <PageTransition>
@@ -30,17 +46,23 @@ export function SwitchPanel() {
                 </div>
               )}
 
-              {ports.length === 0 ? (
-                <p className="text-center font-body text-sm text-whisper-gray dark:text-[#6b7280]">No ports configured</p>
+              {sortedPorts.length === 0 ? (
+                <p className="text-center font-body text-sm text-whisper-gray dark:text-[#6b7280]">
+                  No ports configured
+                </p>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 h-full">
-                  {ports.map(p => (
+                  {sortedPorts.map((p) => (
                     <PortSwitch
                       key={p.name}
                       name={p.name}
                       pin={p.pin}
                       on={p.on}
-                      disabled={isRestarting || isExclusivePending || pendingPortName === p.name}
+                      disabled={
+                        isRestarting ||
+                        isExclusivePending ||
+                        pendingPortName === p.name
+                      }
                       onToggle={() => void exclusiveToggle(p.name)}
                       freqMin={p.freq_min_ghz}
                       freqMax={p.freq_max_ghz}
