@@ -254,8 +254,10 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   }, [toast])
 
   const startStreamFn = useCallback(async (config: RxConnectConfig, durationSec?: number) => {
+    let connected = false
     try {
       await connectRx(config)
+      connected = true
       await apiStartStream()
       setIsStreamStarted(true)
       if (durationSec && durationSec > 0) {
@@ -263,7 +265,9 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       toast((err as AppError).message ?? 'Failed to start stream', 'error')
-      try { await disconnectRx() } catch { /* ignore */ }
+      if (connected) {
+        try { await disconnectRx() } catch { /* ignore */ }
+      }
       setIsStreamStarted(false)
     }
   }, [toast, stopStreamFn])
