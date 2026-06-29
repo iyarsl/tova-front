@@ -1,21 +1,29 @@
 import { z } from 'zod'
 import client from './client'
-import type { ApiScanRow, ScanDefaults } from '@/types/scan'
+import type { ApiScanRow, ScanDefaults, ScanRowResult } from '@/types/scan'
 
-export type { ApiScanRow }
+export type { ApiScanRow, ScanRowResult }
+
+const ScanRowResultSchema = z.object({
+  row_index:   z.number(),
+  status:      z.enum(['success', 'failed']),
+  output_file: z.string().nullable(),
+  error:       z.string().nullable(),
+  attempts:    z.number(),
+})
 
 export async function runScan(
   rows: ApiScanRow[],
   output_dir: string,
   mock: boolean,
   use_vortex: boolean,
-): Promise<string[]> {
+): Promise<ScanRowResult[]> {
   const res = await client.post(
     '/scan/run',
     { rows, output_dir, mock, use_vortex },
     { timeout: 5 * 60_000 },
   )
-  return z.array(z.string()).parse(res.data)
+  return z.array(ScanRowResultSchema).parse(res.data)
 }
 
 const ScanDefaultsSchema = z.object({

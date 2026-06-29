@@ -1,12 +1,13 @@
 import { createContext, use, useState, useCallback, useMemo, type ReactNode } from 'react'
 import { useScanRows } from './useScanRows'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
+import type { ScanRowResult } from '@/types/scan'
 
 type ScanContextValue = ReturnType<typeof useScanRows> & {
   importedFileName: string | null
   setImportedFileName: (name: string | null) => void
-  results: string[] | null
-  setResults: (files: string[] | null) => void
+  results: ScanRowResult[] | null
+  setResults: (results: ScanRowResult[] | null) => void
 }
 
 const ScanContext = createContext<ScanContextValue | null>(null)
@@ -15,7 +16,7 @@ export function ScanProvider({ children }: { children: ReactNode }) {
   const scanRows = useScanRows()
   const { defaults } = useScanDefaults()
   const [importedFileName, setImportedFileName] = useState<string | null>(null)
-  const [results, setResults] = useState<string[] | null>(null)
+  const [results, setResults] = useState<ScanRowResult[] | null>(null)
 
   const addRow = useCallback(() => {
     scanRows.addRow(

@@ -5,10 +5,11 @@ import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
 import { Topbar } from '@/components/Topbar'
 import { ScanTable } from './ScanTable'
+import { ScanResultRows } from './ScanResultRows'
 import { useScan } from './ScanContext'
 import { useMutation } from '@tanstack/react-query'
 import { runScan } from '@/api/scan'
-import type { ApiScanRow } from '@/types/scan'
+import type { ApiScanRow, ScanRowResult } from '@/types/scan'
 import { useToast } from '@/components/Toast'
 import type { AppError } from '@/api/client'
 import { ScheduleModal } from './ScheduleModal'
@@ -102,6 +103,57 @@ function RunModal({
   )
 }
 
+function RunResultsPanel({ results, onClose }: { results: ScanRowResult[]; onClose: () => void }) {
+  const ok     = results.filter(r => r.status === 'success').length
+  const failed = results.length - ok
+  const tone   = failed === 0 ? 'success' : ok === 0 ? 'error' : 'partial'
+
+  const shell = {
+    success: 'border-meadow-green/30 bg-pastel-green dark:bg-emerald-500/5',
+    partial: 'border-[#FFB877]/50 bg-[#FFF3E6] dark:bg-amber-500/[0.07]',
+    error:   'border-sunset-red/30 bg-[#FFE9E9] dark:bg-rose-500/[0.07]',
+  }[tone]
+  const heading = {
+    success: 'text-meadow-green-dk dark:text-emerald-400',
+    partial: 'text-[#C2620E] dark:text-amber-400',
+    error:   'text-sunset-red dark:text-rose-400',
+  }[tone]
+  const closeBtn = {
+    success: 'text-meadow-green-dk/50 hover:text-meadow-green-dk dark:text-emerald-400/50 dark:hover:text-emerald-400',
+    partial: 'text-[#C2620E]/50 hover:text-[#C2620E] dark:text-amber-400/50 dark:hover:text-amber-400',
+    error:   'text-sunset-red/50 hover:text-sunset-red dark:text-rose-400/50 dark:hover:text-rose-400',
+  }[tone]
+
+  const summary = failed === 0
+    ? `${ok} succeeded`
+    : ok === 0
+      ? `${failed} failed`
+      : `${ok} succeeded · ${failed} failed`
+
+  return (
+    <m.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      className={`rounded-[16px] border p-4 ${shell}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className={`text-xs tracking-[0.08em] font-body font-bold uppercase ${heading}`}>
+          Run Results — {summary}
+        </div>
+        <button type="button"
+          onClick={onClose}
+          aria-label="Close run results"
+          className={`transition-colors leading-none text-lg ${closeBtn}`}
+        >
+          ×
+        </button>
+      </div>
+      <ScanResultRows results={results} />
+    </m.div>
+  )
+}
+
 export function ScanPage() {
   const { rows, errors, addRow, removeRow, updateCell, validateAll, clearErrors, loadRows,
           importedFileName, setImportedFileName, results, setResults } = useScan()
@@ -144,10 +196,14 @@ export function ScanPage() {
       }))
       return runScan(apiRows, dir, mock, useVortex ?? true)
     },
-    onSuccess: (files) => {
-      setResults(files)
+    onSuccess: (results) => {
+      const ok     = results.filter(r => r.status === 'success').length
+      const failed = results.length - ok
+      setResults(results)
       setShowModal(false)
-      toast(`Scan complete — ${files.length} file(s) saved`, 'success')
+      if (failed === 0)  toast(`Scan complete — ${ok} file(s) saved`, 'success')
+      else if (ok === 0) toast(`Scan failed — all ${failed} row(s) failed`, 'error')
+      else               toast(`Partial — ${ok} saved, ${failed} failed`, 'error')
     },
     onError: (err: AppError) => toast(err.message, 'error'),
   })
@@ -286,32 +342,7 @@ export function ScanPage() {
             />
 
             <AnimatePresence>
-              {results && (
-                <m.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="rounded-[16px] border border-meadow-green/30 bg-pastel-green dark:bg-emerald-500/5 p-4"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="text-xs tracking-[0.08em] font-body font-bold text-meadow-green-dk dark:text-emerald-400 uppercase">
-                      Output Files
-                    </div>
-                    <button type="button"
-                      onClick={() => setResults(null)}
-                      aria-label="Close output files"
-                      className="text-meadow-green-dk/50 dark:text-emerald-400/50 hover:text-meadow-green-dk dark:hover:text-emerald-400 transition-colors leading-none text-lg"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <div className="space-y-1">
-                    {results.map(f => (
-                      <div key={f} className="font-mono text-xs text-tale-gray dark:text-[#9ca3af]">{f}</div>
-                    ))}
-                  </div>
-                </m.div>
-              )}
+              {results && <RunResultsPanel results={results} onClose={() => setResults(null)} />}
             </AnimatePresence>
 
             {/* Upcoming Scheduled Runs */}

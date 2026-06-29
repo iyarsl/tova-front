@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react'
 import { m, AnimatePresence } from 'framer-motion'
 import { useScanHistory, useDeleteHistory } from './useScanHistory'
+import { ScanResultRows } from './ScanResultRows'
 import type { ScanHistoryEntry } from '@/types/schedule'
 
 function formatDateTime(iso: string) {
@@ -11,13 +12,19 @@ function formatDateTime(iso: string) {
 }
 
 function StatusBadge({ status }: { status: ScanHistoryEntry['status'] }) {
+  const styles = {
+    success: 'dark:bg-emerald-500/10 bg-emerald-50 dark:text-emerald-400 text-emerald-600',
+    partial: 'dark:bg-amber-500/10 bg-amber-50 dark:text-amber-400 text-amber-600',
+    failed:  'dark:bg-rose-500/10 bg-rose-50 dark:text-rose-400 text-rose-500',
+  }[status]
+  const dot = {
+    success: 'bg-emerald-400',
+    partial: 'bg-amber-400',
+    failed:  'bg-rose-400',
+  }[status]
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] text-[10px] font-mono tracking-wider uppercase ${
-      status === 'success'
-        ? 'dark:bg-emerald-500/10 bg-emerald-50 dark:text-emerald-400 text-emerald-600'
-        : 'dark:bg-rose-500/10 bg-rose-50 dark:text-rose-400 text-rose-500'
-    }`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${status === 'success' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] text-[10px] font-mono tracking-wider uppercase ${styles}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
       {status}
     </span>
   )
@@ -90,7 +97,9 @@ export function ScanHistoryTable() {
                   className={`border-b dark:border-white/[0.08] border-black/[0.06] transition-colors ${
                     entry.status === 'failed'
                       ? 'dark:bg-rose-500/[0.05] bg-rose-50/60'
-                      : idx % 2 === 0 ? 'dark:bg-white/[0.015]' : 'dark:bg-white/[0.035] bg-[#f9fafb]'
+                      : entry.status === 'partial'
+                        ? 'dark:bg-amber-500/[0.05] bg-amber-50/60'
+                        : idx % 2 === 0 ? 'dark:bg-white/[0.015]' : 'dark:bg-white/[0.035] bg-[#f9fafb]'
                   } ${expanded === entry.id ? 'dark:border-b-white/[0.04] border-b-black/[0.04]' : ''}`}
                 >
                   <td className="px-3 py-2.5 border-r dark:border-white/[0.10] border-black/[0.08] w-10">
@@ -223,6 +232,15 @@ export function ScanHistoryTable() {
                               </tbody>
                             </table>
                           </div>
+
+                          {entry.row_results && entry.row_results.length > 0 && (
+                            <>
+                              <div className="text-[10px] tracking-[0.08em] font-medium dark:text-[#6b7280] text-[#9ca3af] uppercase mt-4 mb-2">
+                                Row Results
+                              </div>
+                              <ScanResultRows results={entry.row_results} />
+                            </>
+                          )}
                         </div>
                       </m.div>
                     </td>

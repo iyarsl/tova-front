@@ -1,4 +1,4 @@
-import type { ApiScanRow } from './scan'
+import type { ApiScanRow, ScanRowResult } from './scan'
 
 export type Recurrence = 'none' | 'hourly' | 'daily' | 'weekly' | 'custom'
 
@@ -30,8 +30,9 @@ export interface ScanHistoryEntry {
   id: string
   scheduled_scan_id: string
   ran_at: string
-  status: 'success' | 'failed'
+  status: 'success' | 'failed' | 'partial'
   output_files: string[]
   error_message?: string
   rows: ApiScanRow[]
+  row_results?: ScanRowResult[]
 }

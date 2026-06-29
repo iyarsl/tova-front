@@ -19,6 +19,15 @@ export type ApiScanRow = {
   sample_rate:       number
 }
 
+/** Per-row outcome returned by POST /scan/run (and carried in scan history) */
+export type ScanRowResult = {
+  row_index:   number
+  status:      'success' | 'failed'
+  output_file: string | null
+  error:       string | null
+  attempts:    number
+}
+
 export type ScanRowErrors = Partial<Record<keyof Omit<ScanRow, 'id'>, string>>
 
 export type ScanDefaults = {
