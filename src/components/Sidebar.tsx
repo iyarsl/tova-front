@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchConfig } from '@/api/vortex'
 import { useAppSettings } from '@/hooks/useAppSettings'
 import { useAuth } from '@/hooks/useAuth'
+import { UsrpStatus } from '@/components/UsrpStatus'
 
 type IconProps = { className?: string }
 type NavItem = { to: string; label: string; icon: (props: IconProps) => JSX.Element }
@@ -235,6 +236,17 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* USRP status */}
+      <div className="px-3 pb-2">
+        {collapsed ? (
+          <div className="flex justify-center py-1">
+            <UsrpStatus collapsed />
+          </div>
+        ) : (
+          <UsrpStatus />
+        )}
+      </div>
 
       {/* User / logout */}
       <div className="px-3 pb-2 pt-3 border-t border-[#FFE4C4] dark:border-white/[0.07]">

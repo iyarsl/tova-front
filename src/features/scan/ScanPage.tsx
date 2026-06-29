@@ -231,9 +231,11 @@ export function ScanPage() {
 
             {/* Toolbar */}
             <div className="flex items-center justify-between">
-              <span className="text-xs tracking-[0.08em] text-whisper-gray dark:text-[#4b5563] uppercase font-body font-bold">
-                {rows.length} row{rows.length !== 1 ? 's' : ''}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs tracking-[0.08em] text-whisper-gray dark:text-[#4b5563] uppercase font-body font-bold">
+                  {rows.length} row{rows.length !== 1 ? 's' : ''}
+                </span>
+              </div>
               <div className="flex gap-2 flex-wrap items-center">
                 <button type="button"
                   onClick={() => setShowDefaultsModal(true)}
