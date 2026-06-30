@@ -3,7 +3,7 @@ import { fetchAppSettings } from '@/api/settings'
 
 /** Default applied once the fetch settles unsuccessfully — matches the
  *  previous VITE_USE_VORTEX default so a backend hiccup never bricks the UI. */
-const USE_VORTEX_FALLBACK = true
+const USE_VORTEX_FALLBACK = false
 
 type AppSettingsState = {
   /** undefined while the first fetch is in flight; a concrete boolean once settled. */

@@ -74,7 +74,7 @@ export function UsrpStatus({ collapsed = false }: Props) {
 
   return (
     <div
-      className="inline-flex flex-col gap-0.5 px-3 py-1.5 rounded-full border border-black/[0.08] bg-black/[0.04] dark:border-white/[0.10] dark:bg-white/[0.04]"
+      className="inline-flex flex-col gap-0.5 px-2 py-1"
       aria-label={`USRP device status: ${cfg.label}`}
     >
       <div className="flex items-center gap-1.5">

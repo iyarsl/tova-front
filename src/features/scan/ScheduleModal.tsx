@@ -8,6 +8,7 @@ import { DateTimePicker } from '@/components/DateTimePicker'
 import type { ScanRow } from '@/types/scan'
 import type { Recurrence } from '@/types/schedule'
 import { useAppSettings } from '@/hooks/useAppSettings'
+import { buildApiScanRows } from './buildApiScanRows'
 
 interface Props {
   rows: ScanRow[]
@@ -40,15 +41,16 @@ export function ScheduleModal({ rows, onClose }: Props) {
 
   function handleSubmit() {
     if (!scheduledAt || !dir) return
+    const vortexEnabled = useVortex ?? false
     createMut.mutate(
       {
-        rows: rows.map(({ id: _, out_freq_mhz: _o, ...rest }) => ({
-          ...rest,
-          out_freq_mhz: defaults?.out_freq_mhz ?? 1250,
-        }) as import('@/types/scan').ApiScanRow),
+        rows: buildApiScanRows(rows, {
+          defaultOutFreqMhz: defaults?.out_freq_mhz ?? 1250,
+          useVortex: vortexEnabled,
+        }),
         output_dir: dir,
         mock: false,
-        use_vortex: useVortex ?? true,
+        use_vortex: vortexEnabled,
         scheduled_at: new Date(scheduledAt).toISOString(),
         recurrence,
         ...(recurrence === 'custom'

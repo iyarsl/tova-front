@@ -9,7 +9,7 @@ import { ScanResultRows } from './ScanResultRows'
 import { useScan } from './ScanContext'
 import { useMutation } from '@tanstack/react-query'
 import { runScan } from '@/api/scan'
-import type { ApiScanRow, ScanRowResult } from '@/types/scan'
+import type { ScanRowResult } from '@/types/scan'
 import { useToast } from '@/components/Toast'
 import type { AppError } from '@/api/client'
 import { ScheduleModal } from './ScheduleModal'
@@ -20,6 +20,7 @@ import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { parseExcelToScanRows } from '@/utils/parseExcel'
 import { downloadScanTemplate } from '@/utils/downloadTemplate'
 import { useAppSettings } from '@/hooks/useAppSettings'
+import { buildApiScanRows } from './buildApiScanRows'
 
 function RunModal({
   onClose,
@@ -185,16 +186,16 @@ export function ScanPage() {
 
   const runMut = useMutation({
     mutationFn: ({ dir, mock }: { dir: string; mock: boolean }) => {
-      const outFreq = defaults?.out_freq_mhz ?? 1250
-      const apiRows: ApiScanRow[] = rows.map(({ id: _id, duration, entrance_freq_ghz, bandwidth, gain_db, sample_rate }) => ({
-        duration:          duration!,
-        entrance_freq_ghz: entrance_freq_ghz!,
-        out_freq_mhz:      outFreq,
-        bandwidth:         bandwidth!,
-        gain_db:           gain_db!,
-        sample_rate:       sample_rate!,
-      }))
-      return runScan(apiRows, dir, mock, useVortex ?? true)
+      const vortexEnabled = useVortex ?? false
+      return runScan(
+        buildApiScanRows(rows, {
+          defaultOutFreqMhz: defaults?.out_freq_mhz ?? 1250,
+          useVortex: vortexEnabled,
+        }),
+        dir,
+        mock,
+        vortexEnabled,
+      )
     },
     onSuccess: (results) => {
       const ok     = results.filter(r => r.status === 'success').length

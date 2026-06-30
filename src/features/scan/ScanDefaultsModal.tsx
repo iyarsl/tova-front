@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { m } from 'framer-motion'
 import { useScanDefaults } from '@/hooks/useScanDefaults'
 import { useRabbitMq } from '@/hooks/useRabbitMq'
@@ -37,9 +37,11 @@ export function ScanDefaultsModal({ onClose }: Props) {
 
   const [errors, setErrors] = useState<{ gain?: string; outFreq?: string; outputDir?: string }>({})
 
+  const formInitialized = useRef(false)
   useEffect(() => {
-    if (!defaults) return
+    if (!defaults || formInitialized.current) return
     setForm({ gainStr: String(defaults.gain_db), outFreqStr: String(defaults.out_freq_mhz), outputDir: defaults.output_dir })
+    formInitialized.current = true
   }, [defaults])
 
   function validate() {

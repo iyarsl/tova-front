@@ -11,7 +11,7 @@ export type RxConnectConfig = {
 }
 
 export async function connectRx(config: RxConnectConfig): Promise<void> {
-  await client.post('/rx/connect', config)
+  await client.post('/rx/connect', config, { timeout: 40_000 })
 }
 
 export async function disconnectRx(): Promise<void> {
@@ -19,7 +19,7 @@ export async function disconnectRx(): Promise<void> {
 }
 
 export async function startStream(chunkDuration = 0.5): Promise<void> {
-  await client.post('/rx/stream_start', null, { params: { chunk_duration: chunkDuration } })
+  await client.post('/rx/stream_start', null, { params: { chunk_duration: chunkDuration }, timeout: 40_000 })
 }
 
 export async function stopStream(): Promise<void> {

@@ -43,8 +43,7 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const value = row[col.key]
 
-  function commit(raw: string) {
-    setEditing(false)
+  function updateValue(raw: string) {
     if (col.type === 'number') {
       if (raw.trim() === '') {
         onUpdate(row.id, col.key, null as never)
@@ -53,6 +52,10 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
         if (!isNaN(n)) onUpdate(row.id, col.key, (col.displayScale ? n * col.displayScale : n) as never)
       }
     }
+  }
+
+  function commit() {
+    setEditing(false)
   }
 
   const cellBase = `h-10 flex items-center px-3 font-mono text-[13px] border-r border-[#FFD4A6]/50 dark:border-white/[0.10] cursor-pointer transition-colors ${
@@ -100,9 +103,10 @@ function Cell({ row, col, error, onUpdate }: CellProps) {
           min={col.min}
           max={col.max}
           step={col.step}
-          onBlur={e => commit(e.target.value)}
+          onChange={e => updateValue(e.target.value)}
+          onBlur={() => commit()}
           onKeyDown={e => {
-            if (e.key === 'Enter') commit((e.target as HTMLInputElement).value)
+            if (e.key === 'Enter') commit()
             if (e.key === 'Escape') setEditing(false)
           }}
           className="w-full h-full bg-pastel-orange dark:bg-cyan-400/10 border border-dora-orange/40 dark:border-cyan-400/40 px-3 text-[13px] font-mono text-dora-orange-dark dark:text-cyan-300 focus:outline-none rounded-none"
