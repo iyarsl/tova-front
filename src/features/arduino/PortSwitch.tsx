@@ -68,7 +68,7 @@ export function PortSwitch({ name, pin, on, disabled, onToggle, freqMin, freqMax
       </div>
 
       {/* State + pin */}
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-2.5">
         <span
           className={`font-mono text-[11px] font-bold uppercase tracking-widest ${
             on ? 'text-dora-orange dark:text-amber-400' : 'text-whisper-gray dark:text-[#4b5563]'
@@ -76,14 +76,16 @@ export function PortSwitch({ name, pin, on, disabled, onToggle, freqMin, freqMax
         >
           {on ? 'ON' : 'OFF'}
         </span>
-        <span className="font-mono text-[12px] font-semibold text-map-brown/60 dark:text-[#6b7280]">
-          pin {pin}
-        </span>
         {freqMin != null && freqMax != null && (
-          <span className="font-mono text-[10px] text-map-brown/40 dark:text-[#4b5563]">
-            {freqMin}–{freqMax} GHz
+          <span className={`font-mono text-[13px] font-semibold tracking-tight ${
+            on ? 'text-dora-orange dark:text-amber-400' : 'text-map-brown/80 dark:text-[#9ca3af]'
+          }`}>
+            {freqMin}–{freqMax} <span className="text-[11px] font-medium">GHz</span>
           </span>
         )}
+        <span className="font-mono text-[10px] text-map-brown/40 dark:text-[#4b5563]">
+          pin {pin}
+        </span>
       </div>
     </div>
   )

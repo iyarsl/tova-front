@@ -10,7 +10,9 @@ Web conntrol for usrp and vortex combained together.
 
 - Always invoke the `frontend-design` skill before writing any frontend code, every session, no exceptions
 - For ANY conversation always use the `caveman` plugin
-- Always use `Playwright` for browser automating, UI testing, and screen shots
+- Use `claude-in-chrome` for visual checks, quick UI iteration, and interactive local debugging (screenshots, console logs, network requests).
+- Use `Playwright` for isolated browser automation, generating E2E test scripts, and complex multi-step regression checks.
+- CRITICAL: Never run `claude-in-chrome` and `Playwright MCP` simultaneously in the same task thread to avoid context window explosion and browser state confusion. Clear the session or use separate threads when switching from local visual debugging to automated test scripting.
 
 
 ## Tech Stack
@@ -63,7 +65,7 @@ Feature folders own their state, components, and hooks. Do not put feature logic
 
 ## Backend API
 
-FastAPI runs locally (default `http://localhost:8000`). Base URL in `VITE_API_BASE_URL` env var.
+FastAPI runs locally (default `http://localhost:5000`). Base URL in `VITE_API_BASE_URL` env var.
 
 ### VORTEX Endpoints (proxied from device)
 
