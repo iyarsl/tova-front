@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx'
 
 const HEADERS = [
   'Duration (s)',
-  'Entrance Freq (GHz)',
+  'Frequency (GHz)',
   'Out Freq (MHz)',
   'Bandwidth (MHz)',
   'Gain (dB)',

@@ -1,5 +1,5 @@
-﻿import { useState } from 'react'
-import type { JSX } from 'react'
+﻿import type { JSX } from 'react'
+import { useSidebarCollapsed } from '@/hooks/useSidebarCollapsed'
 import { NavLink } from 'react-router-dom'
 import { m } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
@@ -135,7 +135,7 @@ function LogoutIcon({ className }: { className?: string }) {
 }
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useSidebarCollapsed()
   const { user, logout } = useAuth()
   const { useVortex, isPending: settingsPending } = useAppSettings()
   const { data, isError } = useQuery({

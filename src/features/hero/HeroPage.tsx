@@ -133,7 +133,7 @@ export function HeroPage() {
 
           <m.p {...reveal(0.5)}
             className="mt-3 font-body text-tale-gray text-[15px] leading-relaxed max-w-md mx-auto xl:mx-0">
-            Sweep the spectrum, lock the Vortex, and chart every signal — your command center for live RF.
+            Seraching the spectrum since 2026
           </m.p>
 
           {/* CTA */}

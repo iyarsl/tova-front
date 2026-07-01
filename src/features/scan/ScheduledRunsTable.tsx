@@ -197,7 +197,7 @@ export function ScheduledRunsTable() {
                             <table className="border-collapse text-[11px] font-mono">
                               <thead>
                                 <tr className="dark:text-[#6b7280] text-[#9ca3af]">
-                                  {['#', 'Duration (s)', 'Entrance (GHz)', 'Out (MHz)', 'BW (MHz)', 'Gain (dB)', 'Sample Rate (Hz)'].map(h => (
+                                  {['#', 'Duration (s)', 'Frequency (GHz)', 'Out (MHz)', 'BW (MHz)', 'Gain (dB)', 'Sample Rate (Hz)'].map(h => (
                                     <th key={h} className="px-3 py-1 text-left font-normal border-r dark:border-white/[0.06] border-black/[0.04] last:border-r-0 whitespace-nowrap">
                                       {h}
                                     </th>

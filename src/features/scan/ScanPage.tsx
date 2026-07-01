@@ -1,5 +1,4 @@
 ﻿import { useState, useEffect } from 'react'
-import { useOutputDir } from '@/hooks/useOutputDir'
 import { isAbsolutePath } from '@/utils/path'
 import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
@@ -31,11 +30,11 @@ function RunModal({
   onRun: (dir: string) => void
   loading: boolean
 }) {
-  const [savedDir, saveDir] = useOutputDir()
+  const { defaults } = useScanDefaults()
   const [dir, setDir] = useState('')
   useEffect(() => {
-    if (!dir && isAbsolutePath(savedDir)) setDir(savedDir)
-  }, [savedDir])
+    if (!dir && defaults?.output_dir && isAbsolutePath(defaults.output_dir)) setDir(defaults.output_dir)
+  }, [defaults?.output_dir])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[rgba(45,42,62,0.45)] backdrop-blur-sm">
@@ -88,7 +87,7 @@ function RunModal({
             </button>
             <button type="button"
               disabled={loading || !dir || !isAbsolutePath(dir)}
-              onClick={() => { saveDir(dir); onRun(dir) }}
+              onClick={() => onRun(dir)}
               className="flex-1 py-2.5 rounded-full font-display font-bold text-[14px] text-white disabled:opacity-50 hover:-translate-y-0.5 transition-transform"
               style={{
                 background: 'linear-gradient(135deg, #FF8C42, #E06A1A)',
@@ -292,20 +291,26 @@ export function ScanPage() {
                     Schedule
                   </button>
                 </span>
-                <button type="button"
-                  onClick={() => {
-                    const ok = validateAll()
-                    if (!ok) { toast('Fix validation errors before running', 'error'); return }
-                    setShowModal(true)
-                  }}
-                  className="px-4 py-2 rounded-full font-display font-bold text-xs tracking-wide uppercase text-white hover:-translate-y-0.5 transition-transform"
-                  style={{
-                    background: 'linear-gradient(135deg, #FF8C42, #E06A1A)',
-                    boxShadow: '0 4px 14px rgba(255,140,66,0.40)',
-                  }}
+                <span
+                  title={rows.length === 0 ? 'Add scan rows to enable running' : undefined}
+                  className="inline-flex"
                 >
-                  Run Scan
-                </button>
+                  <button type="button"
+                    onClick={() => {
+                      const ok = validateAll()
+                      if (!ok) { toast('Fix validation errors before running', 'error'); return }
+                      setShowModal(true)
+                    }}
+                    disabled={rows.length === 0}
+                    className="px-4 py-2 rounded-full font-display font-bold text-xs tracking-wide uppercase text-white hover:-translate-y-0.5 transition-transform disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                    style={{
+                      background: 'linear-gradient(135deg, #FF8C42, #E06A1A)',
+                      boxShadow: '0 4px 14px rgba(255,140,66,0.40)',
+                    }}
+                  >
+                    Run Scan
+                  </button>
+                </span>
               </div>
             </div>
 

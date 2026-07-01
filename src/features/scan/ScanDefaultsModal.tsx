@@ -40,7 +40,7 @@ export function ScanDefaultsModal({ onClose }: Props) {
   const formInitialized = useRef(false)
   useEffect(() => {
     if (!defaults || formInitialized.current) return
-    setForm({ gainStr: String(defaults.gain_db), outFreqStr: String(defaults.out_freq_mhz), outputDir: defaults.output_dir })
+    setForm({ gainStr: String(defaults.gain_db), outFreqStr: String(defaults.out_freq_mhz / 1000), outputDir: defaults.output_dir })
     formInitialized.current = true
   }, [defaults])
 
@@ -53,7 +53,7 @@ export function ScanDefaultsModal({ onClose }: Props) {
     else if (gain < 0 || gain > 90)             errs.gain = '0–90 dB'
 
     if (outFreqStr === '' || isNaN(outFreq))    errs.outFreq = 'Required'
-    else if (outFreq < 0 || outFreq > 3500)     errs.outFreq = '0–3500 MHz'
+    else if (outFreq < 0 || outFreq > 3.5)      errs.outFreq = '0–3.5 GHz'
 
     if (!outputDir)                              errs.outputDir = 'Required'
     else if (!isAbsolutePath(outputDir))         errs.outputDir = 'Must be absolute (e.g. C:\\scans\\output or /data/scans)'
@@ -65,7 +65,7 @@ export function ScanDefaultsModal({ onClose }: Props) {
   function handleSave() {
     if (!validate()) return
     mutation.mutate(
-      { gain_db: Number(gainStr), out_freq_mhz: Number(outFreqStr), output_dir: outputDir },
+      { gain_db: Number(gainStr), out_freq_mhz: Number(outFreqStr) * 1000, output_dir: outputDir },
       {
         onSuccess: onClose,
         onError: (err: AppError) => toast(err.message ?? 'Failed to save defaults', 'error'),
@@ -113,17 +113,17 @@ export function ScanDefaultsModal({ onClose }: Props) {
 
             <div>
               <label htmlFor="defaults-out-freq" className="font-body text-xs font-bold text-whisper-gray dark:text-[#6b7280] uppercase tracking-wider block mb-1.5">
-                Output Frequency (MHz)
+                Output Frequency (GHz)
               </label>
               <input
                 id="defaults-out-freq"
                 type="number"
                 min={0}
-                max={3500}
-                step={0.1}
+                max={3.5}
+                step={0.001}
                 value={outFreqStr}
                 onChange={e => { setForm(f => ({ ...f, outFreqStr: e.target.value })); setErrors(prev => ({ ...prev, outFreq: undefined })) }}
-                placeholder="1250"
+                placeholder="1.25"
                 className={inputClass(!!errors.outFreq)}
               />
               {errors.outFreq && <FieldError msg={errors.outFreq} />}

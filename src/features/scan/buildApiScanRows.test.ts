@@ -3,7 +3,7 @@ import { buildApiScanRows } from './buildApiScanRows'
 import type { ScanRow } from '@/types/scan'
 
 describe('buildApiScanRows', () => {
-  it('uses the edited per-row output frequency and gain values', () => {
+  it('when VORTEX is on, sends the entrance frequency as-is and the configured default as output frequency', () => {
     const rows: ScanRow[] = [
       {
         id: 'row-1',
@@ -20,7 +20,7 @@ describe('buildApiScanRows', () => {
       {
         duration: 1,
         entrance_freq_ghz: 2.4,
-        out_freq_mhz: 1550,
+        out_freq_mhz: 1250,
         bandwidth: 20,
         gain_db: 42,
         sample_rate: 1_000_000,
@@ -28,23 +28,7 @@ describe('buildApiScanRows', () => {
     ])
   })
 
-  it('falls back to the configured output frequency when the hidden row value is empty', () => {
-    const rows: ScanRow[] = [
-      {
-        id: 'row-1',
-        duration: 1,
-        entrance_freq_ghz: 2.4,
-        out_freq_mhz: null,
-        bandwidth: 20,
-        gain_db: 42,
-        sample_rate: 1_000_000,
-      },
-    ]
-
-    expect(buildApiScanRows(rows, { defaultOutFreqMhz: 1250, useVortex: true })[0].out_freq_mhz).toBe(1250)
-  })
-
-  it('uses the table entrance frequency as MHz when VORTEX is disabled', () => {
+  it('when VORTEX is off, sends the entrance frequency (converted to MHz) as both entrance and output, ignoring the configured default', () => {
     const rows: ScanRow[] = [
       {
         id: 'row-1',
@@ -57,6 +41,15 @@ describe('buildApiScanRows', () => {
       },
     ]
 
-    expect(buildApiScanRows(rows, { defaultOutFreqMhz: 1250, useVortex: false })[0].out_freq_mhz).toBe(2400)
+    expect(buildApiScanRows(rows, { defaultOutFreqMhz: 1250, useVortex: false })).toEqual([
+      {
+        duration: 1,
+        entrance_freq_ghz: 2.4,
+        out_freq_mhz: 2400,
+        bandwidth: 20,
+        gain_db: 42,
+        sample_rate: 1_000_000,
+      },
+    ])
   })
 })

@@ -4,7 +4,7 @@ import type { ScanRow } from '@/types/scan'
 // Aliases map: canonical field → accepted lowercase header substrings
 const COLUMN_ALIASES: Record<keyof Omit<ScanRow, 'id'>, string[]> = {
   duration:          ['duration (s)', 'duration', 'dur'],
-  entrance_freq_ghz: ['entrance freq (ghz)', 'entrance freq', 'entrance_freq_ghz'],
+  entrance_freq_ghz: ['frequency (ghz)', 'frequency', 'entrance freq (ghz)', 'entrance freq', 'entrance_freq_ghz'],
   out_freq_mhz:      ['out freq (mhz)', 'out freq', 'out_freq_mhz', 'output'],
   bandwidth:         ['bandwidth (mhz)', 'bandwidth', 'bw'],
   gain_db:           ['gain (db)', 'gain', 'gain_db'],
@@ -65,7 +65,7 @@ export async function parseExcelToScanRows(file: File): Promise<ScanRow[]> {
   if (missing.length > 0) {
     const labels: Record<ScanField, string> = {
       duration:          'Duration (s)',
-      entrance_freq_ghz: 'Entrance Freq (GHz)',
+      entrance_freq_ghz: 'Frequency (GHz)',
       out_freq_mhz:      'Out Freq (MHz)',
       bandwidth:         'Bandwidth (MHz)',
       gain_db:           'Gain (dB)',
