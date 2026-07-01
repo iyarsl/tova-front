@@ -18,8 +18,10 @@ export async function disconnectRx(): Promise<void> {
   await client.delete('/rx/disconnect', { timeout: 30_000 })
 }
 
-export async function startStream(chunkDuration = 0.5): Promise<void> {
-  await client.post('/rx/stream_start', null, { params: { chunk_duration: chunkDuration }, timeout: 40_000 })
+export const DEFAULT_CHUNK_DURATION_SEC = 0.5
+
+export async function startStream(chunkDuration: number = DEFAULT_CHUNK_DURATION_SEC): Promise<void> {
+  await client.post('/rx/stream_start', { chunk_duration: chunkDuration }, { timeout: 40_000 })
 }
 
 export async function stopStream(): Promise<void> {

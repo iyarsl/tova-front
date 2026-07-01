@@ -46,8 +46,8 @@ type RxStreamContextType = {
   buildCapture: (durationSec: number) => CapturePayload | null
   /** Whether a stream was started from this session */
   isStreamStarted: boolean
-  /** Connect USRP, start stream; auto-stops+disconnects after durationSec if provided */
-  startStream: (config: RxConnectConfig, durationSec?: number) => Promise<void>
+  /** Connect USRP, start stream. chunkDurationSec falls back to backend default if not set */
+  startStream: (config: RxConnectConfig, chunkDurationSec?: number) => Promise<void>
   /** Stop stream and disconnect USRP */
   stopStream: () => Promise<void>
 }
@@ -79,7 +79,6 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   const [isStreamStarted, setIsStreamStarted] = useState(false)
 
   const { toast } = useToast()
-  const durationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Mirror data in a ref so handleToggle always captures the latest frame,
   // even when called from inside setFrozen's functional updater.
@@ -242,10 +241,6 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
   // -- stream control ---------------------------------------------------------
 
   const stopStreamFn = useCallback(async () => {
-    if (durationTimerRef.current) {
-      clearTimeout(durationTimerRef.current)
-      durationTimerRef.current = null
-    }
     try { await apiStopStream() } catch { /* already stopped */ }
     try { await disconnectRx() } catch (err) {
       toast((err as AppError).message ?? 'Failed to disconnect RX', 'error')
@@ -253,16 +248,13 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
     setIsStreamStarted(false)
   }, [toast])
 
-  const startStreamFn = useCallback(async (config: RxConnectConfig, durationSec?: number) => {
+  const startStreamFn = useCallback(async (config: RxConnectConfig, chunkDurationSec?: number) => {
     let connected = false
     try {
       await connectRx(config)
       connected = true
-      await apiStartStream()
+      await apiStartStream(chunkDurationSec)
       setIsStreamStarted(true)
-      if (durationSec && durationSec > 0) {
-        durationTimerRef.current = setTimeout(() => void stopStreamFn(), durationSec * 1000)
-      }
     } catch (err) {
       toast((err as AppError).message ?? 'Failed to start stream', 'error')
       if (connected) {
@@ -270,18 +262,11 @@ export function RxStreamProvider({ children }: { children: React.ReactNode }) {
       }
       setIsStreamStarted(false)
     }
-  }, [toast, stopStreamFn])
+  }, [toast])
 
   // Initialize isStreamStarted from backend on mount
   useEffect(() => {
     fetchStreamStatus().then(setIsStreamStarted).catch(() => {})
-  }, [])
-
-  // Stop stream on unmount if we started it
-  useEffect(() => {
-    return () => {
-      if (durationTimerRef.current) clearTimeout(durationTimerRef.current)
-    }
   }, [])
 
   // -- capture ----------------------------------------------------------------

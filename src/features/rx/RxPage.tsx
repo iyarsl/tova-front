@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from 'react'
+﻿import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { m, AnimatePresence } from 'framer-motion'
 import { PageTransition } from '@/components/PageTransition'
@@ -12,6 +12,7 @@ import type { RxStatus } from '@/types/rx'
 import { TimeDomainChart } from '@/components/signal/TimeDomainChart'
 import { FftChart } from '@/components/signal/FftChart'
 import { SpectrogramChart } from '@/components/signal/SpectrogramChart'
+import { DEFAULT_CHUNK_DURATION_SEC } from '@/api/rx'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'combined',    label: 'FFT + Time',   icon: '⌇∿' },
@@ -128,27 +129,16 @@ export function RxPage() {
   const [freqGhz, setFreqGhz]   = useState<number | ''>(vortexConfig ? vortexConfig.rfin_hz / 1e9 : '')
   const [srMsps, setSrMsps]     = useState<number | ''>(1)
   const [gainDb, setGainDb]     = useState<number | ''>(20)
-  const [duration, setDuration] = useState<number | ''>('')
-  const [countdown, setCountdown] = useState<number | null>(null)
+  const [chunkDur, setChunkDur] = useState<number | ''>('')
   const [streamPending, setStreamPending] = useState(false)
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const fieldErrors = {
     freq:     freqGhz === '' || (typeof freqGhz === 'number' && freqGhz <= 0),
     sr:       srMsps  === '' || (typeof srMsps  === 'number' && srMsps  <= 0),
     gain:     gainDb  === '' || (typeof gainDb  === 'number' && (gainDb < 0 || gainDb > 90)),
-    duration: typeof duration === 'number' && duration <= 0,
+    chunkDur: typeof chunkDur === 'number' && chunkDur <= 0,
   }
   const hasErrors = Object.values(fieldErrors).some(Boolean)
-
-  const clearCountdown = useCallback(() => {
-    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
-    setCountdown(null)
-  }, [])
-
-  useEffect(() => {
-    if (!isStreamStarted) clearCountdown()
-  }, [isStreamStarted, clearCountdown])
 
   useEffect(() => {
     if (vortexConfig && freqGhz === '') setFreqGhz(vortexConfig.rfin_hz / 1e9)
@@ -159,26 +149,16 @@ export function RxPage() {
     const sr   = typeof srMsps  === 'number' ? srMsps  * 1e6 : 1e6
     const gain = typeof gainDb  === 'number' ? gainDb        : 20
     setStreamPending(true)
-    const dur = typeof duration === 'number' && duration > 0 && isFinite(duration) ? duration : undefined
-    await startStream({ frequency: freq, sample_rate: sr, gain, bandwidth: sr }, dur)
+    const chunk = typeof chunkDur === 'number' && chunkDur > 0 && isFinite(chunkDur) ? chunkDur : undefined
+    await startStream({ frequency: freq, sample_rate: sr, gain, bandwidth: sr }, chunk)
     setStreamPending(false)
-    if (dur) {
-      setCountdown(dur)
-      countdownRef.current = setInterval(() => {
-        setCountdown(c => {
-          if (c === null || c <= 1) { clearCountdown(); return null }
-          return c - 1
-        })
-      }, 1000)
-    }
-  }, [duration, startStream, clearCountdown])
+  }, [chunkDur, startStream])
 
   const handleStop = useCallback(async () => {
     setStreamPending(true)
-    clearCountdown()
     await stopStream()
     setStreamPending(false)
-  }, [stopStream, clearCountdown])
+  }, [stopStream])
 
   const centerFreq = vortexConfig ? (vortexConfig.rfin_hz / 1e6).toFixed(0) : '—'
   const data = displayData
@@ -253,20 +233,15 @@ export function RxPage() {
                 <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">dB</span>
                 <div className="w-px h-4 bg-tale-gray/20 dark:bg-white/10 mx-1" />
                 <input
-                  type="number" min={0.1} step={0.1} value={duration}
-                  onChange={e => setDuration(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                  placeholder="∞"
+                  type="number" min={0.01} step={0.01} value={chunkDur}
+                  onChange={e => setChunkDur(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                  placeholder={String(DEFAULT_CHUNK_DURATION_SEC)}
                   disabled={streamPending || isStreamStarted}
-                  title="Duration in seconds — leave blank for continuous"
-                  className={`w-16 ${inputCls(fieldErrors.duration)}`}
+                  title={`Chunk duration in seconds — leave blank for default (${DEFAULT_CHUNK_DURATION_SEC}s)`}
+                  className={`w-14 ${inputCls(fieldErrors.chunkDur)}`}
                 />
-                <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">s</span>
+                <span className="font-mono text-[10px] text-whisper-gray dark:text-[#4b5563] select-none">chunk s</span>
               </>
-              {countdown !== null && isStreamStarted && (
-                <span className="font-mono text-[11px] font-bold text-sky-blue-d dark:text-cyan-400 tabular-nums min-w-[28px] text-center">
-                  {countdown}s
-                </span>
-              )}
               <button
                 type="button"
                 disabled={streamPending || (!isStreamStarted && hasErrors)}
