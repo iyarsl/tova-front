@@ -1,5 +1,4 @@
 ﻿import { useState, useEffect } from 'react'
-import { useOutputDir } from '@/hooks/useOutputDir'
 import { isAbsolutePath } from '@/utils/path'
 import { m } from 'framer-motion'
 import { useCreateSchedule } from './useScheduledScans'
@@ -18,11 +17,7 @@ interface Props {
 const unitToMinutes = { seconds: 1 / 60, minutes: 1, hours: 60, days: 1440, weeks: 10080 } as const
 
 export function ScheduleModal({ rows, onClose }: Props) {
-  const [savedDir, saveDir]         = useOutputDir()
   const [dir, setDir]               = useState('')
-  useEffect(() => {
-    if (!dir && isAbsolutePath(savedDir)) setDir(savedDir)
-  }, [savedDir])
   const [scheduledAt, setScheduledAt] = useState('')
   const [recurrence, setRecurrence] = useState<Recurrence>('none')
   const [customValue, setCustomValue] = useState(2)
@@ -32,6 +27,10 @@ export function ScheduleModal({ rows, onClose }: Props) {
   const { defaults } = useScanDefaults()
   const { useVortex } = useAppSettings()
 
+  useEffect(() => {
+    if (!dir && defaults?.output_dir && isAbsolutePath(defaults.output_dir)) setDir(defaults.output_dir)
+  }, [defaults?.output_dir])
+
   const [minDateTime] = useState(() => {
     const d  = new Date(Date.now() + 60_000)
     const p2 = (n: number) => String(n).padStart(2, '0')
@@ -39,8 +38,16 @@ export function ScheduleModal({ rows, onClose }: Props) {
            `T${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`
   })
 
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const isPastTime = scheduledAt !== '' && new Date(scheduledAt).getTime() <= now
+
   function handleSubmit() {
-    if (!scheduledAt || !dir) return
+    if (!scheduledAt || !dir || new Date(scheduledAt).getTime() <= Date.now()) return
     const vortexEnabled = useVortex ?? false
     createMut.mutate(
       {
@@ -57,7 +64,7 @@ export function ScheduleModal({ rows, onClose }: Props) {
           ? { custom_interval_minutes: customValue * unitToMinutes[customUnit] }
           : {}),
       },
-      { onSuccess: () => { saveDir(dir); onClose() } },
+      { onSuccess: onClose },
     )
   }
 
@@ -108,6 +115,11 @@ export function ScheduleModal({ rows, onClose }: Props) {
               min={minDateTime}
               onChange={setScheduledAt}
             />
+            {isPastTime && (
+              <p className="mt-1 font-mono text-[11px] dark:text-rose-400/80 text-rose-500">
+                Must be a future time
+              </p>
+            )}
           </div>
 
           {/* Recurrence */}
@@ -179,7 +191,7 @@ export function ScheduleModal({ rows, onClose }: Props) {
             Cancel
           </button>
           <button type="button"
-            disabled={createMut.isPending || !scheduledAt || !dir || !isAbsolutePath(dir)}
+            disabled={createMut.isPending || !scheduledAt || !dir || !isAbsolutePath(dir) || isPastTime}
             onClick={handleSubmit}
             className="flex-1 py-2.5 rounded-[8px] dark:bg-cyan-400 bg-[#0891b2] dark:text-[#030712] text-white font-display font-semibold text-[13px] tracking-wider uppercase disabled:opacity-50 hover:opacity-90 transition-opacity"
           >

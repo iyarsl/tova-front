@@ -68,14 +68,6 @@ function firstWeekday(year: number, month: number): number {
   return new Date(year, month - 1, 1).getDay()
 }
 
-/** Compare as local timestamps: negative = a < b */
-function compareParts(a: DateTimeParts, b: DateTimeParts): number {
-  const toNum = (p: DateTimeParts) =>
-    p.year * 1e10 + p.month * 1e8 + p.day * 1e6 +
-    p.hour * 1e4  + p.minute * 1e2 + p.second
-  return toNum(a) - toNum(b)
-}
-
 function dateBefore(a: DateTimeParts, b: DateTimeParts): boolean {
   if (a.year  !== b.year)  return a.year  < b.year
   if (a.month !== b.month) return a.month < b.month
@@ -97,10 +89,24 @@ interface TimeSpinnerProps {
 }
 
 function TimeSpinner({ label, value, min, max, onChange }: TimeSpinnerProps) {
+  const [draft, setDraft]     = useState(pad2(value))
+  const [focused, setFocused] = useState(false)
+
+  useEffect(() => {
+    if (!focused) setDraft(pad2(value))
+  }, [value, focused])
+
   function inc() { onChange(value < max ? value + 1 : 0) }
   function dec() {
     if (value > min) onChange(value - 1)
     else if (min === 0) onChange(max)
+  }
+
+  function commit(raw: string) {
+    const n = parseInt(raw, 10)
+    const clamped = isNaN(n) ? value : Math.min(max, Math.max(min, n))
+    onChange(clamped)
+    setDraft(pad2(clamped))
   }
 
   return (
@@ -116,11 +122,17 @@ function TimeSpinner({ label, value, min, max, onChange }: TimeSpinnerProps) {
       >
         ▲
       </button>
-      <div className="w-11 h-9 flex items-center justify-center dark:bg-base-950/80 bg-[#f0f1f3] rounded-[6px] border dark:border-white/[0.06] border-black/[0.06]">
-        <span className="font-mono text-[16px] dark:text-cyan-400 text-[#0891b2] tabular-nums leading-none">
-          {pad2(value)}
-        </span>
-      </div>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={draft}
+        onFocus={() => setFocused(true)}
+        onChange={e => setDraft(e.target.value.replace(/\D/g, '').slice(0, 2))}
+        onBlur={e => { setFocused(false); commit(e.target.value) }}
+        onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur() }}
+        aria-label={label}
+        className="w-11 h-9 flex items-center justify-center dark:bg-base-950/80 bg-[#f0f1f3] rounded-[6px] border dark:border-white/[0.06] border-black/[0.06] text-center font-mono text-[16px] dark:text-cyan-400 text-[#0891b2] tabular-nums leading-none focus:outline-none dark:focus:border-cyan-400/40 focus:border-cyan-500/40"
+      />
       <button
         type="button"
         onClick={dec}
@@ -139,32 +151,13 @@ interface TimeViewProps {
   hour:      number
   minute:    number
   second:    number
-  minHour:   number
-  minMinute: number
-  minSecond: number
   onChangeTime: (h: number, m: number, s: number) => void
 }
 
-function TimeView({ hour, minute, second, minHour, minMinute, minSecond, onChangeTime }: TimeViewProps) {
-  const effMinMinute = hour   === minHour   ? minMinute : 0
-  const effMinSecond = (hour === minHour && minute === minMinute) ? minSecond : 0
-
-  function setHour(h: number) {
-    const clampedH = Math.max(minHour, h)
-    const clampedM = clampedH === minHour ? Math.max(minMinute, minute) : minute
-    const clampedS = (clampedH === minHour && clampedM === minMinute) ? Math.max(minSecond, second) : second
-    onChangeTime(clampedH, clampedM, clampedS)
-  }
-
-  function setMinute(m: number) {
-    const clampedM = Math.max(effMinMinute, m)
-    const clampedS = (hour === minHour && clampedM === minMinute) ? Math.max(minSecond, second) : second
-    onChangeTime(hour, clampedM, clampedS)
-  }
-
-  function setSecond(s: number) {
-    onChangeTime(hour, minute, Math.max(effMinSecond, s))
-  }
+function TimeView({ hour, minute, second, onChangeTime }: TimeViewProps) {
+  function setHour(h: number)   { onChangeTime(h, minute, second) }
+  function setMinute(m: number) { onChangeTime(hour, m, second) }
+  function setSecond(s: number) { onChangeTime(hour, minute, s) }
 
   return (
     <div className="flex flex-col gap-3">
@@ -173,11 +166,11 @@ function TimeView({ hour, minute, second, minHour, minMinute, minSecond, onChang
       </span>
 
       <div className="flex items-center gap-1">
-        <TimeSpinner label="HH" value={hour}   min={minHour}     max={23} onChange={setHour} />
+        <TimeSpinner label="HH" value={hour}   min={0} max={23} onChange={setHour} />
         <span className="font-mono text-xl dark:text-[#374151] text-[#d1d5db] mt-3 select-none pb-0.5">:</span>
-        <TimeSpinner label="MM" value={minute} min={effMinMinute} max={59} onChange={setMinute} />
+        <TimeSpinner label="MM" value={minute} min={0} max={59} onChange={setMinute} />
         <span className="font-mono text-xl dark:text-[#374151] text-[#d1d5db] mt-3 select-none pb-0.5">:</span>
-        <TimeSpinner label="SS" value={second} min={effMinSecond} max={59} onChange={setSecond} />
+        <TimeSpinner label="SS" value={second} min={0} max={59} onChange={setSecond} />
       </div>
 
       <div className="pt-1 border-t dark:border-white/[0.06] border-black/[0.06]">
@@ -335,21 +328,14 @@ function PickerPanel({ rect, parts, minParts, onChangeParts, onClose }: PickerPa
   }, [onClose])
 
   function handleSelectDay(year: number, month: number, day: number) {
-    const candidate: DateTimeParts = { ...parts, year, month, day }
-    onChangeParts(compareParts(candidate, minParts) < 0 ? { ...minParts } : candidate)
+    onChangeParts({ ...parts, year, month, day })
     setViewYear(year)
     setViewMonth(month)
   }
 
   function handleChangeTime(h: number, m: number, s: number) {
-    const candidate: DateTimeParts = { ...parts, hour: h, minute: m, second: s }
-    onChangeParts(compareParts(candidate, minParts) < 0 ? { ...minParts } : candidate)
+    onChangeParts({ ...parts, hour: h, minute: m, second: s })
   }
-
-  const isMinDay    = dateEqual(parts, minParts)
-  const minHour     = isMinDay ? minParts.hour   : 0
-  const minMinute   = (isMinDay && parts.hour   === minParts.hour)   ? minParts.minute : 0
-  const minSecond   = (isMinDay && parts.hour   === minParts.hour && parts.minute === minParts.minute) ? minParts.second : 0
 
   // Position: open below, flip above if near viewport bottom
   const panelH      = 300
@@ -400,9 +386,6 @@ function PickerPanel({ rect, parts, minParts, onChangeParts, onClose }: PickerPa
           hour={parts.hour}
           minute={parts.minute}
           second={parts.second}
-          minHour={minHour}
-          minMinute={minMinute}
-          minSecond={minSecond}
           onChangeTime={handleChangeTime}
         />
       </div>
@@ -452,9 +435,8 @@ export function DateTimePicker({ value, min, onChange, id }: DateTimePickerProps
   }
 
   const handleChangeParts = useCallback((p: DateTimeParts) => {
-    const clamped = compareParts(p, minParts) < 0 ? { ...minParts } : p
-    onChange(partsToString(clamped))
-  }, [minParts, onChange])
+    onChange(partsToString(p))
+  }, [onChange])
 
   const hasValue   = Boolean(value && parseDateTimeString(value))
   const displayText = useMemo(() => {
